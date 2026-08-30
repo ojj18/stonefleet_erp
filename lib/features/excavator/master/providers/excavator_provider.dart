@@ -1,13 +1,19 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/models/excavator_model.dart';
+import '../../../../data/models/vehicle_rc_response.dart';
 import '../../../../data/repositories/excavator_repository.dart';
+import '../../../../data/services/way2api_service.dart';
 
 class ExcavatorProvider extends ChangeNotifier {
   final ExcavatorRepository _repository;
+  final Way2ApiService _vehicleService;
 
-  ExcavatorProvider({ExcavatorRepository? repository})
-    : _repository = repository ?? ExcavatorRepository();
+  ExcavatorProvider({
+    ExcavatorRepository? repository,
+    Way2ApiService? vehicleService,
+  }) : _repository = repository ?? ExcavatorRepository(),
+       _vehicleService = vehicleService ?? Way2ApiService();
 
   // ============================================================
   // STATE
@@ -200,6 +206,26 @@ class ExcavatorProvider extends ChangeNotifier {
       _error = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<VehicleRcModel?> lookupVehicle(String registrationNumber) async {
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final vehicle = await _vehicleService.getVehicleDetails(
+        registrationNumber,
+      );
+
+      return vehicle;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return null;
+    } finally {
+      _setLoading(false);
     }
   }
 }

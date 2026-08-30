@@ -94,10 +94,8 @@ class ExcavatorRepository {
   }) async {
     final db = await _databaseHelper.database;
 
-    final normalized = registrationNumber.trim().toUpperCase();
-
     String where = 'registration_number = ?';
-    final List<Object?> whereArgs = [normalized];
+    final whereArgs = <dynamic>[registrationNumber];
 
     if (excludeId != null) {
       where += ' AND id != ?';

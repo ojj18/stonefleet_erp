@@ -1,91 +1,111 @@
 class ExcavatorModel {
   final int? id;
+
+  // Vehicle details
   final String registrationNumber;
-  final int manufacturerId;
-  final int modelId;
+  final String? manufacturerName;
+  final String? modelName;
   final int? manufacturingYear;
-  final bool status;
+
+  // Document expiry
   final String? insuranceExpiry;
   final String? fcExpiry;
   final String? permitExpiry;
   final String? taxExpiry;
+
+  // Status
+  final bool status;
+
+  // Audit
   final String createdAt;
   final String? updatedAt;
 
   const ExcavatorModel({
     this.id,
     required this.registrationNumber,
-    required this.manufacturerId,
-    required this.modelId,
+    this.manufacturerName,
+    this.modelName,
     this.manufacturingYear,
-    this.status = true,
     this.insuranceExpiry,
     this.fcExpiry,
     this.permitExpiry,
     this.taxExpiry,
+    this.status = true,
     required this.createdAt,
     this.updatedAt,
   });
+
+  // ------------------------------------------------------------
+  // FROM MAP
+  // ------------------------------------------------------------
 
   factory ExcavatorModel.fromMap(Map<String, dynamic> map) {
     return ExcavatorModel(
       id: map['id'] as int?,
       registrationNumber: map['registration_number'] as String,
-      manufacturerId: map['manufacturer_id'] as int,
-      modelId: map['model_id'] as int,
+      manufacturerName: map['manufacturer_name'] as String?,
+      modelName: map['model_name'] as String?,
       manufacturingYear: map['manufacturing_year'] as int?,
-      status: (map['status'] as int? ?? 1) == 1,
       insuranceExpiry: map['insurance_expiry'] as String?,
       fcExpiry: map['fc_expiry'] as String?,
       permitExpiry: map['permit_expiry'] as String?,
       taxExpiry: map['tax_expiry'] as String?,
+      status: (map['status'] as int? ?? 1) == 1,
       createdAt: map['created_at'] as String,
       updatedAt: map['updated_at'] as String?,
     );
   }
 
+  // ------------------------------------------------------------
+  // TO MAP
+  // ------------------------------------------------------------
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'registration_number': registrationNumber,
-      'manufacturer_id': manufacturerId,
-      'model_id': modelId,
+      'manufacturer_name': manufacturerName,
+      'model_name': modelName,
       'manufacturing_year': manufacturingYear,
-      'status': status ? 1 : 0,
       'insurance_expiry': insuranceExpiry,
       'fc_expiry': fcExpiry,
       'permit_expiry': permitExpiry,
       'tax_expiry': taxExpiry,
+      'status': status ? 1 : 0,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
   }
 
+  // ------------------------------------------------------------
+  // COPY WITH
+  // ------------------------------------------------------------
+
   ExcavatorModel copyWith({
     int? id,
     String? registrationNumber,
-    int? manufacturerId,
-    int? modelId,
+    String? manufacturerName,
+    String? modelName,
     int? manufacturingYear,
-    bool? status,
     String? insuranceExpiry,
     String? fcExpiry,
     String? permitExpiry,
     String? taxExpiry,
+    bool? status,
     String? createdAt,
     String? updatedAt,
   }) {
     return ExcavatorModel(
       id: id ?? this.id,
       registrationNumber: registrationNumber ?? this.registrationNumber,
-      manufacturerId: manufacturerId ?? this.manufacturerId,
-      modelId: modelId ?? this.modelId,
+      manufacturerName: manufacturerName ?? this.manufacturerName,
+      modelName: modelName ?? this.modelName,
       manufacturingYear: manufacturingYear ?? this.manufacturingYear,
-      status: status ?? this.status,
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       fcExpiry: fcExpiry ?? this.fcExpiry,
       permitExpiry: permitExpiry ?? this.permitExpiry,
       taxExpiry: taxExpiry ?? this.taxExpiry,
+      status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

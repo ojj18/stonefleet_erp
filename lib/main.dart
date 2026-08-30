@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'core/database/database_helper.dart';
 
+import 'data/services/vehicle_api_service.dart';
+import 'data/services/way2api_service.dart';
 import 'features/excavator/master/providers/excavator_master_provider.dart';
 
 import 'features/excavator/master/providers/excavator_provider.dart';
@@ -22,12 +26,39 @@ Future<void> main() async {
   final db = await DatabaseHelper.instance.database;
 
   debugPrint('DB PATH: ${db.path}');
+  await testVehicleApi();
 
   // ------------------------------------------------------------
   // APP
   // ------------------------------------------------------------
 
   runApp(const StoneFleetApp());
+}
+
+// Future<void> testVehicleApi() async {
+//   final service = Way2ApiService();
+
+//   try {
+//     final response = await service.getVehicleDetails('TN25CM5143');
+
+//     debugPrint(const JsonEncoder.withIndent('  ').convert(response));
+//   } catch (e) {
+//     debugPrint('WAY2API ERROR: $e');
+//   }
+// }
+
+Future<void> testVehicleApi() async {
+  final service = VehicleApiService(apiKey: 'pk_test_21wtgca020zjlcghkfo7038');
+
+  try {
+    final result = await service.getVehicleDetails('TN25CM5143');
+
+    print('VEHICLE RESPONSE:');
+    print(result);
+  } catch (e) {
+    print('VEHICLE API ERROR:');
+    print(e);
+  }
 }
 
 class StoneFleetApp extends StatelessWidget {
