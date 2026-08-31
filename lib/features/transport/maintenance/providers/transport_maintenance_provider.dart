@@ -9,12 +9,22 @@ class TransportMaintenanceProvider extends ChangeNotifier {
   TransportMaintenanceProvider({TransportMaintenanceRepository? repository})
     : _repository = repository ?? TransportMaintenanceRepository();
 
-  List<TransportMaintenanceModel> _records = [];
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  List<TransportMaintenanceModel> _maintenance = [];
 
   bool _isLoading = false;
+
   String? _error;
 
-  List<TransportMaintenanceModel> get records => List.unmodifiable(_records);
+  // ============================================================
+  // GETTERS
+  // ============================================================
+
+  List<TransportMaintenanceModel> get maintenance =>
+      List.unmodifiable(_maintenance);
 
   bool get isLoading => _isLoading;
 
@@ -29,24 +39,7 @@ class TransportMaintenanceProvider extends ChangeNotifier {
     _error = null;
 
     try {
-      _records = await _repository.getAll();
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  // ============================================================
-  // LOAD BY VEHICLE
-  // ============================================================
-
-  Future<void> loadByVehicle(int vehicleId) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      _records = await _repository.getByVehicle(vehicleId);
+      _maintenance = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -64,7 +57,23 @@ class TransportMaintenanceProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+
       return null;
+    }
+  }
+
+  // ============================================================
+  // GET BY VEHICLE
+  // ============================================================
+
+  Future<List<TransportMaintenanceModel>> getByVehicleId(int vehicleId) async {
+    try {
+      return await _repository.getByVehicleId(vehicleId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return [];
     }
   }
 
@@ -78,11 +87,13 @@ class TransportMaintenanceProvider extends ChangeNotifier {
 
     try {
       await _repository.insert(model);
-      _records = await _repository.getAll();
+
+      _maintenance = await _repository.getAll();
 
       return true;
     } catch (e) {
       _error = e.toString();
+
       return false;
     } finally {
       _setLoading(false);
@@ -99,11 +110,13 @@ class TransportMaintenanceProvider extends ChangeNotifier {
 
     try {
       await _repository.update(model);
-      _records = await _repository.getAll();
+
+      _maintenance = await _repository.getAll();
 
       return true;
     } catch (e) {
       _error = e.toString();
+
       return false;
     } finally {
       _setLoading(false);
@@ -120,11 +133,13 @@ class TransportMaintenanceProvider extends ChangeNotifier {
 
     try {
       await _repository.delete(id);
-      _records = await _repository.getAll();
+
+      _maintenance = await _repository.getAll();
 
       return true;
     } catch (e) {
       _error = e.toString();
+
       return false;
     } finally {
       _setLoading(false);
@@ -132,27 +147,62 @@ class TransportMaintenanceProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // COUNT
+  // TOTAL KM
   // ============================================================
 
-  Future<int> getCount() async {
+  Future<double> getTotalKm() async {
     try {
-      return await _repository.getCount();
+      return await _repository.getTotalKm();
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+
       return 0;
     }
   }
 
   // ============================================================
-  // HELPERS
+  // TOTAL DIESEL
+  // ============================================================
+
+  Future<double> getTotalDiesel() async {
+    try {
+      return await _repository.getTotalDiesel();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return 0;
+    }
+  }
+
+  // ============================================================
+  // TOTAL DIESEL EXPENSE
+  // ============================================================
+
+  Future<double> getTotalDieselExpense() async {
+    try {
+      return await _repository.getTotalDieselExpense();
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return 0;
+    }
+  }
+
+  // ============================================================
+  // CLEAR ERROR
   // ============================================================
 
   void clearError() {
     _error = null;
     notifyListeners();
   }
+
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   void _setLoading(bool value) {
     _isLoading = value;

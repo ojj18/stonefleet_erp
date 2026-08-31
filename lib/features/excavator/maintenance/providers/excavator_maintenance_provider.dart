@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 
+import '../../../../data/models/excavator_maintenance_list_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 import '../../../../data/repositories/excavator_maintenance_repository.dart';
 
@@ -19,6 +20,11 @@ class ExcavatorMaintenanceProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   String? get error => _error;
+
+  List<ExcavatorMaintenanceListModel> _listRecords = [];
+
+  List<ExcavatorMaintenanceListModel> get listRecords =>
+      List.unmodifiable(_listRecords);
 
   // ------------------------------------------------------------
   // LOAD ALL
@@ -64,7 +70,11 @@ class ExcavatorMaintenanceProvider extends ChangeNotifier {
 
     try {
       await _repository.insert(model);
+
       _records = await _repository.getAll();
+
+      _listRecords = await _repository.getAllWithExcavator();
+
       return true;
     } catch (e) {
       _error = e.toString();
@@ -154,5 +164,18 @@ class ExcavatorMaintenanceProvider extends ChangeNotifier {
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();
+  }
+
+  Future<void> loadMaintenanceList() async {
+    _setLoading(true);
+    _error = null;
+
+    try {
+      _listRecords = await _repository.getAllWithExcavator();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _setLoading(false);
+    }
   }
 }

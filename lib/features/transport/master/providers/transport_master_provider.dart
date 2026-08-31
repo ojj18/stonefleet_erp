@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../data/models/transport_master_model.dart';
-import '../../../../data/repositories/transport_repository.dart';
+import '../../../../data/models/transport_vehicle_model.dart';
+import '../../../../data/repositories/transport_vehicle_repository.dart';
 
 class TransportProvider extends ChangeNotifier {
   final TransportRepository _repository;
@@ -9,27 +9,35 @@ class TransportProvider extends ChangeNotifier {
   TransportProvider({TransportRepository? repository})
     : _repository = repository ?? TransportRepository();
 
-  List<TransportModel> _models = [];
+  // ============================================================
+  // STATE
+  // ============================================================
+
+  List<TransportModel> _vehicles = [];
 
   bool _isLoading = false;
   String? _error;
 
-  List<TransportModel> get models => List.unmodifiable(_models);
+  // ============================================================
+  // GETTERS
+  // ============================================================
+
+  List<TransportModel> get vehicles => List.unmodifiable(_vehicles);
 
   bool get isLoading => _isLoading;
 
   String? get error => _error;
 
   // ============================================================
-  // LOAD ALL MODELS
+  // LOAD ALL
   // ============================================================
 
-  Future<void> loadModels() async {
+  Future<void> loadVehicles() async {
     _setLoading(true);
     _error = null;
 
     try {
-      _models = await _repository.getAll();
+      _vehicles = await _repository.getAll();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -38,15 +46,15 @@ class TransportProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // LOAD BY MANUFACTURER
+  // LOAD ACTIVE
   // ============================================================
 
-  Future<void> loadByManufacturer(int manufacturerId) async {
+  Future<void> loadActiveVehicles() async {
     _setLoading(true);
     _error = null;
 
     try {
-      _models = await _repository.getByManufacturer(manufacturerId);
+      _vehicles = await _repository.getActive();
     } catch (e) {
       _error = e.toString();
     } finally {
@@ -69,16 +77,33 @@ class TransportProvider extends ChangeNotifier {
   }
 
   // ============================================================
+  // GET BY REGISTRATION NUMBER
+  // ============================================================
+
+  Future<TransportModel?> getByRegistrationNumber(
+    String registrationNumber,
+  ) async {
+    try {
+      return await _repository.getByRegistrationNumber(registrationNumber);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return null;
+    }
+  }
+
+  // ============================================================
   // ADD
   // ============================================================
 
-  Future<bool> addModel(TransportModel model) async {
+  Future<bool> addVehicle(TransportModel model) async {
     _setLoading(true);
     _error = null;
 
     try {
       await _repository.insert(model);
-      _models = await _repository.getAll();
+
+      _vehicles = await _repository.getAll();
 
       return true;
     } catch (e) {
@@ -93,13 +118,14 @@ class TransportProvider extends ChangeNotifier {
   // UPDATE
   // ============================================================
 
-  Future<bool> updateModel(TransportModel model) async {
+  Future<bool> updateVehicle(TransportModel model) async {
     _setLoading(true);
     _error = null;
 
     try {
       await _repository.update(model);
-      _models = await _repository.getAll();
+
+      _vehicles = await _repository.getAll();
 
       return true;
     } catch (e) {
@@ -114,13 +140,14 @@ class TransportProvider extends ChangeNotifier {
   // DELETE
   // ============================================================
 
-  Future<bool> deleteModel(int id) async {
+  Future<bool> deleteVehicle(int id) async {
     _setLoading(true);
     _error = null;
 
     try {
       await _repository.delete(id);
-      _models = await _repository.getAll();
+
+      _vehicles = await _repository.getAll();
 
       return true;
     } catch (e) {
@@ -132,13 +159,17 @@ class TransportProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // HELPERS
+  // CLEAR ERROR
   // ============================================================
 
   void clearError() {
     _error = null;
     notifyListeners();
   }
+
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   void _setLoading(bool value) {
     _isLoading = value;

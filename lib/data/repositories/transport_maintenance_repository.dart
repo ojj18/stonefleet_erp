@@ -1,6 +1,5 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../../core/constants/table_constants.dart';
 import '../../core/database/database_helper.dart';
 import '../models/transport_maintenance_model.dart';
 
@@ -10,92 +9,148 @@ class TransportMaintenanceRepository {
   TransportMaintenanceRepository({DatabaseHelper? databaseHelper})
     : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
 
+  // ============================================================
+  // INSERT
+  // ============================================================
+
+  Future<int> insert(TransportMaintenanceModel model) async {
+    final db = await _databaseHelper.database;
+
+    return await db.insert(
+      'transport_maintenance',
+      model.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+  }
+
+  // ============================================================
+  // GET ALL
+  // ============================================================
+
   Future<List<TransportMaintenanceModel>> getAll() async {
     final db = await _databaseHelper.database;
 
-    final result = await db.query(
-      TableConstants.transportMaintenance,
-      orderBy: 'created_at DESC',
-    );
+    final result = await db.query('transport_maintenance', orderBy: 'id DESC');
 
-    return result.map(TransportMaintenanceModel.fromMap).toList();
+    return result.map((map) => TransportMaintenanceModel.fromMap(map)).toList();
   }
 
-  Future<List<TransportMaintenanceModel>> getByVehicle(int vehicleId) async {
-    final db = await _databaseHelper.database;
-
-    final result = await db.query(
-      TableConstants.transportMaintenance,
-      where: 'transport_vehicle_id = ?',
-      whereArgs: [vehicleId],
-      orderBy: 'created_at DESC',
-    );
-
-    return result.map(TransportMaintenanceModel.fromMap).toList();
-  }
+  // ============================================================
+  // GET BY ID
+  // ============================================================
 
   Future<TransportMaintenanceModel?> getById(int id) async {
     final db = await _databaseHelper.database;
 
     final result = await db.query(
-      TableConstants.transportMaintenance,
+      'transport_maintenance',
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
     );
 
-    if (result.isEmpty) return null;
+    if (result.isEmpty) {
+      return null;
+    }
 
     return TransportMaintenanceModel.fromMap(result.first);
   }
 
-  Future<int> insert(TransportMaintenanceModel model) async {
+  // ============================================================
+  // GET BY VEHICLE
+  // ============================================================
+
+  Future<List<TransportMaintenanceModel>> getByVehicleId(
+    int transportVehicleId,
+  ) async {
     final db = await _databaseHelper.database;
 
-    final data = model.toMap()..remove('id');
-
-    return db.insert(
-      TableConstants.transportMaintenance,
-      data,
-      conflictAlgorithm: ConflictAlgorithm.abort,
+    final result = await db.query(
+      'transport_maintenance',
+      where: 'transport_vehicle_id = ?',
+      whereArgs: [transportVehicleId],
+      orderBy: 'id DESC',
     );
+
+    return result.map((map) => TransportMaintenanceModel.fromMap(map)).toList();
   }
+
+  // ============================================================
+  // UPDATE
+  // ============================================================
 
   Future<int> update(TransportMaintenanceModel model) async {
     if (model.id == null) {
-      throw ArgumentError('Transport maintenance ID is required.');
+      throw ArgumentError('Maintenance ID is required for update.');
     }
 
     final db = await _databaseHelper.database;
 
-    final data = model.toMap()..remove('id');
-
-    return db.update(
-      TableConstants.transportMaintenance,
-      data,
+    return await db.update(
+      'transport_maintenance',
+      model.toMap(),
       where: 'id = ?',
       whereArgs: [model.id],
     );
   }
 
+  // ============================================================
+  // DELETE
+  // ============================================================
+
   Future<int> delete(int id) async {
     final db = await _databaseHelper.database;
 
-    return db.delete(
-      TableConstants.transportMaintenance,
+    return await db.delete(
+      'transport_maintenance',
       where: 'id = ?',
       whereArgs: [id],
     );
   }
 
-  Future<int> getCount() async {
+  // ============================================================
+  // TOTAL KM
+  // ============================================================
+
+  Future<double> getTotalKm() async {
     final db = await _databaseHelper.database;
 
     final result = await db.rawQuery('''
-      SELECT COUNT(*) AS count
-      FROM ${TableConstants.transportMaintenance}
+      SELECT COALESCE(SUM(total_km), 0) AS total_km
+      FROM transport_maintenance
       ''');
 
-    return (result.first['count'] as int?) ?? 0;
+    return ((result.first['total_km'] as num?) ?? 0).toDouble();
+  }
+
+  // ============================================================
+  // TOTAL DIESEL
+  // ============================================================
+
+  Future<double> getTotalDiesel() async {
+    final db = await _databaseHelper.database;
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(diesel_filled), 0) AS total_diesel
+      FROM transport_maintenance
+      ''');
+
+    return ((result.first['total_diesel'] as num?) ?? 0).toDouble();
+  }
+
+  // ============================================================
+  // TOTAL DIESEL EXPENSE
+  // ============================================================
+
+  Future<double> getTotalDieselExpense() async {
+    final db = await _databaseHelper.database;
+
+    final result = await db.rawQuery('''
+      SELECT COALESCE(SUM(diesel_expense), 0)
+      AS total_expense
+      FROM transport_maintenance
+      ''');
+
+    return ((result.first['total_expense'] as num?) ?? 0).toDouble();
   }
 }

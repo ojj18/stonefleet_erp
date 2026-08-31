@@ -1,17 +1,32 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:stonefleet_erp/features/dashboard/screen/dashboard_screen.dart';
 
 import 'core/database/database_helper.dart';
 
 import 'data/services/vehicle_api_service.dart';
-import 'data/services/way2api_service.dart';
-import 'features/excavator/master/providers/excavator_master_provider.dart';
 
+// ============================================================
+// EXCAVATOR
+// ============================================================
+
+import 'features/dashboard/provider/dashboard_provider.dart';
+import 'features/excavator/master/providers/excavator_master_provider.dart';
 import 'features/excavator/master/providers/excavator_provider.dart';
 import 'features/excavator/master/screens/excavator_master_screen.dart';
+
+import 'features/excavator/maintenance/providers/excavator_maintenance_provider.dart';
+
+import 'features/excavator/service/providers/excavator_service_provider.dart';
+
+// ============================================================
+// TRANSPORT
+// ============================================================
+
+import 'features/transport/maintenance/providers/transport_maintenance_provider.dart';
+import 'features/transport/master/providers/transport_master_provider.dart';
+import 'features/transport/service/providers/transport_service_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,11 +36,17 @@ Future<void> main() async {
   // ------------------------------------------------------------
 
   sqfliteFfiInit();
+
   databaseFactory = databaseFactoryFfi;
 
   final db = await DatabaseHelper.instance.database;
 
   debugPrint('DB PATH: ${db.path}');
+
+  // ------------------------------------------------------------
+  // TEST VEHICLE API
+  // ------------------------------------------------------------
+
   await testVehicleApi();
 
   // ------------------------------------------------------------
@@ -35,17 +56,9 @@ Future<void> main() async {
   runApp(const StoneFleetApp());
 }
 
-// Future<void> testVehicleApi() async {
-//   final service = Way2ApiService();
-
-//   try {
-//     final response = await service.getVehicleDetails('TN25CM5143');
-
-//     debugPrint(const JsonEncoder.withIndent('  ').convert(response));
-//   } catch (e) {
-//     debugPrint('WAY2API ERROR: $e');
-//   }
-// }
+// ============================================================
+// VEHICLE API TEST
+// ============================================================
 
 Future<void> testVehicleApi() async {
   final service = VehicleApiService(apiKey: 'pk_test_21wtgca020zjlcghkfo7038');
@@ -53,13 +66,17 @@ Future<void> testVehicleApi() async {
   try {
     final result = await service.getVehicleDetails('TN25CM5143');
 
-    print('VEHICLE RESPONSE:');
-    print(result);
+    debugPrint('VEHICLE RESPONSE:');
+    debugPrint(result.toString());
   } catch (e) {
-    print('VEHICLE API ERROR:');
-    print(e);
+    debugPrint('VEHICLE API ERROR:');
+    debugPrint(e.toString());
   }
 }
+
+// ============================================================
+// APP
+// ============================================================
 
 class StoneFleetApp extends StatelessWidget {
   const StoneFleetApp({super.key});
@@ -68,21 +85,62 @@ class StoneFleetApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // --------------------------------------------------------
+        // ========================================================
         // REGISTERED EXCAVATORS
-        // --------------------------------------------------------
+        // ========================================================
         ChangeNotifierProvider(
           create: (_) => ExcavatorProvider()..loadExcavators(),
         ),
 
-        // --------------------------------------------------------
+        // ========================================================
         // EXCAVATOR MASTER MODELS
-        // --------------------------------------------------------
+        // ========================================================
         ChangeNotifierProvider(
           create: (_) => ExcavatorMasterProvider()..loadModels(),
         ),
+
+        // ========================================================
+        // EXCAVATOR MAINTENANCE
+        // ========================================================
+        ChangeNotifierProvider(
+          create: (_) => ExcavatorMaintenanceProvider()..loadMaintenance(),
+        ),
+
+        // ========================================================
+        // EXCAVATOR SERVICE
+        // ========================================================
+        ChangeNotifierProvider(
+          create: (_) => ExcavatorServiceProvider()..loadServices(),
+        ),
+
+        // ========================================================
+        // TRANSPORT MASTER
+        // ========================================================
+        ChangeNotifierProvider(
+          create: (_) => TransportProvider()..loadVehicles(),
+        ),
+
+        // ============================================================
+        // TRANSPORT MAINTENANCE
+        // ============================================================
+        ChangeNotifierProvider(
+          create: (_) => TransportMaintenanceProvider()..loadMaintenance(),
+        ),
+        // --------------------------------------------------------
+        // TRANSPORT SERVICE
+        // --------------------------------------------------------
+        ChangeNotifierProvider(
+          create: (_) => TransportServiceProvider()..loadServices(),
+        ),
+        // --------------------------------------------------------
+        // Dashboard
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => DashboardProvider()),
       ],
 
+      // ==========================================================
+      // MATERIAL APP
+      // ==========================================================
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
 
@@ -99,6 +157,7 @@ class StoneFleetApp extends StatelessWidget {
 
           inputDecorationTheme: const InputDecorationTheme(
             filled: true,
+
             fillColor: Colors.white,
 
             border: OutlineInputBorder(
@@ -107,7 +166,10 @@ class StoneFleetApp extends StatelessWidget {
           ),
         ),
 
-        home: const ExcavatorMasterScreen(),
+        // --------------------------------------------------------
+        // INITIAL SCREEN
+        // --------------------------------------------------------
+        home: const DashboardScreen(),
       ),
     );
   }

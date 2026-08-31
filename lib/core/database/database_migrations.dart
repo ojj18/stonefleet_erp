@@ -92,32 +92,29 @@ class DatabaseMigrations {
     // 5. TRANSPORT VEHICLES
     // ============================================================
     await db.execute('''
-      CREATE TABLE transport_vehicles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        registration_number TEXT NOT NULL UNIQUE,
-        manufacturer_id INTEGER NOT NULL,
-        model_id INTEGER NOT NULL,
-        manufacturing_year INTEGER,
-        emission_standard TEXT,
-        status INTEGER NOT NULL DEFAULT 1,
-        insurance_expiry TEXT,
-        fc_expiry TEXT,
-        permit_expiry TEXT,
-        tax_expiry TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT,
+  CREATE TABLE transport_vehicles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-        FOREIGN KEY (manufacturer_id)
-          REFERENCES manufacturers(id)
-          ON DELETE RESTRICT
-          ON UPDATE CASCADE,
+    registration_number TEXT NOT NULL UNIQUE,
 
-        FOREIGN KEY (model_id)
-          REFERENCES transport_models(id)
-          ON DELETE RESTRICT
-          ON UPDATE CASCADE
-      )
-    ''');
+    manufacturer_name TEXT,
+    model_name TEXT,
+
+    manufacturing_year INTEGER,
+
+    emission_standard TEXT,
+
+    status INTEGER NOT NULL DEFAULT 1,
+
+    insurance_expiry TEXT,
+    fc_expiry TEXT,
+    permit_expiry TEXT,
+    tax_expiry TEXT,
+
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
 
     // ============================================================
     // 6. SPARES
@@ -386,6 +383,16 @@ class DatabaseMigrations {
     await DatabaseSeed.seed(db);
   }
 
+  static Future<bool> _hasColumn(
+    Database db,
+    String tableName,
+    String columnName,
+  ) async {
+    final result = await db.rawQuery('PRAGMA table_info($tableName)');
+
+    return result.any((column) => column['name'] == columnName);
+  }
+
   static Future<void> onUpgrade(
     Database db,
     int oldVersion,
@@ -393,101 +400,245 @@ class DatabaseMigrations {
   ) async {
     // ============================================================
     // VERSION 2
-    // Change excavators table:
-    //
-    // OLD:
-    // manufacturer_id
-    // model_id
-    //
-    // NEW:
-    // manufacturer_name
-    // model_name
+    // EXCAVATOR MIGRATION
     // ============================================================
 
     if (oldVersion < 2) {
-      await db.transaction((txn) async {
-        // ----------------------------------------------------------
-        // 1. Create new excavators table
-        // ----------------------------------------------------------
+      final excavatorHasManufacturerId = await _hasColumn(
+        db,
+        'excavators',
+        'manufacturer_id',
+      );
 
-        await txn.execute('''
-        CREATE TABLE excavators_new (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
+      final excavatorHasModelId = await _hasColumn(
+        db,
+        'excavators',
+        'model_id',
+      );
 
-          registration_number TEXT NOT NULL UNIQUE,
+      // ----------------------------------------------------------
+      // Only migrate if the OLD columns actually exist.
+      //
+      // This is important because some development databases
+      // may already contain the new excavator schema.
+      // ----------------------------------------------------------
 
-          manufacturer_name TEXT,
-          model_name TEXT,
-          manufacturing_year INTEGER,
+      if (excavatorHasManufacturerId || excavatorHasModelId) {
+        await db.transaction((txn) async {
+          // --------------------------------------------------------
+          // 1. Create new excavators table
+          // --------------------------------------------------------
 
-          status INTEGER NOT NULL DEFAULT 1,
+          await txn.execute('''
+          CREATE TABLE excavators_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-          insurance_expiry TEXT,
-          fc_expiry TEXT,
-          permit_expiry TEXT,
-          tax_expiry TEXT,
+            registration_number TEXT NOT NULL UNIQUE,
 
-          created_at TEXT NOT NULL,
-          updated_at TEXT
-        )
-      ''');
+            manufacturer_name TEXT,
+            model_name TEXT,
+            manufacturing_year INTEGER,
 
-        // ----------------------------------------------------------
-        // 2. Copy existing excavator data
-        //
-        // Manufacturer/model names are obtained from their
-        // existing master tables.
-        // ----------------------------------------------------------
+            status INTEGER NOT NULL DEFAULT 1,
 
-        await txn.execute('''
-        INSERT INTO excavators_new (
-          id,
-          registration_number,
-          manufacturer_name,
-          model_name,
-          manufacturing_year,
-          status,
-          insurance_expiry,
-          fc_expiry,
-          permit_expiry,
-          tax_expiry,
-          created_at,
-          updated_at
-        )
-        SELECT
-          e.id,
-          e.registration_number,
-          m.name,
-          em.model_name,
-          e.manufacturing_year,
-          e.status,
-          e.insurance_expiry,
-          e.fc_expiry,
-          e.permit_expiry,
-          e.tax_expiry,
-          e.created_at,
-          e.updated_at
-        FROM excavators e
-        LEFT JOIN manufacturers m
-          ON m.id = e.manufacturer_id
-        LEFT JOIN excavator_models em
-          ON em.id = e.model_id
-      ''');
+            insurance_expiry TEXT,
+            fc_expiry TEXT,
+            permit_expiry TEXT,
+            tax_expiry TEXT,
 
-        // ----------------------------------------------------------
-        // 3. Remove old table
-        // ----------------------------------------------------------
+            created_at TEXT NOT NULL,
+            updated_at TEXT
+          )
+        ''');
 
-        await txn.execute('DROP TABLE excavators');
+          // --------------------------------------------------------
+          // 2. Copy old data
+          // --------------------------------------------------------
 
-        // ----------------------------------------------------------
-        // 4. Rename new table
-        // ----------------------------------------------------------
+          await txn.execute('''
+          INSERT INTO excavators_new (
+            id,
+            registration_number,
+            manufacturer_name,
+            model_name,
+            manufacturing_year,
+            status,
+            insurance_expiry,
+            fc_expiry,
+            permit_expiry,
+            tax_expiry,
+            created_at,
+            updated_at
+          )
+          SELECT
+            e.id,
+            e.registration_number,
+            m.name,
+            em.model_name,
+            e.manufacturing_year,
+            e.status,
+            e.insurance_expiry,
+            e.fc_expiry,
+            e.permit_expiry,
+            e.tax_expiry,
+            e.created_at,
+            e.updated_at
+          FROM excavators e
+          LEFT JOIN manufacturers m
+            ON m.id = e.manufacturer_id
+          LEFT JOIN excavator_models em
+            ON em.id = e.model_id
+        ''');
 
-        await txn.execute('ALTER TABLE excavators_new RENAME TO excavators');
-      });
+          // --------------------------------------------------------
+          // 3. Drop old table
+          // --------------------------------------------------------
 
-      log('Database migrated to version 2: excavator vehicle data updated.');
+          await txn.execute('DROP TABLE excavators');
+
+          // --------------------------------------------------------
+          // 4. Rename new table
+          // --------------------------------------------------------
+
+          await txn.execute(
+            'ALTER TABLE excavators_new '
+            'RENAME TO excavators',
+          );
+        });
+
+        log(
+          'Database migrated to version 2: '
+          'excavator schema updated.',
+        );
+      } else {
+        log(
+          'Database version 2: '
+          'excavator schema already updated. '
+          'Migration skipped.',
+        );
+      }
+    }
+
+    // ============================================================
+    // VERSION 3
+    // TRANSPORT MIGRATION
+    // ============================================================
+
+    if (oldVersion < 3) {
+      final transportHasManufacturerId = await _hasColumn(
+        db,
+        'transport_vehicles',
+        'manufacturer_id',
+      );
+
+      final transportHasModelId = await _hasColumn(
+        db,
+        'transport_vehicles',
+        'model_id',
+      );
+
+      // ----------------------------------------------------------
+      // Only migrate if old Transport columns exist.
+      // ----------------------------------------------------------
+
+      if (transportHasManufacturerId || transportHasModelId) {
+        await db.transaction((txn) async {
+          // --------------------------------------------------------
+          // 1. Create new transport table
+          // --------------------------------------------------------
+
+          await txn.execute('''
+          CREATE TABLE transport_vehicles_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            registration_number TEXT NOT NULL UNIQUE,
+
+            manufacturer_name TEXT,
+            model_name TEXT,
+            manufacturing_year INTEGER,
+
+            emission_standard TEXT,
+
+            status INTEGER NOT NULL DEFAULT 1,
+
+            insurance_expiry TEXT,
+            fc_expiry TEXT,
+            permit_expiry TEXT,
+            tax_expiry TEXT,
+
+            created_at TEXT NOT NULL,
+            updated_at TEXT
+          )
+        ''');
+
+          // --------------------------------------------------------
+          // 2. Copy existing Transport data
+          // --------------------------------------------------------
+
+          await txn.execute('''
+          INSERT INTO transport_vehicles_new (
+            id,
+            registration_number,
+            manufacturer_name,
+            model_name,
+            manufacturing_year,
+            emission_standard,
+            status,
+            insurance_expiry,
+            fc_expiry,
+            permit_expiry,
+            tax_expiry,
+            created_at,
+            updated_at
+          )
+          SELECT
+            t.id,
+            t.registration_number,
+            m.name,
+            tm.model_name,
+            t.manufacturing_year,
+            t.emission_standard,
+            t.status,
+            t.insurance_expiry,
+            t.fc_expiry,
+            t.permit_expiry,
+            t.tax_expiry,
+            t.created_at,
+            t.updated_at
+          FROM transport_vehicles t
+          LEFT JOIN manufacturers m
+            ON m.id = t.manufacturer_id
+          LEFT JOIN transport_models tm
+            ON tm.id = t.model_id
+        ''');
+
+          // --------------------------------------------------------
+          // 3. Drop old Transport table
+          // --------------------------------------------------------
+
+          await txn.execute('DROP TABLE transport_vehicles');
+
+          // --------------------------------------------------------
+          // 4. Rename new table
+          // --------------------------------------------------------
+
+          await txn.execute(
+            'ALTER TABLE transport_vehicles_new '
+            'RENAME TO transport_vehicles',
+          );
+        });
+
+        log(
+          'Database migrated to version 3: '
+          'transport schema updated.',
+        );
+      } else {
+        log(
+          'Database version 3: '
+          'transport schema already updated. '
+          'Migration skipped.',
+        );
+      }
     }
   }
 }

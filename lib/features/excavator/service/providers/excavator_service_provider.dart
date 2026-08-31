@@ -297,4 +297,15 @@ class ExcavatorServiceProvider extends ChangeNotifier {
     _isLoading = value;
     notifyListeners();
   }
+
+  Future<List<ExcavatorServiceItemModel>> getItems(int serviceId) async {
+    try {
+      _error = null;
+      return await _repository.getItems(serviceId);
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return [];
+    }
+  }
 }

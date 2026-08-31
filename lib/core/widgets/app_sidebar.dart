@@ -1,115 +1,163 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/features/transport/maintenance/screens/transport_maintenance_screen.dart';
+import 'package:stonefleet_erp/features/transport/master/screens/transport_master_screen.dart';
+import 'package:stonefleet_erp/features/transport/service/screens/transport_service_screen.dart';
 
-class SideBar extends StatelessWidget {
-  const SideBar({super.key});
+import '../../features/dashboard/screen/dashboard_screen.dart';
+import '../../features/excavator/maintenance/screens/excavator_maintenance_screen.dart';
+import '../../features/excavator/master/screens/excavator_master_screen.dart';
+import '../../features/excavator/service/screens/excavator_service_screen.dart';
+
+class AppSidebar extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onMenuTap;
+
+  const AppSidebar({
+    super.key,
+    required this.selectedIndex,
+    required this.onMenuTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: const EdgeInsets.only(top: 20),
       width: 240,
-      height: double.infinity,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(right: BorderSide(color: Color(0xFFBECABC))),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      color: Colors.white,
       child: Column(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF00652C),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Icon(
-                  Icons.diamond_outlined,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'STONEFLEET',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF00652C),
-                    ),
-                  ),
-                  Text(
-                    'ERP MANAGER',
-                    style: TextStyle(
-                      fontSize: 10,
-                      letterSpacing: 1,
-                      color: Color(0xFF4E5867),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+          // Logo / App name
+          _menuItem(
+            icon: Icons.dashboard_outlined,
+            title: 'Dashboard',
+            index: 0,
           ),
-          const SizedBox(height: 32),
 
-          _navItem(icon: Icons.dashboard_outlined, title: 'Dashboard'),
-          _navItem(icon: Icons.construction_outlined, title: 'Maintenance'),
-          _navItem(icon: Icons.engineering_outlined, title: 'Service'),
-          _navItem(
-            icon: Icons.local_shipping,
-            title: 'Excavator Master',
-            active: true,
+          _menuItem(
+            icon: Icons.agriculture_outlined,
+            title: 'Excavators',
+            index: 1,
           ),
-          _navItem(icon: Icons.build_outlined, title: 'Build'),
 
-          const Spacer(),
+          _menuItem(
+            icon: Icons.build_outlined,
+            title: 'Excavator Maintenance',
+            index: 2,
+          ),
 
-          const Divider(color: Color(0xFFBECABC)),
+          _menuItem(
+            icon: Icons.handyman_outlined,
+            title: 'Excavator Service',
+            index: 3,
+          ),
 
-          _navItem(icon: Icons.account_circle_outlined, title: 'Profile'),
-          _navItem(icon: Icons.logout_outlined, title: 'Logout'),
+          _menuItem(
+            icon: Icons.local_shipping_outlined,
+            title: 'Transport',
+            index: 4,
+          ),
+
+          _menuItem(
+            icon: Icons.build_outlined,
+            title: 'Transport Maintenance',
+            index: 5,
+          ),
+
+          _menuItem(
+            icon: Icons.handyman_outlined,
+            title: 'Transport Service',
+            index: 6,
+          ),
         ],
       ),
     );
   }
 
-  Widget _navItem({
+  Widget _menuItem({
     required IconData icon,
     required String title,
-    bool active = false,
+    required int index,
   }) {
-    return Container(
-      height: 42,
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: active ? const Color(0xFFE7E8EA) : Colors.transparent,
-        border: active
-            ? const Border(left: BorderSide(color: Color(0xFF00652C), width: 4))
-            : null,
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 12),
-          Icon(
-            icon,
-            size: 20,
-            color: active ? const Color(0xFF00652C) : const Color(0xFF3F493F),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              color: active ? const Color(0xFF00652C) : const Color(0xFF3F493F),
+    final selected = selectedIndex == index;
+
+    return InkWell(
+      onTap: () => onMenuTap(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+        child: Row(
+          children: [
+            Icon(icon, color: selected ? const Color(0xFF00652C) : Colors.grey),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+}
+
+void handleMenuTap(int index, {required BuildContext? context}) {
+  switch (index) {
+    case 0:
+      // Dashboard
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+      break;
+
+    case 1:
+      // Excavator
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const ExcavatorMasterScreen()),
+      );
+      break;
+
+    case 2:
+      // Excavator Maintenance
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const ExcavatorMaintenanceScreen()),
+      );
+      break;
+
+    case 3:
+      // Excavator Service
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const ExcavatorServiceScreen()),
+      );
+      break;
+
+    case 4:
+      // Transport
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const TransportMasterScreen()),
+      );
+      break;
+
+    case 5:
+      // Transport
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const TransportMaintenanceScreen()),
+      );
+      break;
+    case 6:
+      // Transport
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const TransportServiceScreen()),
+      );
+      break;
   }
 }

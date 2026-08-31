@@ -17,18 +17,6 @@ class TransportServiceModel {
     this.updatedAt,
   });
 
-  factory TransportServiceModel.fromMap(Map<String, dynamic> map) {
-    return TransportServiceModel(
-      id: map['id'] as int?,
-      transportVehicleId: map['transport_vehicle_id'] as int,
-      serviceDate: map['service_date'] as String,
-      currentKm: (map['current_km'] as num).toDouble(),
-      remarks: map['remarks'] as String?,
-      createdAt: map['created_at'] as String,
-      updatedAt: map['updated_at'] as String?,
-    );
-  }
-
   Map<String, dynamic> toMap() {
     return {
       'id': id,
@@ -39,6 +27,18 @@ class TransportServiceModel {
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
+  }
+
+  factory TransportServiceModel.fromMap(Map<String, dynamic> map) {
+    return TransportServiceModel(
+      id: map['id'] as int?,
+      transportVehicleId: map['transport_vehicle_id'] as int,
+      serviceDate: map['service_date'] as String,
+      currentKm: (map['current_km'] as num).toDouble(),
+      remarks: map['remarks'] as String?,
+      createdAt: map['created_at'] as String,
+      updatedAt: map['updated_at'] as String?,
+    );
   }
 
   TransportServiceModel copyWith({

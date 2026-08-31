@@ -1,10 +1,8 @@
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
-import '../../core/constants/table_constants.dart';
 import '../../core/database/database_helper.dart';
-import '../models/transport_service_item_model.dart';
 import '../models/transport_service_model.dart';
-import '../models/transport_service_schedule_model.dart';
+import '../models/transport_service_item_model.dart';
 
 class TransportServiceRepository {
   final DatabaseHelper _databaseHelper;
@@ -13,75 +11,120 @@ class TransportServiceRepository {
     : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
 
   // ============================================================
-  // SERVICE
+  // GET ALL SERVICES
   // ============================================================
 
   Future<List<TransportServiceModel>> getAll() async {
     final db = await _databaseHelper.database;
 
     final result = await db.query(
-      TableConstants.transportService,
-      orderBy: 'service_date DESC',
+      'transport_service',
+      orderBy: 'service_date DESC, id DESC',
     );
 
-    return result.map(TransportServiceModel.fromMap).toList();
+    return result.map((map) => TransportServiceModel.fromMap(map)).toList();
   }
 
-  Future<List<TransportServiceModel>> getByVehicle(int vehicleId) async {
-    final db = await _databaseHelper.database;
-
-    final result = await db.query(
-      TableConstants.transportService,
-      where: 'transport_vehicle_id = ?',
-      whereArgs: [vehicleId],
-      orderBy: 'service_date DESC',
-    );
-
-    return result.map(TransportServiceModel.fromMap).toList();
-  }
+  // ============================================================
+  // GET BY ID
+  // ============================================================
 
   Future<TransportServiceModel?> getById(int id) async {
     final db = await _databaseHelper.database;
 
     final result = await db.query(
-      TableConstants.transportService,
+      'transport_service',
       where: 'id = ?',
       whereArgs: [id],
       limit: 1,
     );
 
-    if (result.isEmpty) return null;
+    if (result.isEmpty) {
+      return null;
+    }
 
     return TransportServiceModel.fromMap(result.first);
   }
 
   // ============================================================
-  // SERVICE + ITEMS TRANSACTION
+  // GET SERVICE ITEMS
   // ============================================================
 
-  Future<int> createServiceWithItems({
+  Future<List<TransportServiceItemModel>> getItems(int serviceId) async {
+    final db = await _databaseHelper.database;
+
+    final result = await db.query(
+      'transport_service_items',
+      where: 'service_id = ?',
+      whereArgs: [serviceId],
+      orderBy: 'id ASC',
+    );
+
+    return result.map((map) => TransportServiceItemModel.fromMap(map)).toList();
+  }
+
+  // ============================================================
+  // GET SERVICE WITH ITEMS
+  // ============================================================
+
+  Future<
+    ({TransportServiceModel service, List<TransportServiceItemModel> items})?
+  >
+  getByIdWithItems(int id) async {
+    final service = await getById(id);
+
+    if (service == null) {
+      return null;
+    }
+
+    final items = await getItems(id);
+
+    return (service: service, items: items);
+  }
+
+  // ============================================================
+  // INSERT SERVICE
+  // ============================================================
+
+  Future<int> insert(TransportServiceModel service) async {
+    final db = await _databaseHelper.database;
+
+    return await db.insert(
+      'transport_service',
+      service.toMap()..remove('id'),
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
+  }
+
+  // ============================================================
+  // INSERT SERVICE WITH ITEMS
+  // ============================================================
+
+  Future<int> insertWithItems({
     required TransportServiceModel service,
     required List<TransportServiceItemModel> items,
   }) async {
     final db = await _databaseHelper.database;
 
-    return db.transaction<int>((txn) async {
-      final serviceData = service.toMap()..remove('id');
+    return await db.transaction((txn) async {
+      // --------------------------------------------------------
+      // INSERT SERVICE
+      // --------------------------------------------------------
 
       final serviceId = await txn.insert(
-        TableConstants.transportService,
-        serviceData,
+        'transport_service',
+        service.toMap()..remove('id'),
         conflictAlgorithm: ConflictAlgorithm.abort,
       );
 
-      for (final item in items) {
-        final itemData = item.toMap()
-          ..remove('id')
-          ..['service_id'] = serviceId;
+      // --------------------------------------------------------
+      // INSERT ITEMS
+      // --------------------------------------------------------
 
+      for (final item in items) {
         await txn.insert(
-          TableConstants.transportServiceItems,
-          itemData,
+          'transport_service_items',
+          item.copyWith(serviceId: serviceId).toMap()..remove('id'),
           conflictAlgorithm: ConflictAlgorithm.abort,
         );
       }
@@ -90,135 +133,123 @@ class TransportServiceRepository {
     });
   }
 
-  Future<int> updateService(TransportServiceModel service) async {
+  // ============================================================
+  // UPDATE SERVICE
+  // ============================================================
+
+  Future<int> update(TransportServiceModel service) async {
     if (service.id == null) {
-      throw ArgumentError('Transport service ID is required.');
+      throw ArgumentError('Service ID is required for update.');
     }
 
     final db = await _databaseHelper.database;
 
     final data = service.toMap()..remove('id');
 
-    return db.update(
-      TableConstants.transportService,
+    return await db.update(
+      'transport_service',
       data,
       where: 'id = ?',
       whereArgs: [service.id],
     );
   }
 
-  Future<int> deleteService(int serviceId) async {
+  // ============================================================
+  // UPDATE SERVICE WITH ITEMS
+  // ============================================================
+
+  Future<void> updateWithItems({
+    required TransportServiceModel service,
+    required List<TransportServiceItemModel> items,
+  }) async {
+    if (service.id == null) {
+      throw ArgumentError('Service ID is required for update.');
+    }
+
     final db = await _databaseHelper.database;
 
-    return db.transaction<int>((txn) async {
-      await txn.delete(
-        TableConstants.transportServiceItems,
-        where: 'service_id = ?',
-        whereArgs: [serviceId],
+    await db.transaction((txn) async {
+      // --------------------------------------------------------
+      // UPDATE SERVICE
+      // --------------------------------------------------------
+
+      final serviceData = service.toMap()..remove('id');
+
+      await txn.update(
+        'transport_service',
+        serviceData,
+        where: 'id = ?',
+        whereArgs: [service.id],
       );
 
-      return txn.delete(
-        TableConstants.transportService,
-        where: 'id = ?',
-        whereArgs: [serviceId],
+      // --------------------------------------------------------
+      // DELETE OLD ITEMS
+      // --------------------------------------------------------
+
+      await txn.delete(
+        'transport_service_items',
+        where: 'service_id = ?',
+        whereArgs: [service.id],
       );
+
+      // --------------------------------------------------------
+      // INSERT UPDATED ITEMS
+      // --------------------------------------------------------
+
+      for (final item in items) {
+        await txn.insert(
+          'transport_service_items',
+          item.copyWith(serviceId: service.id!).toMap()..remove('id'),
+          conflictAlgorithm: ConflictAlgorithm.abort,
+        );
+      }
     });
   }
 
   // ============================================================
-  // SERVICE ITEMS
+  // DELETE SERVICE
   // ============================================================
 
-  Future<List<TransportServiceItemModel>> getItems(int serviceId) async {
+  Future<int> delete(int id) async {
     final db = await _databaseHelper.database;
 
-    final result = await db.query(
-      TableConstants.transportServiceItems,
-      where: 'service_id = ?',
-      whereArgs: [serviceId],
-      orderBy: 'id ASC',
-    );
-
-    return result.map(TransportServiceItemModel.fromMap).toList();
-  }
-
-  Future<int> addItem(TransportServiceItemModel item) async {
-    final db = await _databaseHelper.database;
-
-    final data = item.toMap()..remove('id');
-
-    return db.insert(
-      TableConstants.transportServiceItems,
-      data,
-      conflictAlgorithm: ConflictAlgorithm.abort,
+    return await db.delete(
+      'transport_service',
+      where: 'id = ?',
+      whereArgs: [id],
     );
   }
+
+  // ============================================================
+  // DELETE SERVICE ITEM
+  // ============================================================
 
   Future<int> deleteItem(int itemId) async {
     final db = await _databaseHelper.database;
 
-    return db.delete(
-      TableConstants.transportServiceItems,
+    return await db.delete(
+      'transport_service_items',
       where: 'id = ?',
       whereArgs: [itemId],
     );
   }
 
   // ============================================================
-  // SERVICE SCHEDULE
+  // GET VEHICLE SERVICE HISTORY
   // ============================================================
 
-  Future<List<TransportServiceScheduleModel>> getSchedulesByModel(
-    int transportModelId,
+  Future<List<TransportServiceModel>> getByVehicleId(
+    int transportVehicleId,
   ) async {
     final db = await _databaseHelper.database;
 
     final result = await db.query(
-      TableConstants.transportServiceSchedules,
-      where: 'transport_model_id = ?',
-      whereArgs: [transportModelId],
-      orderBy: 'id ASC',
+      'transport_service',
+      where: 'transport_vehicle_id = ?',
+      whereArgs: [transportVehicleId],
+      orderBy: 'service_date DESC, id DESC',
     );
 
-    return result.map(TransportServiceScheduleModel.fromMap).toList();
-  }
-
-  Future<int> insertSchedule(TransportServiceScheduleModel schedule) async {
-    final db = await _databaseHelper.database;
-
-    final data = schedule.toMap()..remove('id');
-
-    return db.insert(
-      TableConstants.transportServiceSchedules,
-      data,
-      conflictAlgorithm: ConflictAlgorithm.abort,
-    );
-  }
-
-  Future<int> updateSchedule(TransportServiceScheduleModel schedule) async {
-    if (schedule.id == null) {
-      throw ArgumentError('Transport service schedule ID is required.');
-    }
-
-    final db = await _databaseHelper.database;
-
-    final data = schedule.toMap()..remove('id');
-
-    return db.update(
-      TableConstants.transportServiceSchedules,
-      data,
-      where: 'id = ?',
-      whereArgs: [schedule.id],
-    );
-  }
-
-  Future<int> deleteSchedule(int id) async {
-    final db = await _databaseHelper.database;
-
-    return db.delete(
-      TableConstants.transportServiceSchedules,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return result.map((map) => TransportServiceModel.fromMap(map)).toList();
   }
 }

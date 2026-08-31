@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/widgets/app_sidebar.dart';
 import '../providers/excavator_provider.dart';
 import 'excavator_master_add_edit_screen.dart';
 
@@ -37,7 +38,12 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
       backgroundColor: const Color(0xFFF8F9FB),
       body: Row(
         children: [
-          _buildSidebar(),
+          AppSidebar(
+            selectedIndex: 1,
+            onMenuTap: (index) {
+              handleMenuTap(index, context: context);
+            },
+          ),
           Expanded(
             child: Column(
               children: [
@@ -206,90 +212,87 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
           child: Column(
             children: [
               Expanded(
-                child: SingleChildScrollView(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columnSpacing: 32,
-                      headingRowColor: WidgetStateProperty.all(
-                        const Color(0xFFF3F4F6),
-                      ),
-                      columns: const [
-                        DataColumn(label: Text('REGISTRATION')),
-                        DataColumn(label: Text('MANUFACTURER')),
-                        DataColumn(label: Text('MODEL')),
-                        DataColumn(label: Text('YEAR')),
-                        DataColumn(label: Text('STATUS')),
-                        DataColumn(label: Text('COMPLIANCE')),
-                        DataColumn(label: Text('ACTIONS')),
-                      ],
-                      rows: excavators.map((excavator) {
-                        return DataRow(
-                          cells: [
-                            DataCell(
-                              Text(
-                                excavator.registrationNumber,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-
-                            DataCell(
-                              Text(
-                                'Manufacturer #'
-                                '${excavator.manufacturerId}',
-                              ),
-                            ),
-
-                            DataCell(
-                              Text(
-                                'Model #'
-                                '${excavator.modelId}',
-                              ),
-                            ),
-
-                            DataCell(
-                              Text('${excavator.manufacturingYear ?? '-'}'),
-                            ),
-
-                            DataCell(_statusChip(excavator.status)),
-
-                            DataCell(_complianceStatus(excavator)),
-
-                            DataCell(
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    tooltip: 'Edit',
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 18,
-                                    ),
-                                    onPressed: () {
-                                      _editExcavator(excavator.id!);
-                                    },
-                                  ),
-                                  IconButton(
-                                    tooltip: 'Delete',
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                    ),
-                                    color: const Color(0xFFBA1A1A),
-                                    onPressed: () {
-                                      _deleteExcavator(excavator.id!);
-                                    },
-                                  ),
-                                ],
-                              ),
-                            ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: SizedBox(
+                        width: constraints.maxWidth,
+                        child: DataTable(
+                          columnSpacing: 32,
+                          headingRowColor: WidgetStateProperty.all(
+                            const Color(0xFFF3F4F6),
+                          ),
+                          columns: const [
+                            DataColumn(label: Text('REGISTRATION')),
+                            DataColumn(label: Text('MANUFACTURER')),
+                            DataColumn(label: Text('MODEL')),
+                            DataColumn(label: Text('YEAR')),
+                            DataColumn(label: Text('STATUS')),
+                            DataColumn(label: Text('COMPLIANCE')),
+                            DataColumn(label: Text('ACTIONS')),
                           ],
-                        );
-                      }).toList(),
-                    ),
-                  ),
+                          rows: excavators.map((excavator) {
+                            return DataRow(
+                              cells: [
+                                DataCell(
+                                  Text(
+                                    excavator.registrationNumber,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+
+                                DataCell(
+                                  Text(excavator.manufacturerName ?? '-'),
+                                ),
+
+                                DataCell(Text(excavator.modelName ?? '-')),
+
+                                DataCell(
+                                  Text('${excavator.manufacturingYear ?? '-'}'),
+                                ),
+
+                                DataCell(_statusChip(excavator.status)),
+
+                                DataCell(_complianceStatus(excavator)),
+
+                                DataCell(
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        tooltip: 'Edit',
+                                        icon: const Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          _editExcavator(excavator.id!);
+                                        },
+                                      ),
+                                      IconButton(
+                                        tooltip: 'Delete',
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          size: 18,
+                                        ),
+                                        color: const Color(0xFFBA1A1A),
+                                        onPressed: () {
+                                          _deleteExcavator(excavator.id!);
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
 
@@ -572,103 +575,6 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
   }
 
   // ============================================================
-  // SIDEBAR
-  // ============================================================
-
-  Widget _buildSidebar() {
-    return Container(
-      width: 240,
-      color: Colors.white,
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-
-          const Row(
-            children: [
-              Icon(Icons.diamond_outlined, color: Color(0xFF00652C), size: 28),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'STONEFLEET',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF00652C),
-                    ),
-                  ),
-                  Text(
-                    'ERP MANAGER',
-                    style: TextStyle(
-                      fontSize: 9,
-                      letterSpacing: 1,
-                      color: Color(0xFF4E5867),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 32),
-
-          _sidebarItem(Icons.dashboard_outlined, 'Dashboard'),
-
-          _sidebarItem(
-            Icons.precision_manufacturing_outlined,
-            'Excavator',
-            active: true,
-          ),
-
-          _sidebarItem(Icons.local_shipping_outlined, 'Transport'),
-
-          _sidebarItem(Icons.build_outlined, 'Maintenance'),
-
-          _sidebarItem(Icons.engineering_outlined, 'Service'),
-
-          // const Spacer(),
-
-          // _sidebarItem(Icons.settings_outlined, 'Settings'),
-
-          // _sidebarItem(Icons.logout_outlined, 'Logout'),
-        ],
-      ),
-    );
-  }
-
-  Widget _sidebarItem(IconData icon, String title, {bool active = false}) {
-    return Container(
-      height: 44,
-      margin: const EdgeInsets.only(bottom: 5),
-      decoration: BoxDecoration(
-        color: active ? const Color(0xFFE8F5E9) : Colors.transparent,
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 12),
-          Icon(
-            icon,
-            size: 20,
-            color: active ? const Color(0xFF00652C) : const Color(0xFF4E5867),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: active ? FontWeight.w600 : FontWeight.w400,
-              color: active ? const Color(0xFF00652C) : const Color(0xFF3F493F),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ============================================================
   // TOP BAR
   // ============================================================
 
@@ -687,10 +593,10 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const Spacer(),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.notifications_outlined),
-          ),
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.notifications_outlined),
+          // ),
           const SizedBox(width: 8),
           const CircleAvatar(
             radius: 17,

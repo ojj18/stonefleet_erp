@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 
-import '../../../../data/models/transport_service_item_model.dart';
 import '../../../../data/models/transport_service_model.dart';
-import '../../../../data/models/transport_service_schedule_model.dart';
+import '../../../../data/models/transport_service_item_model.dart';
 import '../../../../data/repositories/transport_service_repository.dart';
 
 class TransportServiceProvider extends ChangeNotifier {
@@ -17,27 +16,32 @@ class TransportServiceProvider extends ChangeNotifier {
 
   List<TransportServiceModel> _services = [];
 
-  List<TransportServiceItemModel> _items = [];
-
-  List<TransportServiceScheduleModel> _schedules = [];
-
   bool _isLoading = false;
 
   String? _error;
 
+  // ============================================================
+  // SERVICE ITEMS
+  // ============================================================
+
+  final Map<int, List<TransportServiceItemModel>> _itemsCache = {};
+
+  // ============================================================
+  // GETTERS
+  // ============================================================
+
   List<TransportServiceModel> get services => List.unmodifiable(_services);
-
-  List<TransportServiceItemModel> get items => List.unmodifiable(_items);
-
-  List<TransportServiceScheduleModel> get schedules =>
-      List.unmodifiable(_schedules);
 
   bool get isLoading => _isLoading;
 
   String? get error => _error;
 
+  List<TransportServiceItemModel> getItemsForService(int serviceId) {
+    return List.unmodifiable(_itemsCache[serviceId] ?? []);
+  }
+
   // ============================================================
-  // SERVICES
+  // LOAD ALL SERVICES
   // ============================================================
 
   Future<void> loadServices() async {
@@ -53,18 +57,9 @@ class TransportServiceProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> loadByVehicle(int vehicleId) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      _services = await _repository.getByVehicle(vehicleId);
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
+  // ============================================================
+  // GET SERVICE BY ID
+  // ============================================================
 
   Future<TransportServiceModel?> getById(int id) async {
     try {
@@ -72,15 +67,61 @@ class TransportServiceProvider extends ChangeNotifier {
     } catch (e) {
       _error = e.toString();
       notifyListeners();
+
       return null;
     }
   }
 
   // ============================================================
-  // CREATE SERVICE + ITEMS
+  // GET SERVICE ITEMS
   // ============================================================
 
-  Future<int?> createService({
+  Future<List<TransportServiceItemModel>> getItems(int serviceId) async {
+    try {
+      final items = await _repository.getItems(serviceId);
+
+      _itemsCache[serviceId] = items;
+
+      notifyListeners();
+
+      return items;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return [];
+    }
+  }
+
+  // ============================================================
+  // LOAD SERVICE WITH ITEMS
+  // ============================================================
+
+  Future<
+    ({TransportServiceModel service, List<TransportServiceItemModel> items})?
+  >
+  getByIdWithItems(int id) async {
+    try {
+      final result = await _repository.getByIdWithItems(id);
+
+      if (result != null) {
+        _itemsCache[id] = result.items;
+      }
+
+      return result;
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+
+      return null;
+    }
+  }
+
+  // ============================================================
+  // ADD SERVICE
+  // ============================================================
+
+  Future<bool> addService({
     required TransportServiceModel service,
     required List<TransportServiceItemModel> items,
   }) async {
@@ -88,17 +129,26 @@ class TransportServiceProvider extends ChangeNotifier {
     _error = null;
 
     try {
-      final serviceId = await _repository.createServiceWithItems(
+      final serviceId = await _repository.insertWithItems(
         service: service,
         items: items,
       );
 
-      await loadServices();
+      final createdService = await _repository.getById(serviceId);
 
-      return serviceId;
+      if (createdService != null) {
+        _services.insert(0, createdService);
+      }
+
+      final savedItems = await _repository.getItems(serviceId);
+
+      _itemsCache[serviceId] = savedItems;
+
+      return true;
     } catch (e) {
       _error = e.toString();
-      return null;
+
+      return false;
     } finally {
       _setLoading(false);
     }
@@ -108,17 +158,41 @@ class TransportServiceProvider extends ChangeNotifier {
   // UPDATE SERVICE
   // ============================================================
 
-  Future<bool> updateService(TransportServiceModel service) async {
+  Future<bool> updateService({
+    required TransportServiceModel service,
+    required List<TransportServiceItemModel> items,
+  }) async {
+    if (service.id == null) {
+      _error = 'Service ID is required for update.';
+      notifyListeners();
+
+      return false;
+    }
+
     _setLoading(true);
     _error = null;
 
     try {
-      await _repository.updateService(service);
-      await loadServices();
+      await _repository.updateWithItems(service: service, items: items);
+
+      final updatedService = await _repository.getById(service.id!);
+
+      if (updatedService != null) {
+        final index = _services.indexWhere((item) => item.id == service.id);
+
+        if (index != -1) {
+          _services[index] = updatedService;
+        }
+      }
+
+      final updatedItems = await _repository.getItems(service.id!);
+
+      _itemsCache[service.id!] = updatedItems;
 
       return true;
     } catch (e) {
       _error = e.toString();
+
       return false;
     } finally {
       _setLoading(false);
@@ -129,17 +203,21 @@ class TransportServiceProvider extends ChangeNotifier {
   // DELETE SERVICE
   // ============================================================
 
-  Future<bool> deleteService(int serviceId) async {
+  Future<bool> deleteService(int id) async {
     _setLoading(true);
     _error = null;
 
     try {
-      await _repository.deleteService(serviceId);
-      await loadServices();
+      await _repository.delete(id);
+
+      _services.removeWhere((service) => service.id == id);
+
+      _itemsCache.remove(id);
 
       return true;
     } catch (e) {
       _error = e.toString();
+
       return false;
     } finally {
       _setLoading(false);
@@ -147,135 +225,57 @@ class TransportServiceProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // SERVICE ITEMS
+  // DELETE SERVICE ITEM
   // ============================================================
 
-  Future<void> loadItems(int serviceId) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      _items = await _repository.getItems(serviceId);
-    } catch (e) {
-      _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<bool> addItem(TransportServiceItemModel item) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      await _repository.addItem(item);
-
-      _items = await _repository.getItems(item.serviceId);
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<bool> deleteItem(int itemId, int serviceId) async {
-    _setLoading(true);
-    _error = null;
-
+  Future<bool> deleteServiceItem(int itemId, int serviceId) async {
     try {
       await _repository.deleteItem(itemId);
 
-      _items = await _repository.getItems(serviceId);
+      final items = _itemsCache[serviceId];
+
+      if (items != null) {
+        items.removeWhere((item) => item.id == itemId);
+      }
+
+      notifyListeners();
 
       return true;
     } catch (e) {
       _error = e.toString();
+      notifyListeners();
+
       return false;
-    } finally {
-      _setLoading(false);
     }
   }
 
   // ============================================================
-  // SERVICE SCHEDULES
+  // VEHICLE SERVICE HISTORY
   // ============================================================
 
-  Future<void> loadSchedules(int transportModelId) async {
-    _setLoading(true);
-    _error = null;
-
+  Future<List<TransportServiceModel>> getByVehicleId(
+    int transportVehicleId,
+  ) async {
     try {
-      _schedules = await _repository.getSchedulesByModel(transportModelId);
+      return await _repository.getByVehicleId(transportVehicleId);
     } catch (e) {
       _error = e.toString();
-    } finally {
-      _setLoading(false);
-    }
-  }
+      notifyListeners();
 
-  Future<bool> addSchedule(TransportServiceScheduleModel schedule) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      await _repository.insertSchedule(schedule);
-
-      _schedules = await _repository.getSchedulesByModel(
-        schedule.transportModelId,
-      );
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<bool> updateSchedule(TransportServiceScheduleModel schedule) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      await _repository.updateSchedule(schedule);
-
-      _schedules = await _repository.getSchedulesByModel(
-        schedule.transportModelId,
-      );
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  Future<bool> deleteSchedule(int id, int transportModelId) async {
-    _setLoading(true);
-    _error = null;
-
-    try {
-      await _repository.deleteSchedule(id);
-
-      _schedules = await _repository.getSchedulesByModel(transportModelId);
-
-      return true;
-    } catch (e) {
-      _error = e.toString();
-      return false;
-    } finally {
-      _setLoading(false);
+      return [];
     }
   }
 
   // ============================================================
-  // HELPERS
+  // REFRESH
+  // ============================================================
+
+  Future<void> refresh() async {
+    await loadServices();
+  }
+
+  // ============================================================
+  // CLEAR ERROR
   // ============================================================
 
   void clearError() {
@@ -283,15 +283,9 @@ class TransportServiceProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void clearItems() {
-    _items = [];
-    notifyListeners();
-  }
-
-  void clearSchedules() {
-    _schedules = [];
-    notifyListeners();
-  }
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   void _setLoading(bool value) {
     _isLoading = value;

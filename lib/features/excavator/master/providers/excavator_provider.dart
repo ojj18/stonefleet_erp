@@ -1,19 +1,13 @@
 import 'package:flutter/foundation.dart';
 
 import '../../../../data/models/excavator_model.dart';
-import '../../../../data/models/vehicle_rc_response.dart';
 import '../../../../data/repositories/excavator_repository.dart';
-import '../../../../data/services/way2api_service.dart';
 
 class ExcavatorProvider extends ChangeNotifier {
   final ExcavatorRepository _repository;
-  final Way2ApiService _vehicleService;
 
-  ExcavatorProvider({
-    ExcavatorRepository? repository,
-    Way2ApiService? vehicleService,
-  }) : _repository = repository ?? ExcavatorRepository(),
-       _vehicleService = vehicleService ?? Way2ApiService();
+  ExcavatorProvider({ExcavatorRepository? repository})
+    : _repository = repository ?? ExcavatorRepository();
 
   // ============================================================
   // STATE
@@ -38,7 +32,7 @@ class ExcavatorProvider extends ChangeNotifier {
   int get count => _excavators.length;
 
   // ============================================================
-  // LOAD ALL EXCAVATORS
+  // LOAD ALL
   // ============================================================
 
   Future<void> loadExcavators() async {
@@ -55,7 +49,7 @@ class ExcavatorProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // LOAD ACTIVE EXCAVATORS
+  // LOAD ACTIVE
   // ============================================================
 
   Future<void> loadActiveExcavators() async {
@@ -72,7 +66,7 @@ class ExcavatorProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // GET EXCAVATOR BY ID
+  // GET BY ID
   // ============================================================
 
   Future<ExcavatorModel?> getById(int id) async {
@@ -86,6 +80,26 @@ class ExcavatorProvider extends ChangeNotifier {
   }
 
   // ============================================================
+  // CHECK REGISTRATION EXISTS
+  // ============================================================
+
+  Future<bool> registrationExists(
+    String registrationNumber, {
+    int? excludeId,
+  }) async {
+    try {
+      return await _repository.registrationExists(
+        registrationNumber,
+        excludeId: excludeId,
+      );
+    } catch (e) {
+      _error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ============================================================
   // ADD EXCAVATOR
   // ============================================================
 
@@ -94,9 +108,19 @@ class ExcavatorProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      // Final duplicate protection.
+      final exists = await _repository.registrationExists(
+        model.registrationNumber,
+      );
+
+      if (exists) {
+        _error = 'Registration number already exists.';
+        return false;
+      }
+
       await _repository.insert(model);
 
-      // Refresh the list after insertion.
+      // Refresh list.
       _excavators = await _repository.getAll();
 
       return true;
@@ -117,9 +141,20 @@ class ExcavatorProvider extends ChangeNotifier {
     _clearError();
 
     try {
+      // During edit, exclude the current vehicle ID.
+      final exists = await _repository.registrationExists(
+        model.registrationNumber,
+        excludeId: model.id,
+      );
+
+      if (exists) {
+        _error = 'Registration number already exists.';
+        return false;
+      }
+
       await _repository.update(model);
 
-      // Refresh the list after update.
+      // Refresh list.
       _excavators = await _repository.getAll();
 
       return true;
@@ -142,7 +177,7 @@ class ExcavatorProvider extends ChangeNotifier {
     try {
       await _repository.delete(id);
 
-      // Refresh the list after deletion.
+      // Refresh list.
       _excavators = await _repository.getAll();
 
       return true;
@@ -163,7 +198,7 @@ class ExcavatorProvider extends ChangeNotifier {
   }
 
   // ============================================================
-  // CLEAR DATA
+  // CLEAR
   // ============================================================
 
   void clear() {
@@ -191,41 +226,5 @@ class ExcavatorProvider extends ChangeNotifier {
 
   void _clearError() {
     _error = null;
-  }
-
-  Future<bool> registrationExists(
-    String registrationNumber, {
-    int? excludeId,
-  }) async {
-    try {
-      return await _repository.registrationExists(
-        registrationNumber,
-        excludeId: excludeId,
-      );
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-      return false;
-    }
-  }
-
-  Future<VehicleRcModel?> lookupVehicle(String registrationNumber) async {
-    _setLoading(true);
-    _clearError();
-
-    try {
-      final vehicle = await _vehicleService.getVehicleDetails(
-        registrationNumber,
-      );
-
-      return vehicle;
-    } catch (e) {
-      _error = e.toString();
-      notifyListeners();
-
-      return null;
-    } finally {
-      _setLoading(false);
-    }
   }
 }

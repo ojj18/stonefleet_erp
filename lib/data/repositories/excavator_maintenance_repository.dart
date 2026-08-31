@@ -2,6 +2,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../core/constants/table_constants.dart';
 import '../../core/database/database_helper.dart';
+import '../models/excavator_maintenance_list_model.dart';
 import '../models/excavator_maintenance_model.dart';
 
 class ExcavatorMaintenanceRepository {
@@ -99,5 +100,21 @@ class ExcavatorMaintenanceRepository {
       ''');
 
     return (result.first['count'] as int?) ?? 0;
+  }
+
+  Future<List<ExcavatorMaintenanceListModel>> getAllWithExcavator() async {
+    final db = await _databaseHelper.database;
+
+    final result = await db.rawQuery('''
+    SELECT
+      em.*,
+      e.registration_number AS registration_number
+    FROM excavator_maintenance em
+    INNER JOIN excavators e
+      ON e.id = em.excavator_id
+    ORDER BY em.created_at DESC
+  ''');
+
+    return result.map(ExcavatorMaintenanceListModel.fromMap).toList();
   }
 }
