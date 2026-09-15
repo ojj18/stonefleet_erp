@@ -1,9 +1,12 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../data/models/excavator_maintenance_ocr_model.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 
+import '../../../../data/services/ocr_service.dart';
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_maintenance_provider.dart';
 
@@ -47,6 +50,9 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   final _remarksController = TextEditingController();
 
+  final _dieselPerHourController = TextEditingController();
+  final _dieselCostPerHourController = TextEditingController();
+
   // ------------------------------------------------------------
   // STATE
   // ------------------------------------------------------------
@@ -58,6 +64,8 @@ class _ExcavatorMaintenanceAddEditScreenState
   bool _isSaving = false;
 
   final List<String> _shifts = const ['Day', 'Night'];
+  XFile? _selectedSheet;
+  ExcavatorMaintenanceOcrModel? ocrResult;
 
   // ------------------------------------------------------------
   // INIT
@@ -146,6 +154,9 @@ class _ExcavatorMaintenanceAddEditScreenState
 
     _remarksController.dispose();
 
+    _dieselPerHourController.dispose();
+    _dieselCostPerHourController.dispose();
+
     super.dispose();
   }
 
@@ -199,14 +210,464 @@ class _ExcavatorMaintenanceAddEditScreenState
 
     final rate = double.tryParse(_dieselRateController.text.trim());
 
-    if (diesel == null || rate == null) {
+    final starting = double.tryParse(_startingHourController.text.trim());
+
+    final closing = double.tryParse(_closingHourController.text.trim());
+
+    // Calculate diesel expense
+    if (diesel != null && rate != null) {
+      final expense = diesel * rate;
+
+      _dieselExpenseController.text = expense.toStringAsFixed(2);
+    } else {
       _dieselExpenseController.clear();
+    }
+
+    // Calculate total working hours
+    if (starting == null || closing == null) {
+      _dieselPerHourController.clear();
+      _dieselCostPerHourController.clear();
       return;
     }
 
-    final expense = diesel * rate;
+    final workingHours = closing - starting;
 
-    _dieselExpenseController.text = expense.toStringAsFixed(2);
+    if (workingHours <= 0 || diesel == null || diesel <= 0) {
+      _dieselPerHourController.clear();
+      _dieselCostPerHourController.clear();
+      return;
+    }
+
+    // Diesel consumption per hour
+    final dieselPerHour = diesel / workingHours;
+
+    // Diesel cost per hour
+    final dieselCostPerHour = (diesel * (rate ?? 0)) / workingHours;
+
+    _dieselPerHourController.text = dieselPerHour.toStringAsFixed(2);
+
+    if (rate != null) {
+      _dieselCostPerHourController.text = dieselCostPerHour.toStringAsFixed(2);
+    } else {
+      _dieselCostPerHourController.clear();
+    }
+  }
+  // ------------------------------------------------------------
+  // UPLOAD IMAGE
+  // ------------------------------------------------------------
+
+  Future<void> _pickMaintenanceSheet() async {
+    const XTypeGroup imageTypeGroup = XTypeGroup(
+      label: 'Images',
+      extensions: <String>['jpg', 'jpeg', 'png', 'webp'],
+    );
+
+    try {
+      final XFile? file = await openFile(
+        acceptedTypeGroups: <XTypeGroup>[imageTypeGroup],
+      );
+
+      if (file == null) {
+        return;
+      }
+
+      setState(() {
+        _selectedSheet = file;
+      });
+
+      if (!mounted) return;
+
+      await _showSheetPreview();
+    } catch (e) {
+      debugPrint('File picker error: $e');
+    }
+  }
+
+  // ------------------------------------------------------------
+  // IMAGE PREVIEW
+  // ------------------------------------------------------------
+
+  Future<void> _showSheetPreview() async {
+    final file = _selectedSheet;
+
+    if (file == null || !mounted) {
+      return;
+    }
+
+    final imageBytes = await file.readAsBytes();
+
+    if (!mounted) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Uploaded Sheet'),
+          content: SizedBox(
+            width: 700,
+            height: 500,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.memory(imageBytes, fit: BoxFit.contain),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+
+                setState(() {
+                  _selectedSheet = null;
+                });
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(context);
+
+                await _extractSheetData();
+              },
+
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.upload_file_outlined),
+
+              label: const Text('Use Image'),
+
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(190, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ------------------------------------------------------------
+  // EXTRACT IMAGE DATA
+  // ------------------------------------------------------------
+
+  Future<void> _extractSheetData() async {
+    if (_selectedSheet == null) {
+      return;
+    }
+
+    if (!mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          content: SizedBox(
+            width: 320,
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text(
+                    'Extracting Data...',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'Analyzing the uploaded sheet',
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    try {
+      const ocrService = OcrService();
+
+      final result = await ocrService.extractExcavatorMaintenance(
+        _selectedSheet!,
+      );
+
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context, rootNavigator: true).pop();
+
+      setState(() {
+        ocrResult = result;
+      });
+
+      await _showOcrResultDialog();
+
+      debugPrint('========== OCR RESULT ==========');
+      debugPrint('Registration: ${result.registrationNumber}');
+      debugPrint('Operator: ${result.operatorName}');
+      debugPrint('Shift: ${result.shift}');
+      debugPrint('Starting Hour: ${result.startingHour}');
+      debugPrint('Closing Hour: ${result.closingHour}');
+      debugPrint('Bucket Working Hour: ${result.bucketWorkingHour}');
+      debugPrint('Breaker Working Hour: ${result.breakerWorkingHour}');
+      debugPrint('Number of Loads: ${result.numberOfLoads}');
+      debugPrint('Number of Units: ${result.numberOfUnits}');
+      debugPrint('Diesel Filled: ${result.dieselFilled}');
+      debugPrint('Diesel Rate: ${result.dieselRate}');
+      debugPrint('Teeth Set Changed: ${result.teethSetChanged}');
+      debugPrint('Remarks: ${result.remarks}');
+      debugPrint('================================');
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.of(context, rootNavigator: true).pop();
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to extract data: $e')));
+    }
+  }
+
+  // ------------------------------------------------------------
+  // OCR RESULT DATA PREVIEW
+  // ------------------------------------------------------------
+
+  Future<void> _showOcrResultDialog() async {
+    final result = ocrResult;
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Review Extracted Data'),
+          content: SizedBox(
+            width: 600,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ocrRow('Registration Number', result.registrationNumber),
+                  _ocrRow('Operator Name', result.operatorName),
+                  _ocrRow('Shift', result.shift),
+                  _ocrRow('Starting Hour', result.startingHour?.toString()),
+                  _ocrRow('Closing Hour', result.closingHour?.toString()),
+                  _ocrRow(
+                    'Bucket Working Hour',
+                    result.bucketWorkingHour?.toString(),
+                  ),
+                  _ocrRow(
+                    'Breaker Working Hour',
+                    result.breakerWorkingHour?.toString(),
+                  ),
+                  _ocrRow('Number of Loads', result.numberOfLoads?.toString()),
+                  _ocrRow('Units', result.numberOfUnits?.toString()),
+                  _ocrRow('Diesel Filled', result.dieselFilled?.toString()),
+                  _ocrRow('Diesel Rate', result.dieselRate?.toString()),
+                  _ocrRow(
+                    'Teeth Set Changed',
+                    result.teethSetChanged == null
+                        ? null
+                        : result.teethSetChanged!
+                        ? 'Yes'
+                        : 'No',
+                  ),
+                  _ocrRow('Remarks', result.remarks),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Change'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _applyOcrResultToForm();
+              },
+              child: const Text('Use These Values'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ------------------------------------------------------------
+  // OCR RESULT DATA WIDGET
+  // ------------------------------------------------------------
+
+  Widget _ocrRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(flex: 3, child: Text(value ?? 'Not detected')),
+        ],
+      ),
+    );
+  }
+
+  // ------------------------------------------------------------
+  // APPLYING THE OCR DATA TO THE CONTROLLER
+  // ------------------------------------------------------------
+
+  void _applyOcrResultToForm() {
+    final result = ocrResult;
+
+    if (result == null) {
+      return;
+    }
+
+    if (result.registrationNumber != null &&
+        result.registrationNumber!.trim().isNotEmpty) {
+      final extractedRegistration = _normalizeRegistrationNumber(
+        result.registrationNumber!,
+      );
+
+      ExcavatorModel? matchedExcavator;
+
+      for (final excavator in context.read<ExcavatorProvider>().excavators) {
+        final dbRegistration = _normalizeRegistrationNumber(
+          excavator.registrationNumber,
+        );
+
+        if (dbRegistration == extractedRegistration) {
+          matchedExcavator = excavator;
+          break;
+        }
+      }
+
+      if (matchedExcavator != null) {
+        setState(() {
+          _selectedExcavator = matchedExcavator;
+        });
+      }
+    }
+
+    // ------------------------------------------------------------
+    // BASIC DETAILS
+    // ------------------------------------------------------------
+
+    _operatorController.text = result.operatorName ?? '';
+
+    if (result.shift != null && _shifts.contains(result.shift)) {
+      _selectedShift = result.shift;
+    }
+
+    // ------------------------------------------------------------
+    // WORKING HOURS
+    // ------------------------------------------------------------
+
+    if (result.startingHour != null) {
+      _startingHourController.text = _formatNumber(result.startingHour!);
+    }
+
+    if (result.closingHour != null) {
+      _closingHourController.text = _formatNumber(result.closingHour!);
+    }
+
+    if (result.bucketWorkingHour != null) {
+      _bucketWorkingHourController.text = _formatNumber(
+        result.bucketWorkingHour!,
+      );
+    }
+
+    if (result.breakerWorkingHour != null) {
+      _breakerWorkingHourController.text = _formatNumber(
+        result.breakerWorkingHour!,
+      );
+    }
+
+    // ------------------------------------------------------------
+    // PRODUCTION
+    // ------------------------------------------------------------
+
+    if (result.numberOfLoads != null) {
+      _numberOfLoadsController.text = result.numberOfLoads.toString();
+    }
+
+    if (result.numberOfUnits != null) {
+      _unitsController.text = _formatNumber(result.numberOfUnits!.toDouble());
+    }
+
+    // ------------------------------------------------------------
+    // DIESEL
+    // ------------------------------------------------------------
+
+    if (result.dieselFilled != null) {
+      _dieselFilledController.text = _formatNumber(result.dieselFilled!);
+    }
+
+    if (result.dieselRate != null) {
+      _dieselRateController.text = _formatNumber(result.dieselRate!);
+    }
+
+    // ------------------------------------------------------------
+    // MAINTENANCE
+    // ------------------------------------------------------------
+
+    if (result.teethSetChanged != null) {
+      _teethSetChanged = result.teethSetChanged!;
+    }
+
+    // ------------------------------------------------------------
+    // REMARKS
+    // ------------------------------------------------------------
+
+    _remarksController.text = result.remarks ?? '';
+
+    // ------------------------------------------------------------
+    // RECALCULATE DERIVED VALUES
+    // ------------------------------------------------------------
+
+    _calculateHours();
+    _calculateRunningHour();
+    _calculateDiesel();
+
+    setState(() {});
+  }
+
+  // ------------------------------------------------------------
+  // HELPER METHOD TO NORMALIZE THE REGISTER NUMBER
+  // ------------------------------------------------------------
+
+  String _normalizeRegistrationNumber(String value) {
+    return value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
   }
 
   // ------------------------------------------------------------
@@ -609,6 +1070,32 @@ class _ExcavatorMaintenanceAddEditScreenState
             ),
           ],
         ),
+        Spacer(),
+        ElevatedButton.icon(
+          onPressed: _pickMaintenanceSheet,
+
+          icon: _isSaving
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.upload_file_outlined),
+
+          label: Text('Upload Image'),
+
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00652C),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(190, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -949,6 +1436,35 @@ class _ExcavatorMaintenanceAddEditScreenState
                   required: false,
                 ),
               ),
+            ],
+          ),
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(
+                child: _numberField(
+                  controller: _dieselPerHourController,
+                  label: 'Diesel Consumption (L/hr)',
+                  icon: Icons.speed_outlined,
+                  readOnly: true,
+                  required: false,
+                ),
+              ),
+
+              const SizedBox(width: 20),
+
+              Expanded(
+                child: _numberField(
+                  controller: _dieselCostPerHourController,
+                  label: 'Diesel Cost (₹/hr)',
+                  icon: Icons.currency_rupee,
+                  readOnly: true,
+                  required: false,
+                ),
+              ),
+
+              const Spacer(),
             ],
           ),
         ],

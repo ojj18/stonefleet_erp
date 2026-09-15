@@ -306,13 +306,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  String _todayText() {
-    final now = DateTime.now();
+  // String _todayText() {
+  //   final now = DateTime.now();
 
-    return '${now.day.toString().padLeft(2, '0')}/'
-        '${now.month.toString().padLeft(2, '0')}/'
-        '${now.year}';
-  }
+  //   return '${now.day.toString().padLeft(2, '0')}/'
+  //       '${now.month.toString().padLeft(2, '0')}/'
+  //       '${now.year}';
+  // }
 }
 
 // ================================================================

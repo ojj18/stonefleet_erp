@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../data/models/excavator_maintenance_list_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 import '../providers/excavator_maintenance_provider.dart';
 import 'excavator_maintenance_add_edit_screen.dart';
@@ -436,7 +437,9 @@ class _ExcavatorMaintenanceScreenState
 
                 const Divider(height: 1),
 
-                ...records.map((record) => _buildTableRow(record)),
+                ...records.map(
+                  (record) => _buildTableRow(record, provider.listRecords),
+                ),
               ],
             ),
           ),
@@ -503,11 +506,27 @@ class _ExcavatorMaintenanceScreenState
     );
   }
 
+  String _getRegistrationNumber(
+    int excavatorId,
+    List<ExcavatorMaintenanceListModel> listRecords,
+  ) {
+    for (final item in listRecords) {
+      if (item.excavatorId == excavatorId) {
+        return item.registrationNumber;
+      }
+    }
+
+    return '-';
+  }
+
   // ============================================================
   // TABLE ROW
   // ============================================================
 
-  Widget _buildTableRow(ExcavatorMaintenanceModel record) {
+  Widget _buildTableRow(
+    ExcavatorMaintenanceModel record,
+    List<ExcavatorMaintenanceListModel> listRecords,
+  ) {
     return InkWell(
       onTap: () => _openEditScreen(record),
       child: Container(
@@ -526,8 +545,12 @@ class _ExcavatorMaintenanceScreenState
               ),
             ),
 
-            SizedBox(width: 120, child: _machineBadge(record.excavatorId)),
-
+            SizedBox(
+              width: 120,
+              child: _machineBadge(
+                _getRegistrationNumber(record.excavatorId, listRecords),
+              ),
+            ),
             SizedBox(
               width: 150,
               child: Text(
@@ -608,7 +631,7 @@ class _ExcavatorMaintenanceScreenState
   // MACHINE BADGE
   // ============================================================
 
-  Widget _machineBadge(int excavatorId) {
+  Widget _machineBadge(String registrationNumber) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
@@ -616,7 +639,9 @@ class _ExcavatorMaintenanceScreenState
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        'EXC-$excavatorId',
+        registrationNumber.isEmpty ? '-' : registrationNumber,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -655,19 +680,27 @@ class _ExcavatorMaintenanceScreenState
   List<ExcavatorMaintenanceModel> _filteredRecords(
     List<ExcavatorMaintenanceModel> records,
   ) {
+    final listRecords = context
+        .read<ExcavatorMaintenanceProvider>()
+        .listRecords;
+
     return records.where((record) {
       final operator = record.operatorName?.toLowerCase() ?? '';
-
       final remarks = record.remarks?.toLowerCase() ?? '';
 
-      final excavator = 'exc-${record.excavatorId}';
+      final registrationNumber = _getRegistrationNumber(
+        record.excavatorId,
+        listRecords,
+      ).toLowerCase();
+
+      final excavatorId = record.excavatorId.toString();
 
       final matchesSearch =
           _searchQuery.isEmpty ||
           operator.contains(_searchQuery) ||
           remarks.contains(_searchQuery) ||
-          excavator.contains(_searchQuery) ||
-          record.excavatorId.toString().contains(_searchQuery);
+          registrationNumber.contains(_searchQuery) ||
+          excavatorId.contains(_searchQuery);
 
       final matchesShift =
           _selectedShift == 'All' || record.shift == _selectedShift;
@@ -675,7 +708,6 @@ class _ExcavatorMaintenanceScreenState
       return matchesSearch && matchesShift;
     }).toList();
   }
-
   // ============================================================
   // ADD
   // ============================================================

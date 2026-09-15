@@ -1,3 +1,4 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -5,6 +6,8 @@ import '../../../../core/constants/table_constants.dart';
 import '../../../../core/database/database_helper.dart';
 import '../../../../data/models/excavator_service_item_model.dart';
 import '../../../../data/models/excavator_service_model.dart';
+import '../../../../data/models/excavator_service_ocr_model.dart';
+import '../../../../data/services/ocr_service.dart';
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_service_provider.dart';
 
@@ -38,6 +41,8 @@ class _ExcavatorServiceAddEditScreenState
 
   bool _initializing = true;
   bool _saving = false;
+
+  ExcavatorServiceOcrModel? _ocrResult;
 
   @override
   void initState() {
@@ -156,6 +161,348 @@ class _ExcavatorServiceAddEditScreenState
     }
   }
 
+  Future<void> _extractSheetData() async {
+    try {
+      const typeGroup = XTypeGroup(
+        label: 'Images',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+
+      final imageFile = await openFile(acceptedTypeGroups: [typeGroup]);
+
+      if (imageFile == null || !mounted) {
+        return;
+      }
+
+      final useImage = await _showUploadedSheetDialog(imageFile);
+
+      if (!useImage || !mounted) {
+        return;
+      }
+
+      // Show separate loader popup.
+      _showExtractingDialog();
+
+      final ocrService = const OcrService();
+
+      final result = await ocrService.extractExcavatorService(imageFile);
+
+      if (!mounted) return;
+
+      // Close extracting popup.
+      Navigator.of(context, rootNavigator: true).pop();
+
+      setState(() {
+        _ocrResult = result;
+      });
+
+      await _showOcrResultDialog();
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close loader if it is still open.
+      Navigator.of(context, rootNavigator: true).pop();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to extract service data: $e')),
+      );
+    }
+  }
+
+  Future<bool> _showUploadedSheetDialog(XFile imageFile) async {
+    final imageBytes = await imageFile.readAsBytes();
+
+    if (!mounted) return false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Uploaded Sheet',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 600,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 550),
+                  child: Image.memory(imageBytes, fit: BoxFit.contain),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              icon: const Icon(Icons.file_upload_outlined),
+              label: const Text('Use Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(170, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  void _showExtractingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Extracting Data'),
+          content: SizedBox(
+            width: 300,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                SizedBox(width: 20),
+                Text('Please wait...'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showOcrResultDialog() async {
+    final result = _ocrResult;
+
+    if (result == null || !mounted) return;
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Review Extracted Data'),
+          content: SizedBox(
+            width: 600,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ocrRow('Registration Number', result.registrationNumber),
+                  _ocrRow('Service Date', result.serviceDate),
+                  _ocrRow(
+                    'Current Hour Meter',
+                    result.currentHourMeter?.toString(),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  const Text(
+                    'Service Items',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  if (result.serviceItems.isEmpty)
+                    const Text('No service items detected.')
+                  else
+                    ...result.serviceItems.map(
+                      (item) => Card(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _ocrRow('Spare Part', item.sparePart),
+                              _ocrRow('Quantity', item.quantity?.toString()),
+                              _ocrRow('Cost', item.cost?.toString()),
+                              _ocrRow('Item Remark', item.itemRemark),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  _ocrRow('Service Remarks', result.serviceRemarks),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Change'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _applyOcrResultToForm();
+              },
+              child: const Text('Use These Values'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _ocrRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 150,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          Expanded(
+            child: Text(value == null || value.trim().isEmpty ? '-' : value),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _applyOcrResultToForm() {
+    final result = _ocrResult;
+
+    if (result == null) return;
+
+    // 1. Match registration number with existing excavator.
+    if (result.registrationNumber != null &&
+        result.registrationNumber!.trim().isNotEmpty) {
+      final extractedRegistration = _normalizeRegistrationNumber(
+        result.registrationNumber!,
+      );
+
+      for (final excavator in context.read<ExcavatorProvider>().excavators) {
+        final dbRegistration = _normalizeRegistrationNumber(
+          excavator.registrationNumber,
+        );
+
+        if (dbRegistration == extractedRegistration) {
+          _selectedExcavatorId = excavator.id;
+          break;
+        }
+      }
+    }
+
+    // 2. Apply service date.
+    if (result.serviceDate != null && result.serviceDate!.trim().isNotEmpty) {
+      final parsedDate = DateTime.tryParse(result.serviceDate!);
+
+      if (parsedDate != null) {
+        _serviceDate = parsedDate;
+        _dateController.text =
+            '${parsedDate.day.toString().padLeft(2, '0')}/'
+            '${parsedDate.month.toString().padLeft(2, '0')}/'
+            '${parsedDate.year}';
+      }
+    }
+
+    // 3. Apply current hour meter.
+    if (result.currentHourMeter != null) {
+      _hourMeterController.text = result.currentHourMeter!.toString();
+    }
+
+    // 4. Clear existing draft items.
+    for (final item in _items) {
+      item.dispose();
+    }
+
+    _items.clear();
+
+    // 5. Match OCR spare names with existing spare records.
+    for (final ocrItem in result.serviceItems) {
+      if (ocrItem.sparePart == null || ocrItem.sparePart!.trim().isEmpty) {
+        continue;
+      }
+
+      final spareId = _findSpareId(ocrItem.sparePart!);
+
+      // Do not create a new spare.
+      if (spareId == null) {
+        continue;
+      }
+
+      final draft = _ServiceItemDraft();
+
+      draft.spareId = spareId;
+
+      if (ocrItem.quantity != null) {
+        draft.quantityController.text = ocrItem.quantity!.toString();
+      }
+
+      if (ocrItem.cost != null) {
+        draft.costController.text = ocrItem.cost!.toString();
+      }
+
+      if (ocrItem.itemRemark != null) {
+        draft.remarkController.text = ocrItem.itemRemark!;
+      }
+
+      _items.add(draft);
+    }
+
+    // 6. Apply overall service remarks.
+    if (result.serviceRemarks != null) {
+      _remarksController.text = result.serviceRemarks!;
+    }
+
+    setState(() {});
+  }
+
+  String _normalizeRegistrationNumber(String value) {
+    return value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+  }
+
+  int? _findSpareId(String extractedName) {
+    final normalizedExtracted = _normalizeSpareName(extractedName);
+
+    for (final spare in _spares) {
+      final spareName = spare['name']?.toString() ?? '';
+
+      if (_normalizeSpareName(spareName) == normalizedExtracted) {
+        return spare['id'] as int;
+      }
+    }
+
+    return null;
+  }
+
+  String _normalizeSpareName(String value) {
+    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+  }
+
   // ============================================================
   // BUILD
   // ============================================================
@@ -250,23 +597,46 @@ class _ExcavatorServiceAddEditScreenState
   // ============================================================
 
   Widget _buildHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(
-          widget.isEdit ? 'Edit Excavator Service' : 'Add Excavator Service',
-          style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF191C1E),
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              widget.isEdit
+                  ? 'Edit Excavator Service'
+                  : 'Add Excavator Service',
+              style: const TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFF191C1E),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.isEdit
+                  ? 'Update service details and spare parts used.'
+                  : 'Record excavator service details and spare parts used.',
+              style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
+            ),
+          ],
         ),
-        const SizedBox(height: 6),
-        Text(
-          widget.isEdit
-              ? 'Update service details and spare parts used.'
-              : 'Record excavator service details and spare parts used.',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
+        Spacer(),
+        ElevatedButton.icon(
+          onPressed: _extractSheetData,
+
+          icon: const Icon(Icons.upload_file_outlined),
+
+          label: Text('Upload Image'),
+
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00652C),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(190, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ],
     );

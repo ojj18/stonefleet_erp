@@ -36,6 +36,7 @@ class ExcavatorMaintenanceProvider extends ChangeNotifier {
 
     try {
       _records = await _repository.getAll();
+      _listRecords = await _repository.getAllWithExcavator();
     } catch (e) {
       _error = e.toString();
     } finally {

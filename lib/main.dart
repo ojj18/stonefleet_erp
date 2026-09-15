@@ -14,7 +14,6 @@ import 'data/services/vehicle_api_service.dart';
 import 'features/dashboard/provider/dashboard_provider.dart';
 import 'features/excavator/master/providers/excavator_master_provider.dart';
 import 'features/excavator/master/providers/excavator_provider.dart';
-import 'features/excavator/master/screens/excavator_master_screen.dart';
 
 import 'features/excavator/maintenance/providers/excavator_maintenance_provider.dart';
 
