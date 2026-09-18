@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:stonefleet_erp/features/dashboard/screen/dashboard_screen.dart';
 
 import 'core/database/database_helper.dart';
 
@@ -11,6 +10,8 @@ import 'data/services/vehicle_api_service.dart';
 // EXCAVATOR
 // ============================================================
 
+import 'features/auth/providers/auth_provider.dart';
+import 'features/auth/screens/login_screen.dart';
 import 'features/dashboard/provider/dashboard_provider.dart';
 import 'features/excavator/master/providers/excavator_master_provider.dart';
 import 'features/excavator/master/providers/excavator_provider.dart';
@@ -23,9 +24,16 @@ import 'features/excavator/service/providers/excavator_service_provider.dart';
 // TRANSPORT
 // ============================================================
 
+import 'features/report/providers/report_provider.dart';
 import 'features/transport/maintenance/providers/transport_maintenance_provider.dart';
 import 'features/transport/master/providers/transport_master_provider.dart';
 import 'features/transport/service/providers/transport_service_provider.dart';
+
+// ============================================================
+// SERVICE NOTIFICATION
+// ============================================================
+
+import 'features/service_notification/providers/service_notification_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -135,6 +143,23 @@ class StoneFleetApp extends StatelessWidget {
         // Dashboard
         // --------------------------------------------------------
         ChangeNotifierProvider(create: (_) => DashboardProvider()),
+
+        // --------------------------------------------------------
+        // SERVICE NOTIFICATION
+        // --------------------------------------------------------
+        ChangeNotifierProvider(
+          create: (_) => ServiceNotificationProvider()..loadNotifications(),
+        ),
+
+        // --------------------------------------------------------
+        // REPORT
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => ReportProvider()),
+
+        // --------------------------------------------------------
+        // AUTH SERVICE
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
       ],
 
       // ==========================================================
@@ -168,7 +193,7 @@ class StoneFleetApp extends StatelessWidget {
         // --------------------------------------------------------
         // INITIAL SCREEN
         // --------------------------------------------------------
-        home: const DashboardScreen(),
+        home: const LoginScreen(),
       ),
     );
   }

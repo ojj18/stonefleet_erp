@@ -15,4 +15,5 @@ class TableConstants {
   static const transportService = 'transport_service';
   static const transportServiceItems = 'transport_service_items';
   static const transportServiceSchedules = 'transport_service_schedules';
+  static const users = 'users';
 }

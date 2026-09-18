@@ -379,6 +379,20 @@ class DatabaseMigrations {
       )
     ''');
 
+    await db.execute('''
+  CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
+
+    await DatabaseSeed.seed(db);
+
     log('All 14 StoneFleet tables created successfully.');
     await DatabaseSeed.seed(db);
   }
@@ -638,6 +652,46 @@ class DatabaseMigrations {
           'transport schema already updated. '
           'Migration skipped.',
         );
+      }
+      // ============================================================
+      // VERSION 4
+      // USERS / AUTHENTICATION
+      // ============================================================
+
+      if (oldVersion < 4) {
+        await db.execute('''
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'user',
+      is_active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    )
+  ''');
+
+        final now = DateTime.now().toIso8601String();
+
+        await db.insert('users', {
+          'username': 'admin',
+          'password': 'admin@194',
+          'role': 'admin',
+          'is_active': 1,
+          'created_at': now,
+          'updated_at': now,
+        });
+
+        await db.insert('users', {
+          'username': 'user',
+          'password': 'user@123',
+          'role': 'user',
+          'is_active': 1,
+          'created_at': now,
+          'updated_at': now,
+        });
+
+        log('Database migrated to version 4: users table created.');
       }
     }
   }

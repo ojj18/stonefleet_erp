@@ -1,12 +1,17 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/table_constants.dart';
 import '../../../../core/database/database_helper.dart';
 
+import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../data/models/ocr/transport_service_ocr_model.dart';
 import '../../../../data/models/transport_service_item_model.dart';
 import '../../../../data/models/transport_service_model.dart';
 
+import '../../../../data/services/ocr_service.dart';
+import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../master/providers/transport_master_provider.dart';
 import '../providers/transport_service_provider.dart';
 
@@ -40,6 +45,8 @@ class _TransportServiceAddEditScreenState
 
   bool _initializing = true;
   bool _saving = false;
+
+  TransportServiceOcrModel? _ocrResult;
 
   // ============================================================
   // INIT
@@ -262,16 +269,56 @@ class _TransportServiceAddEditScreenState
           ),
 
           const Spacer(),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
 
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
+
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-
-          const SizedBox(width: 8),
-
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -282,30 +329,52 @@ class _TransportServiceAddEditScreenState
   // ============================================================
 
   Widget _buildHeader() {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          widget.isEdit ? 'Edit Transport Service' : 'Add Transport Service',
-          style: const TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF191C1E),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.isEdit
+                    ? 'Edit Transport Service'
+                    : 'Add Transport Service',
+                style: const TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF191C1E),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                widget.isEdit
+                    ? 'Update service details and spare parts used.'
+                    : 'Record transport vehicle service details and spare parts used.',
+                style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
+              ),
+            ],
           ),
         ),
 
-        const SizedBox(height: 6),
+        const SizedBox(width: 20),
 
-        Text(
-          widget.isEdit
-              ? 'Update service details and spare parts used.'
-              : 'Record transport vehicle service details and spare parts used.',
-          style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
+        ElevatedButton.icon(
+          onPressed: _saving ? null : _extractSheetData,
+          icon: const Icon(Icons.upload_file_outlined),
+          label: const Text('Upload Image'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00652C),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(170, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ],
     );
   }
-
   // ============================================================
   // SERVICE DETAILS
   // ============================================================
@@ -1181,6 +1250,380 @@ class _TransportServiceAddEditScreenState
         backgroundColor: const Color(0xFFBA1A1A),
       ),
     );
+  }
+
+  Future<void> _extractSheetData() async {
+    bool loaderShown = false;
+
+    try {
+      const typeGroup = XTypeGroup(
+        label: 'Images',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+
+      final imageFile = await openFile(acceptedTypeGroups: [typeGroup]);
+
+      if (imageFile == null || !mounted) {
+        return;
+      }
+
+      final useImage = await _showUploadedSheetDialog(imageFile);
+
+      if (!useImage || !mounted) {
+        return;
+      }
+
+      // Show separate extracting popup.
+      _showExtractingDialog();
+      loaderShown = true;
+
+      final ocrService = const OcrService();
+
+      final result = await ocrService.extractTransportService(imageFile);
+
+      if (!mounted) return;
+
+      // Close extracting popup.
+      if (loaderShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+        loaderShown = false;
+      }
+
+      setState(() {
+        _ocrResult = result;
+      });
+
+      await _showOcrResultDialog();
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close only the extracting popup.
+      if (loaderShown) {
+        Navigator.of(context, rootNavigator: true).pop();
+      }
+
+      _showError('Failed to extract transport service data: $e');
+    }
+  }
+
+  Future<bool> _showUploadedSheetDialog(XFile imageFile) async {
+    final imageBytes = await imageFile.readAsBytes();
+
+    if (!mounted) return false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Uploaded Sheet',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 600,
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 550),
+              child: Image.memory(imageBytes, fit: BoxFit.contain),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              icon: const Icon(Icons.file_upload_outlined),
+              label: const Text('Use Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(170, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  void _showExtractingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Extracting Data'),
+          content: SizedBox(
+            width: 300,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                SizedBox(width: 20),
+                Text('Please wait...'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showOcrResultDialog() async {
+    final result = _ocrResult;
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Review Extracted Data',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 650,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ocrRow('Registration Number', result.registrationNumber),
+                  _ocrRow('Service Date', result.serviceDate),
+                  _ocrRow('Current KM', result.currentKm?.toString()),
+
+                  const SizedBox(height: 12),
+
+                  const Text(
+                    'Service Items',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  if (result.serviceItems.isEmpty)
+                    const Text(
+                      'No service items detected.',
+                      style: TextStyle(color: Color(0xFF68717D)),
+                    )
+                  else
+                    ...List.generate(result.serviceItems.length, (index) {
+                      final item = result.serviceItems[index];
+
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8F9FB),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFE1E5E9)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _ocrRow('Spare Part', item.sparePart),
+                            _ocrRow('Quantity', item.quantity?.toString()),
+                            _ocrRow('Cost / Unit', item.cost?.toString()),
+                            _ocrRow('Item Remark', item.itemRemark),
+                          ],
+                        ),
+                      );
+                    }),
+
+                  const SizedBox(height: 8),
+
+                  _ocrRow('Service Remarks', result.serviceRemarks),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Change'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _applyOcrResultToForm();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(180, 48),
+              ),
+              child: const Text('Use These Values'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _ocrRow(String label, String? value) {
+    final displayValue = value == null || value.trim().isEmpty ? '-' : value;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 150,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const Text(':  '),
+          Expanded(child: Text(displayValue)),
+        ],
+      ),
+    );
+  }
+
+  void _applyOcrResultToForm() {
+    final result = _ocrResult;
+
+    if (result == null) {
+      return;
+    }
+
+    // ------------------------------------------------------------
+    // 1. Match transport vehicle by registration number
+    // ------------------------------------------------------------
+    if (result.registrationNumber != null &&
+        result.registrationNumber!.trim().isNotEmpty) {
+      final extractedRegistration = _normalizeRegistrationNumber(
+        result.registrationNumber!,
+      );
+
+      final transportProvider = context.read<TransportProvider>();
+
+      for (final vehicle in transportProvider.vehicles) {
+        final dbRegistration = _normalizeRegistrationNumber(
+          vehicle.registrationNumber,
+        );
+
+        if (dbRegistration == extractedRegistration) {
+          _selectedVehicleId = vehicle.id;
+          break;
+        }
+      }
+    }
+
+    // ------------------------------------------------------------
+    // 2. Service Date
+    // ------------------------------------------------------------
+    if (result.serviceDate != null && result.serviceDate!.trim().isNotEmpty) {
+      final parsedDate = DateTime.tryParse(result.serviceDate!);
+
+      if (parsedDate != null) {
+        _serviceDate = parsedDate;
+
+        _dateController.text = _formatDate(parsedDate);
+      }
+    }
+
+    // ------------------------------------------------------------
+    // 3. Current KM
+    // ------------------------------------------------------------
+    if (result.currentKm != null) {
+      _kmController.text = result.currentKm!.toString();
+    }
+
+    // ------------------------------------------------------------
+    // 4. Remove existing draft items
+    // ------------------------------------------------------------
+    for (final item in _items) {
+      item.dispose();
+    }
+
+    _items.clear();
+
+    // ------------------------------------------------------------
+    // 5. Add OCR service items
+    // ------------------------------------------------------------
+    for (final ocrItem in result.serviceItems) {
+      if (ocrItem.sparePart == null || ocrItem.sparePart!.trim().isEmpty) {
+        continue;
+      }
+
+      final spareId = _findSpareId(ocrItem.sparePart!);
+
+      // Don't create/invent a spare.
+      // Only use existing active spare parts.
+      if (spareId == null) {
+        continue;
+      }
+
+      final draft = _ServiceItemDraft(spareId: spareId);
+
+      if (ocrItem.quantity != null) {
+        draft.quantityController.text = ocrItem.quantity!.toString();
+      }
+
+      if (ocrItem.cost != null) {
+        draft.costController.text = ocrItem.cost!.toString();
+      }
+
+      if (ocrItem.itemRemark != null) {
+        draft.remarkController.text = ocrItem.itemRemark!;
+      }
+
+      _items.add(draft);
+    }
+
+    // ------------------------------------------------------------
+    // 6. Overall service remarks
+    // ------------------------------------------------------------
+    if (result.serviceRemarks != null) {
+      _remarksController.text = result.serviceRemarks!;
+    }
+
+    setState(() {});
+  }
+
+  String _normalizeRegistrationNumber(String value) {
+    return value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
+  }
+
+  int? _findSpareId(String extractedName) {
+    final normalizedExtracted = _normalizeSpareName(extractedName);
+
+    for (final spare in _spares) {
+      final spareName = spare['name']?.toString() ?? '';
+
+      if (_normalizeSpareName(spareName) == normalizedExtracted) {
+        return spare['id'] as int;
+      }
+    }
+
+    return null;
+  }
+
+  String _normalizeSpareName(String value) {
+    return value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
   }
 }
 

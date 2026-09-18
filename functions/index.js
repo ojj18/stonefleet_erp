@@ -425,3 +425,421 @@ Again, do NOT calculate totals and do NOT invent values.
       }
     },
 );
+exports.extractTransportMaintenance = onRequest(
+    {
+      secrets: [openaiApiKey],
+      cors: true,
+    },
+    async (req, res) => {
+      try {
+        if (req.method !== "POST") {
+          return res.status(405).json({
+            success: false,
+            message: "Only POST requests are allowed.",
+          });
+        }
+
+        const {imageBase64, mimeType} = req.body;
+
+        if (!imageBase64) {
+          return res.status(400).json({
+            success: false,
+            message: "imageBase64 is required.",
+          });
+        }
+
+        const client = new OpenAI({
+          apiKey: openaiApiKey.value(),
+        });
+
+        const response = await client.responses.create({
+          model: "gpt-5.4-mini",
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: `
+You are an OCR and data extraction assistant for a Stone Crusher ERP.
+
+The uploaded image is a handwritten Transport Maintenance sheet.
+
+Extract information based on meaning, context, handwriting,
+labels, table structure, and surrounding values.
+
+IMPORTANT RULES:
+
+1. Do NOT assume that fields are written in a fixed order.
+2. Identify each value based on its meaning and surrounding context.
+3. Do NOT invent missing information.
+4. If a value is unclear or not present, return null.
+5. Preserve handwritten remarks as accurately as possible.
+6. Registration numbers may contain spaces or hyphens.
+7. Number of loads must be an integer when clearly identifiable.
+8. Diesel filled must be the quantity in liters.
+9. Diesel rate must be the price per liter.
+10. Do NOT calculate total KM.
+11. Do NOT calculate diesel expense.
+12. Do NOT calculate diesel consumption.
+13. Do NOT calculate diesel cost per KM.
+14. Return only the requested structured data.
+
+FIELD DEFINITIONS:
+
+registration_number:
+Registration number of the transport vehicle.
+
+driver_name:
+Name of the driver.
+
+starting_km:
+Vehicle odometer reading at the beginning of the operation.
+
+closing_km:
+Vehicle odometer reading at the end of the operation.
+
+number_of_loads:
+Number of loads transported.
+
+loading_site:
+Location where the material was loaded.
+
+unloading_site:
+Location where the material was unloaded.
+
+diesel_filled:
+Amount of diesel filled, in liters.
+
+diesel_rate:
+Diesel price per liter.
+
+remarks:
+Any additional handwritten remarks or observations.
+
+IMPORTANT:
+
+If the sheet contains something like:
+
+TN 25 AB 1234
+Ramesh
+12540 - 12680
+8 loads
+Quarry
+Crusher
+30L @ 95
+
+interpret the values according to their meaning.
+
+Do not assume the order in which these values appear.
+
+For example:
+12540 and 12680 should be identified as starting_km
+and closing_km based on their context.
+
+30L should be diesel_filled = 30.
+95 should be diesel_rate = 95.
+
+Return null when information is missing or uncertain.
+                  `,
+                },
+                {
+                  type: "input_image",
+                  image_url:
+`data:${mimeType || "image/jpeg"};base64,${imageBase64}`,
+                  detail: "high",
+                },
+              ],
+            },
+          ],
+          text: {
+            format: {
+              type: "json_schema",
+              name: "transport_maintenance",
+              strict: true,
+              schema: {
+                type: "object",
+                properties: {
+                  registration_number: {
+                    type: ["string", "null"],
+                  },
+                  driver_name: {
+                    type: ["string", "null"],
+                  },
+                  starting_km: {
+                    type: ["number", "null"],
+                  },
+                  closing_km: {
+                    type: ["number", "null"],
+                  },
+                  number_of_loads: {
+                    type: ["integer", "null"],
+                  },
+                  loading_site: {
+                    type: ["string", "null"],
+                  },
+                  unloading_site: {
+                    type: ["string", "null"],
+                  },
+                  diesel_filled: {
+                    type: ["number", "null"],
+                  },
+                  diesel_rate: {
+                    type: ["number", "null"],
+                  },
+                  remarks: {
+                    type: ["string", "null"],
+                  },
+                },
+                required: [
+                  "registration_number",
+                  "driver_name",
+                  "starting_km",
+                  "closing_km",
+                  "number_of_loads",
+                  "loading_site",
+                  "unloading_site",
+                  "diesel_filled",
+                  "diesel_rate",
+                  "remarks",
+                ],
+                additionalProperties: false,
+              },
+            },
+          },
+        });
+
+        const extractedData = JSON.parse(response.output_text);
+
+        logger.info(
+            "Transport maintenance extracted successfully.",
+        );
+
+        return res.status(200).json({
+          success: true,
+          data: extractedData,
+        });
+      } catch (error) {
+        logger.error(
+            "Transport maintenance OCR extraction failed.",
+            error,
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to extract transport maintenance data.",
+          error: error.message,
+        });
+      }
+    },
+);
+exports.extractTransportService = onRequest(
+    {
+      region: "us-central1",
+      secrets: ["OPENAI_API_KEY"],
+    },
+    async (req, res) => {
+      try {
+        if (req.method !== "POST") {
+          return res.status(405).json({
+            success: false,
+            message: "Method not allowed.",
+          });
+        }
+
+        const {
+          imageBase64,
+          mimeType,
+        } = req.body;
+
+        if (!imageBase64) {
+          return res.status(400).json({
+            success: false,
+            message: "imageBase64 is required.",
+          });
+        }
+
+        const client = new OpenAI({
+          apiKey: process.env.OPENAI_API_KEY,
+        });
+
+        const response = await client.responses.create({
+          model: "gpt-5.4-mini",
+
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: `
+You are an OCR and structured data extraction assistant for a
+Stone Crusher ERP system.
+
+The uploaded image contains handwritten transport vehicle
+service information.
+
+Extract the information based on the meaning and context of
+the handwriting.
+
+IMPORTANT:
+- Do NOT assume a fixed field order.
+- Values may appear in different positions.
+- Understand labels, handwriting context, grouping and meaning.
+- "KM", "kilometer", "odometer" etc. refer to current KM.
+- Service date may be written in different date formats.
+- Spare parts may have quantity and cost written nearby or
+  associated with them.
+- Preserve handwritten remarks as accurately as possible.
+- Do not invent missing values.
+- If a value is not clearly available, return null.
+- Do not calculate the grand total.
+- Do not create or invent spare parts.
+- Return only the requested JSON structure.
+
+ERP fields:
+
+1. registration_number
+   Transport vehicle registration number.
+
+2. service_date
+   Date on which the service happened.
+
+3. current_km
+   Current vehicle kilometer / odometer reading.
+
+4. service_items
+   List of spare parts used during this service.
+   For every item extract:
+   - spare_part
+   - quantity
+   - cost
+   - item_remark
+
+5. service_remarks
+   Overall service remarks that do not belong to
+   a specific spare part.
+
+Examples of handwriting patterns you may encounter:
+
+TN 25 BB 9860
+
+15/09/2026
+
+125850
+
+Oil Filter  1  250
+due to dust
+
+Brake Shoe  2  800
+
+Wheel Bearing  1  1200
+damaged
+
+Overall remark:
+vehicle making noise while running
+
+The order can be different and labels may be missing.
+Use contextual understanding rather than positional assumptions.
+                `,
+                },
+                {
+                  type: "input_image",
+                  image_url:
+`data:${mimeType || "image/jpeg"};base64,${imageBase64}`,
+                },
+              ],
+            },
+          ],
+
+          text: {
+            format: {
+              type: "json_schema",
+              name: "transport_service_ocr",
+              strict: true,
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  registration_number: {
+                    type: ["string", "null"],
+                  },
+
+                  service_date: {
+                    type: ["string", "null"],
+                  },
+
+                  current_km: {
+                    type: ["number", "null"],
+                  },
+
+                  service_items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        spare_part: {
+                          type: ["string", "null"],
+                        },
+
+                        quantity: {
+                          type: ["number", "null"],
+                        },
+
+                        cost: {
+                          type: ["number", "null"],
+                        },
+
+                        item_remark: {
+                          type: ["string", "null"],
+                        },
+                      },
+                      required: [
+                        "spare_part",
+                        "quantity",
+                        "cost",
+                        "item_remark",
+                      ],
+                    },
+                  },
+
+                  service_remarks: {
+                    type: ["string", "null"],
+                  },
+                },
+
+                required: [
+                  "registration_number",
+                  "service_date",
+                  "current_km",
+                  "service_items",
+                  "service_remarks",
+                ],
+              },
+            },
+          },
+        });
+
+        const outputText = response.output_text;
+
+        const data = JSON.parse(outputText);
+
+        return res.status(200).json({
+          success: true,
+          data,
+        });
+      } catch (error) {
+        console.error(
+            "Transport Service OCR Error:",
+            error,
+        );
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to extract transport service data.",
+          error: error.message,
+        });
+      }
+    },
+);

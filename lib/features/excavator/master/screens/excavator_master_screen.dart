@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/excavator_provider.dart';
 import 'excavator_master_add_edit_screen.dart';
 
@@ -272,17 +274,18 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                                           _editExcavator(excavator.id!);
                                         },
                                       ),
-                                      IconButton(
-                                        tooltip: 'Delete',
-                                        icon: const Icon(
-                                          Icons.delete_outline,
-                                          size: 18,
+                                      if (context.watch<AuthProvider>().isAdmin)
+                                        IconButton(
+                                          tooltip: 'Delete',
+                                          icon: const Icon(
+                                            Icons.delete_outline,
+                                            size: 18,
+                                          ),
+                                          color: const Color(0xFFBA1A1A),
+                                          onPressed: () {
+                                            _deleteExcavator(excavator.id!);
+                                          },
                                         ),
-                                        color: const Color(0xFFBA1A1A),
-                                        onPressed: () {
-                                          _deleteExcavator(excavator.id!);
-                                        },
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -598,13 +601,56 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
           //   icon: const Icon(Icons.notifications_outlined),
           // ),
           const SizedBox(width: 8),
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
+
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-          const SizedBox(width: 8),
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );

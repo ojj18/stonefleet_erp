@@ -5,6 +5,8 @@ import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/models/excavator_service_model.dart';
 import '../../../../data/repositories/excavator_service_repository.dart';
+import '../../../auth/providers/auth_provider.dart';
+import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_service_provider.dart';
 import 'excavator_service_add_edit_screen.dart';
@@ -121,13 +123,56 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
           //   icon: const Icon(Icons.notifications_outlined),
           // ),
           const SizedBox(width: 8),
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
+
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-          const SizedBox(width: 8),
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -530,17 +575,18 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
                         : () => _openEditScreen(service),
                     icon: const Icon(Icons.edit_outlined, size: 19),
                   ),
-                  IconButton(
-                    tooltip: 'Delete',
-                    onPressed: service.id == null
-                        ? null
-                        : () => _confirmDelete(service),
-                    icon: const Icon(
-                      Icons.delete_outline,
-                      size: 19,
-                      color: Color(0xFFBA1A1A),
+                  if (context.watch<AuthProvider>().isAdmin)
+                    IconButton(
+                      tooltip: 'Delete',
+                      onPressed: service.id == null
+                          ? null
+                          : () => _confirmDelete(service),
+                      icon: const Icon(
+                        Icons.delete_outline,
+                        size: 19,
+                        color: Color(0xFFBA1A1A),
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -594,6 +640,9 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
 
     if (result == true) {
       await context.read<ExcavatorServiceProvider>().loadServices();
+      if (!mounted) return;
+
+      await context.read<ServiceNotificationProvider>().loadNotifications();
     }
   }
 
@@ -611,6 +660,9 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
 
     if (result == true) {
       await context.read<ExcavatorServiceProvider>().loadServices();
+      if (!mounted) return;
+
+      await context.read<ServiceNotificationProvider>().loadNotifications();
     }
   }
 
@@ -659,7 +711,10 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
         .deleteService(service.id!);
 
     if (!mounted) return;
-
+    if (success) {
+      await context.read<ServiceNotificationProvider>().loadNotifications();
+    }
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

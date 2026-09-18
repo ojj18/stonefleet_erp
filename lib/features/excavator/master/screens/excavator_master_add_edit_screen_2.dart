@@ -4,8 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/excavator_model.dart';
-
-import '../../../../data/services/way2api_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/excavator_provider.dart';
 
@@ -62,7 +60,6 @@ class _ExcavatorMasterAddEditScreenState
   bool _registrationExists = false;
 
   bool _registrationChecked = false;
-  bool _rcVerifying = false;
 
   // ============================================================
   // INIT
@@ -366,10 +363,6 @@ class _ExcavatorMasterAddEditScreenState
           // ------------------------------------------------------
           _buildRegistrationField(),
 
-          const SizedBox(height: 10),
-
-          _buildVerifyRcButton(),
-
           const SizedBox(height: 20),
 
           // ------------------------------------------------------
@@ -477,156 +470,6 @@ class _ExcavatorMasterAddEditScreenState
         return null;
       },
     );
-  }
-
-  // ============================================================
-  // VERIFY RC DETAILS
-  // ============================================================
-
-  Widget _buildVerifyRcButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: OutlinedButton.icon(
-        onPressed: _saving || _rcVerifying ? null : _verifyRc,
-        icon: _rcVerifying
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF00652C),
-                ),
-              )
-            : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF00652C),
-          side: const BorderSide(color: Color(0xFF00652C)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _verifyRc() async {
-    if (_rcVerifying) return;
-
-    final registration = _normalizeRegistration(_registrationController.text);
-
-    if (registration.isEmpty) {
-      _showError('Enter registration number first.');
-      return;
-    }
-
-    FocusScope.of(context).unfocus();
-
-    setState(() {
-      _rcVerifying = true;
-    });
-
-    try {
-      final rc = await Way2ApiService().getVehicleDetails(registration);
-
-      if (!mounted) return;
-
-      setState(() {
-        if (rc.manufacturer != null && rc.manufacturer!.trim().isNotEmpty) {
-          _manufacturerController.text = rc.manufacturer!.trim();
-        }
-
-        if (rc.model != null && rc.model!.trim().isNotEmpty) {
-          _modelController.text = rc.model!.trim();
-        }
-
-        if (rc.manufacturingDate != null &&
-            rc.manufacturingDate!.trim().isNotEmpty) {
-          final year = _extractYear(rc.manufacturingDate!);
-          if (year != null) {
-            _yearController.text = year.toString();
-          }
-        }
-
-        final insuranceDate = _parseWay2Date(rc.insuranceExpiry);
-        if (insuranceDate != null) {
-          _insuranceExpiry = insuranceDate;
-        }
-
-        final fitnessDate = _parseWay2Date(rc.fitnessExpiry);
-        if (fitnessDate != null) {
-          _fcExpiry = fitnessDate;
-        }
-
-        final permitDate = _parseWay2Date(rc.permitExpiry);
-        if (permitDate != null) {
-          _permitExpiry = permitDate;
-        }
-
-        final taxDate = _parseWay2Date(rc.taxExpiry);
-        if (taxDate != null) {
-          _taxExpiry = taxDate;
-        }
-
-        _registrationController.text = registration;
-      });
-
-      _showSuccess('RC verified successfully. Details auto-filled.');
-    } catch (e) {
-      if (!mounted) return;
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _rcVerifying = false;
-        });
-      }
-    }
-  }
-
-  int? _extractYear(String value) {
-    final match = RegExp(r'(19|20)\d{2}').firstMatch(value);
-    if (match == null) return null;
-    return int.tryParse(match.group(0)!);
-  }
-
-  DateTime? _parseWay2Date(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-
-    final text = value.trim();
-
-    final isoDate = DateTime.tryParse(text);
-    if (isoDate != null) {
-      return isoDate;
-    }
-
-    final parts = text.split(RegExp(r'[/-]'));
-
-    if (parts.length == 3) {
-      final first = int.tryParse(parts[0]);
-      final second = int.tryParse(parts[1]);
-      final third = int.tryParse(parts[2]);
-
-      if (first != null && second != null && third != null) {
-        if (first > 31) {
-          return DateTime(first, second, third);
-        }
-
-        return DateTime(third, second, first);
-      }
-    }
-
-    return null;
-  }
-
-  String _cleanWay2Error(Object error) {
-    final message = error.toString();
-
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
-    }
-
-    return message;
   }
 
   // ============================================================

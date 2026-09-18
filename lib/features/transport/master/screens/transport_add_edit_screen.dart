@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
+import '../../../../data/services/way2api_service.dart';
+import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/transport_master_provider.dart';
 
 class TransportAddEditScreen extends StatefulWidget {
@@ -46,6 +49,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
   bool _initializing = true;
   bool _saving = false;
+  bool _rcVerifying = false;
 
   // ============================================================
   // INIT
@@ -230,22 +234,56 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           ),
 
           const Spacer(),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
 
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: const Icon(Icons.notifications_outlined),
-          // ),
-          const SizedBox(width: 8),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
 
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-
-          const SizedBox(width: 8),
-
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -337,6 +375,10 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           const SizedBox(height: 20),
 
           _buildEmissionField(),
+
+          const SizedBox(height: 12),
+
+          _buildVerifyRcButton(),
         ],
       ),
     );
@@ -424,6 +466,161 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         return null;
       },
     );
+  }
+
+  // ============================================================
+  // VERIFY RC DETAILS
+  // ============================================================
+
+  Widget _buildVerifyRcButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: OutlinedButton.icon(
+        onPressed: _saving || _rcVerifying ? null : _verifyRc,
+        icon: _rcVerifying
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFF00652C),
+                ),
+              )
+            : const Icon(Icons.verified_outlined, size: 18),
+        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF00652C),
+          side: const BorderSide(color: Color(0xFF00652C)),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _verifyRc() async {
+    if (_rcVerifying) return;
+
+    final registration = _normalizeRegistration(_registrationController.text);
+
+    if (registration.isEmpty) {
+      _showError('Enter registration number first.');
+      return;
+    }
+
+    FocusScope.of(context).unfocus();
+
+    setState(() {
+      _rcVerifying = true;
+    });
+
+    try {
+      final rc = await Way2ApiService().getVehicleDetails(registration);
+
+      if (!mounted) return;
+
+      setState(() {
+        if (rc.manufacturer != null && rc.manufacturer!.trim().isNotEmpty) {
+          _manufacturerController.text = rc.manufacturer!.trim();
+        }
+
+        if (rc.model != null && rc.model!.trim().isNotEmpty) {
+          _modelController.text = rc.model!.trim();
+        }
+
+        if (rc.manufacturingDate != null &&
+            rc.manufacturingDate!.trim().isNotEmpty) {
+          final year = _extractYear(rc.manufacturingDate!);
+          if (year != null) {
+            _yearController.text = year.toString();
+          }
+        }
+
+        final insuranceDate = _parseWay2Date(rc.insuranceExpiry);
+        if (insuranceDate != null) {
+          _insuranceExpiry = insuranceDate;
+        }
+
+        final fitnessDate = _parseWay2Date(rc.fitnessExpiry);
+        if (fitnessDate != null) {
+          _fcExpiry = fitnessDate;
+        }
+
+        final permitDate = _parseWay2Date(rc.permitExpiry);
+        if (permitDate != null) {
+          _permitExpiry = permitDate;
+        }
+
+        final taxDate = _parseWay2Date(rc.taxExpiry);
+        if (taxDate != null) {
+          _taxExpiry = taxDate;
+        }
+
+        _registrationController.text = registration;
+      });
+
+      _showSuccess('RC verified successfully. Details auto-filled.');
+    } catch (e) {
+      if (!mounted) return;
+
+      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _rcVerifying = false;
+        });
+      }
+    }
+  }
+
+  int? _extractYear(String value) {
+    final match = RegExp(r'(19|20)\d{2}').firstMatch(value);
+
+    if (match == null) return null;
+
+    return int.tryParse(match.group(0)!);
+  }
+
+  DateTime? _parseWay2Date(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return null;
+    }
+
+    final text = value.trim();
+
+    // ISO / yyyy-MM-dd
+    final isoDate = DateTime.tryParse(text);
+    if (isoDate != null) {
+      return isoDate;
+    }
+
+    // dd/MM/yyyy or dd-MM-yyyy
+    final parts = text.split(RegExp(r'[/-]'));
+
+    if (parts.length == 3) {
+      final first = int.tryParse(parts[0]);
+      final second = int.tryParse(parts[1]);
+      final third = int.tryParse(parts[2]);
+
+      if (first != null && second != null && third != null) {
+        if (first > 31) {
+          return DateTime(first, second, third);
+        }
+
+        return DateTime(third, second, first);
+      }
+    }
+
+    return null;
+  }
+
+  String _cleanWay2Error(Object error) {
+    final message = error.toString();
+
+    if (message.startsWith('Exception: ')) {
+      return message.substring(11);
+    }
+
+    return message;
   }
 
   // ============================================================

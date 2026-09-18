@@ -1,8 +1,13 @@
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../data/models/ocr/transport_maintenance_ocr_model.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
+import '../../../../data/services/ocr_service.dart';
+import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../../transport/master/providers/transport_master_provider.dart';
 import '../providers/transport_maintenance_provider.dart';
 
@@ -49,9 +54,13 @@ class _TransportMaintenanceAddEditScreenState
 
   double _totalKm = 0;
   double _dieselExpense = 0;
+  double _dieselConsumptionPerKm = 0;
+  double _dieselCostPerKm = 0;
 
   bool _initializing = true;
   bool _saving = false;
+
+  TransportMaintenanceOcrModel? _ocrResult;
 
   // ============================================================
   // INIT
@@ -188,6 +197,15 @@ class _TransportMaintenanceAddEditScreenState
 
     final dieselExpense = dieselFilled * dieselRate;
 
+    double dieselConsumptionPerKm = 0;
+    double dieselCostPerKm = 0;
+
+    if (totalKm > 0 && dieselFilled > 0) {
+      dieselConsumptionPerKm = dieselFilled / totalKm;
+
+      dieselCostPerKm = dieselExpense / totalKm;
+    }
+
     if (!mounted) {
       return;
     }
@@ -195,6 +213,8 @@ class _TransportMaintenanceAddEditScreenState
     setState(() {
       _totalKm = totalKm;
       _dieselExpense = dieselExpense;
+      _dieselConsumptionPerKm = dieselConsumptionPerKm;
+      _dieselCostPerKm = dieselCostPerKm;
     });
   }
 
@@ -299,21 +319,56 @@ class _TransportMaintenanceAddEditScreenState
 
           const Spacer(),
 
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: const Icon(Icons.notifications_outlined),
-          // ),
-          const SizedBox(width: 8),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
 
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
+
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-
-          const SizedBox(width: 8),
-
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -353,15 +408,21 @@ class _TransportMaintenanceAddEditScreenState
           ),
         ),
 
-        OutlinedButton.icon(
-          onPressed: _saving
-              ? null
-              : () {
-                  Navigator.pop(context);
-                },
-          icon: const Icon(Icons.close, size: 18),
-          label: const Text('Cancel'),
+        ElevatedButton.icon(
+          onPressed: _extractSheetData,
+          icon: const Icon(Icons.upload_file_outlined),
+          label: const Text('Upload Image'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF00652C),
+            foregroundColor: Colors.white,
+            minimumSize: const Size(170, 48),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
+
+        const SizedBox(width: 12),
       ],
     );
   }
@@ -565,36 +626,68 @@ class _TransportMaintenanceAddEditScreenState
     return _sectionCard(
       title: 'Diesel & Fuel',
       icon: Icons.local_gas_station_outlined,
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: _buildNumberField(
-              controller: _dieselFilledController,
-              label: 'Diesel Filled',
-              hint: '0.00',
-              icon: Icons.water_drop_outlined,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildNumberField(
+                  controller: _dieselFilledController,
+                  label: 'Diesel Filled',
+                  hint: '0.00',
+                  icon: Icons.water_drop_outlined,
+                ),
+              ),
+
+              const SizedBox(width: 20),
+
+              Expanded(
+                child: _buildNumberField(
+                  controller: _dieselRateController,
+                  label: 'Diesel Rate',
+                  hint: '0.00',
+                  icon: Icons.currency_rupee,
+                ),
+              ),
+
+              const SizedBox(width: 20),
+
+              Expanded(
+                child: _buildCalculatedField(
+                  label: 'Diesel Expense',
+                  value: _formatCurrency(_dieselExpense),
+                  icon: Icons.receipt_long_outlined,
+                ),
+              ),
+            ],
           ),
 
-          const SizedBox(width: 20),
+          const SizedBox(height: 20),
 
-          Expanded(
-            child: _buildNumberField(
-              controller: _dieselRateController,
-              label: 'Diesel Rate',
-              hint: '0.00',
-              icon: Icons.currency_rupee,
-            ),
-          ),
+          Row(
+            children: [
+              Expanded(
+                child: _buildCalculatedField(
+                  label: 'Diesel Consumption',
+                  value: '${_dieselConsumptionPerKm.toStringAsFixed(2)} L/km',
+                  icon: Icons.speed_outlined,
+                ),
+              ),
 
-          const SizedBox(width: 20),
+              const SizedBox(width: 20),
 
-          Expanded(
-            child: _buildCalculatedField(
-              label: 'Diesel Expense',
-              value: _formatCurrency(_dieselExpense),
-              icon: Icons.receipt_long_outlined,
-            ),
+              Expanded(
+                child: _buildCalculatedField(
+                  label: 'Diesel Cost',
+                  value: '${_formatCurrency(_dieselCostPerKm)}/km',
+                  icon: Icons.currency_rupee,
+                ),
+              ),
+
+              const SizedBox(width: 20),
+
+              const Expanded(child: SizedBox()),
+            ],
           ),
         ],
       ),
@@ -992,5 +1085,296 @@ class _TransportMaintenanceAddEditScreenState
 
   String _formatCurrency(double value) {
     return '₹${value.toStringAsFixed(2)}';
+  }
+
+  Future<void> _extractSheetData() async {
+    try {
+      const typeGroup = XTypeGroup(
+        label: 'Images',
+        extensions: ['jpg', 'jpeg', 'png', 'webp'],
+      );
+
+      final imageFile = await openFile(acceptedTypeGroups: [typeGroup]);
+
+      if (imageFile == null || !mounted) {
+        return;
+      }
+
+      final useImage = await _showUploadedSheetDialog(imageFile);
+
+      if (!useImage || !mounted) {
+        return;
+      }
+
+      // Show separate extracting popup.
+      _showExtractingDialog();
+
+      final ocrService = const OcrService();
+
+      final result = await ocrService.extractTransportMaintenance(imageFile);
+
+      if (!mounted) return;
+
+      // Close extracting popup.
+      Navigator.of(context, rootNavigator: true).pop();
+
+      setState(() {
+        _ocrResult = result;
+      });
+
+      await _showOcrResultDialog();
+    } catch (e) {
+      if (!mounted) return;
+
+      // Close extracting popup if it is open.
+      Navigator.of(context, rootNavigator: true).pop();
+
+      _showError('Failed to extract transport maintenance data: $e');
+    }
+  }
+
+  Future<bool> _showUploadedSheetDialog(XFile imageFile) async {
+    final imageBytes = await imageFile.readAsBytes();
+
+    if (!mounted) return false;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Uploaded Sheet',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 600,
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 550),
+              child: Image.memory(imageBytes, fit: BoxFit.contain),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              icon: const Icon(Icons.file_upload_outlined),
+              label: const Text('Use Image'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(170, 48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
+  }
+
+  void _showExtractingDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return const AlertDialog(
+          title: Text('Extracting Data'),
+          content: SizedBox(
+            width: 300,
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                SizedBox(width: 20),
+                Text('Please wait...'),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showOcrResultDialog() async {
+    final result = _ocrResult;
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Review Extracted Data',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          ),
+          content: SizedBox(
+            width: 650,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _ocrRow('Registration Number', result.registrationNumber),
+                  _ocrRow('Driver Name', result.driverName),
+                  _ocrRow('Starting KM', result.startingKm?.toString()),
+                  _ocrRow('Closing KM', result.closingKm?.toString()),
+                  _ocrRow('Number of Loads', result.numberOfLoads?.toString()),
+                  _ocrRow('Loading Site', result.loadingSite),
+                  _ocrRow('Unloading Site', result.unloadingSite),
+                  _ocrRow('Diesel Filled', result.dieselFilled?.toString()),
+                  _ocrRow('Diesel Rate', result.dieselRate?.toString()),
+                  _ocrRow('Remarks', result.remarks),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            OutlinedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Change'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                _applyOcrResultToForm();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(180, 48),
+              ),
+              child: const Text('Use These Values'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _ocrRow(String label, String? value) {
+    final displayValue = value == null || value.trim().isEmpty ? '-' : value;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 180,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const Text(':  '),
+          Expanded(child: Text(displayValue)),
+        ],
+      ),
+    );
+  }
+
+  void _applyOcrResultToForm() {
+    final result = _ocrResult;
+
+    if (result == null) {
+      return;
+    }
+
+    // 1. Match vehicle by registration number.
+    if (result.registrationNumber != null &&
+        result.registrationNumber!.trim().isNotEmpty) {
+      final extractedRegistration = _normalizeRegistrationNumber(
+        result.registrationNumber!,
+      );
+
+      for (final vehicle in context.read<TransportProvider>().vehicles) {
+        final dbRegistration = _normalizeRegistrationNumber(
+          vehicle.registrationNumber,
+        );
+
+        if (dbRegistration == extractedRegistration) {
+          _selectedVehicle = vehicle;
+          break;
+        }
+      }
+    }
+
+    // 2. Driver
+    if (result.driverName != null) {
+      _driverController.text = result.driverName!;
+    }
+
+    // 3. Starting KM
+    if (result.startingKm != null) {
+      _startingKmController.text = result.startingKm!.toString();
+    }
+
+    // 4. Closing KM
+    if (result.closingKm != null) {
+      _closingKmController.text = result.closingKm!.toString();
+    }
+
+    // 5. Number of Loads
+    if (result.numberOfLoads != null) {
+      _numberOfLoadsController.text = result.numberOfLoads!.toString();
+    }
+
+    // 6. Loading Site
+    if (result.loadingSite != null) {
+      _loadingSiteController.text = result.loadingSite!;
+    }
+
+    // 7. Unloading Site
+    if (result.unloadingSite != null) {
+      _unloadingSiteController.text = result.unloadingSite!;
+    }
+
+    // 8. Diesel Filled
+    if (result.dieselFilled != null) {
+      _dieselFilledController.text = result.dieselFilled!.toString();
+    }
+
+    // 9. Diesel Rate
+    if (result.dieselRate != null) {
+      _dieselRateController.text = result.dieselRate!.toString();
+    }
+
+    // 10. Remarks
+    if (result.remarks != null) {
+      _remarksController.text = result.remarks!;
+    }
+
+    // Calculate:
+    // Total KM
+    // Diesel Expense
+    // Diesel Consumption
+    // Diesel Cost
+    _calculateValues();
+
+    setState(() {});
+  }
+
+  String _normalizeRegistrationNumber(String value) {
+    return value.toUpperCase().replaceAll(RegExp(r'[^A-Z0-9]'), '');
   }
 }

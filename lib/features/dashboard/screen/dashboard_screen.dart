@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_sidebar.dart';
 import '../../../data/models/dashboard_model.dart';
+import '../../service_notification/providers/service_notification_provider.dart';
 import '../provider/dashboard_provider.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -69,7 +70,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               _buildKpiSection(dashboard),
 
                               const SizedBox(height: 24),
-
+                              _buildServiceNotificationCard(),
+                              const SizedBox(height: 24),
                               _buildExcavatorSection(dashboard),
 
                               const SizedBox(height: 24),
@@ -98,6 +100,83 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  // ============================================================
+  // SERVICE NOTIFICATIONS
+  // ============================================================
+
+  Widget _buildServiceNotificationCard() {
+    return Consumer<ServiceNotificationProvider>(
+      builder: (context, notificationProvider, _) {
+        return _DashboardCard(
+          title: 'Service Notifications',
+          icon: Icons.notifications_active_outlined,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: _NotificationSummaryItem(
+                      title: 'Overdue',
+                      count: notificationProvider.overdueCount,
+                      icon: Icons.error_outline_rounded,
+                      color: const Color(0xFFD93025),
+                      backgroundColor: const Color(0xFFFFEEEE),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: _NotificationSummaryItem(
+                      title: 'Due',
+                      count: notificationProvider.dueCount,
+                      icon: Icons.access_alarm_rounded,
+                      color: const Color(0xFFE67E22),
+                      backgroundColor: const Color(0xFFFFF3E6),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: _NotificationSummaryItem(
+                      title: 'Upcoming',
+                      count: notificationProvider.upcomingCount,
+                      icon: Icons.schedule_rounded,
+                      color: const Color(0xFF3159C9),
+                      backgroundColor: const Color(0xFFEEF2FF),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: _NotificationSummaryItem(
+                      title: 'Not Recorded',
+                      count: notificationProvider.serviceNotRecordedCount,
+                      icon: Icons.help_outline_rounded,
+                      color: const Color(0xFF64686D),
+                      backgroundColor: const Color(0xFFF0F1F2),
+                    ),
+                  ),
+
+                  const SizedBox(width: 16),
+
+                  OutlinedButton(
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    child: const Text('View All'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildTopBar() {
     return Container(
       height: 64,
@@ -115,26 +194,60 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const Spacer(),
 
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: const Icon(Icons.notifications_outlined),
-          // ),
-          const SizedBox(width: 8),
+          // ======================================================
+          // SERVICE NOTIFICATION
+          // ======================================================
+          Consumer<ServiceNotificationProvider>(
+            builder: (context, notificationProvider, _) {
+              final alertCount = notificationProvider.alertCount;
 
-          const CircleAvatar(
-            radius: 17,
-            backgroundColor: Color(0xFFE8F5E9),
-            child: Icon(Icons.person_outline, color: Color(0xFF00652C)),
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  IconButton(
+                    tooltip: 'Service Notifications',
+                    onPressed: () {
+                      handleMenuTap(7, context: context);
+                    },
+                    icon: const Icon(Icons.notifications_outlined, size: 23),
+                  ),
+
+                  // Badge
+                  if (alertCount > 0)
+                    Positioned(
+                      right: 5,
+                      top: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD93025),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Center(
+                          child: Text(
+                            alertCount > 99 ? '99+' : '$alertCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 8,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
           ),
-
-          const SizedBox(width: 8),
-
-          const Text('Admin', style: TextStyle(fontWeight: FontWeight.w600)),
         ],
       ),
     );
   }
-
   // ============================================================
   // HEADER
   // ============================================================
@@ -790,6 +903,63 @@ class _ErrorView extends StatelessWidget {
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
             label: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NotificationSummaryItem extends StatelessWidget {
+  final String title;
+  final int count;
+  final IconData icon;
+  final Color color;
+  final Color backgroundColor;
+
+  const _NotificationSummaryItem({
+    required this.title,
+    required this.count,
+    required this.icon,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 19, color: color),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade700,
+              ),
+            ),
+          ),
+
+          Text(
+            '$count',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
         ],
       ),

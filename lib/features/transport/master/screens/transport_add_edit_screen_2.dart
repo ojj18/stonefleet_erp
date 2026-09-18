@@ -3,26 +3,22 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
-import '../../../../data/models/excavator_model.dart';
-
-import '../../../../data/services/way2api_service.dart';
+import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
-import '../providers/excavator_provider.dart';
+import '../providers/transport_master_provider.dart';
 
-class ExcavatorMasterAddEditScreen extends StatefulWidget {
-  final int? excavatorId;
+class TransportAddEditScreen extends StatefulWidget {
+  final int? vehicleId;
 
-  const ExcavatorMasterAddEditScreen({super.key, this.excavatorId});
+  const TransportAddEditScreen({super.key, this.vehicleId});
 
-  bool get isEdit => excavatorId != null;
+  bool get isEdit => vehicleId != null;
 
   @override
-  State<ExcavatorMasterAddEditScreen> createState() =>
-      _ExcavatorMasterAddEditScreenState();
+  State<TransportAddEditScreen> createState() => _TransportAddEditScreenState();
 }
 
-class _ExcavatorMasterAddEditScreenState
-    extends State<ExcavatorMasterAddEditScreen> {
+class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // ============================================================
@@ -33,15 +29,10 @@ class _ExcavatorMasterAddEditScreenState
   final _manufacturerController = TextEditingController();
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
+  final _emissionController = TextEditingController();
 
   // ============================================================
-  // FOCUS
-  // ============================================================
-
-  final _registrationFocusNode = FocusNode();
-
-  // ============================================================
-  // DATE STATE
+  // STATE
   // ============================================================
 
   DateTime? _insuranceExpiry;
@@ -49,20 +40,14 @@ class _ExcavatorMasterAddEditScreenState
   DateTime? _permitExpiry;
   DateTime? _taxExpiry;
 
-  // ============================================================
-  // STATE
-  // ============================================================
-
   bool _status = true;
+
+  bool _registrationExists = false;
+  bool _registrationChecking = false;
+  bool _registrationChecked = false;
 
   bool _initializing = true;
   bool _saving = false;
-
-  bool _registrationChecking = false;
-  bool _registrationExists = false;
-
-  bool _registrationChecked = false;
-  bool _rcVerifying = false;
 
   // ============================================================
   // INIT
@@ -71,8 +56,6 @@ class _ExcavatorMasterAddEditScreenState
   @override
   void initState() {
     super.initState();
-
-    _registrationFocusNode.addListener(_handleRegistrationFocusChange);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initialize();
@@ -84,35 +67,45 @@ class _ExcavatorMasterAddEditScreenState
   // ============================================================
 
   Future<void> _initialize() async {
-    final provider = context.read<ExcavatorProvider>();
+    if (!widget.isEdit) {
+      if (mounted) {
+        setState(() {
+          _initializing = false;
+        });
+      }
+
+      return;
+    }
+
+    final provider = context.read<TransportProvider>();
 
     try {
-      if (widget.isEdit) {
-        final excavator = await provider.getById(widget.excavatorId!);
+      final vehicle = await provider.getById(widget.vehicleId!);
 
-        if (excavator != null && mounted) {
-          _registrationController.text = excavator.registrationNumber;
+      if (vehicle != null && mounted) {
+        _registrationController.text = vehicle.registrationNumber;
 
-          _manufacturerController.text = excavator.manufacturerName ?? '';
+        _manufacturerController.text = vehicle.manufacturerName ?? '';
 
-          _modelController.text = excavator.modelName ?? '';
+        _modelController.text = vehicle.modelName ?? '';
 
-          _yearController.text = excavator.manufacturingYear?.toString() ?? '';
+        _yearController.text = vehicle.manufacturingYear?.toString() ?? '';
 
-          _insuranceExpiry = _parseDate(excavator.insuranceExpiry);
+        _emissionController.text = vehicle.emissionStandard ?? '';
 
-          _fcExpiry = _parseDate(excavator.fcExpiry);
+        _insuranceExpiry = _parseDate(vehicle.insuranceExpiry);
 
-          _permitExpiry = _parseDate(excavator.permitExpiry);
+        _fcExpiry = _parseDate(vehicle.fcExpiry);
 
-          _taxExpiry = _parseDate(excavator.taxExpiry);
+        _permitExpiry = _parseDate(vehicle.permitExpiry);
 
-          _status = excavator.status;
-        }
+        _taxExpiry = _parseDate(vehicle.taxExpiry);
+
+        _status = vehicle.status;
       }
     } catch (e) {
       if (mounted) {
-        _showError('Unable to load excavator details: $e');
+        _showError('Unable to load vehicle: $e');
       }
     } finally {
       if (mounted) {
@@ -120,19 +113,6 @@ class _ExcavatorMasterAddEditScreenState
           _initializing = false;
         });
       }
-    }
-  }
-
-  // ============================================================
-  // REGISTRATION FOCUS
-  // ============================================================
-
-  void _handleRegistrationFocusChange() {
-    if (!_registrationFocusNode.hasFocus &&
-        !widget.isEdit &&
-        _registrationController.text.trim().isNotEmpty &&
-        !_registrationChecked) {
-      _checkRegistration();
     }
   }
 
@@ -146,10 +126,7 @@ class _ExcavatorMasterAddEditScreenState
     _manufacturerController.dispose();
     _modelController.dispose();
     _yearController.dispose();
-
-    _registrationFocusNode.removeListener(_handleRegistrationFocusChange);
-
-    _registrationFocusNode.dispose();
+    _emissionController.dispose();
 
     super.dispose();
   }
@@ -162,6 +139,7 @@ class _ExcavatorMasterAddEditScreenState
   Widget build(BuildContext context) {
     if (_initializing) {
       return const Scaffold(
+        backgroundColor: Color(0xFFF8F9FB),
         body: Center(
           child: CircularProgressIndicator(color: Color(0xFF00652C)),
         ),
@@ -170,6 +148,7 @@ class _ExcavatorMasterAddEditScreenState
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
+
       body: Column(
         children: [
           _buildTopBar(),
@@ -177,19 +156,23 @@ class _ExcavatorMasterAddEditScreenState
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(32),
+
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1100),
+
                   child: Form(
                     key: _formKey,
+
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       children: [
                         _buildHeader(),
 
                         const SizedBox(height: 24),
 
-                        _buildMachineDetails(),
+                        _buildVehicleDetailsSection(),
 
                         const SizedBox(height: 20),
 
@@ -221,11 +204,15 @@ class _ExcavatorMasterAddEditScreenState
   Widget _buildTopBar() {
     return Container(
       height: 64,
+
       padding: const EdgeInsets.symmetric(horizontal: 24),
+
       decoration: const BoxDecoration(
         color: Colors.white,
+
         border: Border(bottom: BorderSide(color: Color(0xFFBECABC))),
       ),
+
       child: Row(
         children: [
           IconButton(
@@ -245,12 +232,6 @@ class _ExcavatorMasterAddEditScreenState
           ),
 
           const Spacer(),
-
-          // IconButton(
-          //   onPressed: () {},
-          //   icon: const Icon(Icons.notifications_outlined),
-          // ),
-          const SizedBox(width: 8),
           // ======================================================
           // SERVICE NOTIFICATION
           // ======================================================
@@ -316,9 +297,13 @@ class _ExcavatorMasterAddEditScreenState
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
               Text(
-                widget.isEdit ? 'Edit Excavator' : 'Add Excavator',
+                widget.isEdit
+                    ? 'Edit Transport Vehicle'
+                    : 'Add Transport Vehicle',
+
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -330,8 +315,9 @@ class _ExcavatorMasterAddEditScreenState
 
               Text(
                 widget.isEdit
-                    ? 'Update registered excavator details.'
-                    : 'Register a new excavator in the fleet.',
+                    ? 'Update transport vehicle details.'
+                    : 'Register a new transport vehicle in the fleet.',
+
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -352,29 +338,28 @@ class _ExcavatorMasterAddEditScreenState
   }
 
   // ============================================================
-  // MACHINE DETAILS
+  // VEHICLE DETAILS
   // ============================================================
 
-  Widget _buildMachineDetails() {
+  Widget _buildVehicleDetailsSection() {
     return _sectionCard(
-      title: 'Machine Details',
-      icon: Icons.precision_manufacturing_outlined,
+      title: 'Vehicle Details',
+      icon: Icons.local_shipping_outlined,
+
       child: Column(
         children: [
-          // ------------------------------------------------------
-          // REGISTRATION
-          // ------------------------------------------------------
-          _buildRegistrationField(),
+          Row(
+            children: [
+              Expanded(child: _buildRegistrationField()),
 
-          const SizedBox(height: 10),
+              const SizedBox(width: 20),
 
-          _buildVerifyRcButton(),
+              Expanded(child: _buildYearField()),
+            ],
+          ),
 
           const SizedBox(height: 20),
 
-          // ------------------------------------------------------
-          // MANUFACTURER + MODEL
-          // ------------------------------------------------------
           Row(
             children: [
               Expanded(child: _buildManufacturerField()),
@@ -387,70 +372,23 @@ class _ExcavatorMasterAddEditScreenState
 
           const SizedBox(height: 20),
 
-          // ------------------------------------------------------
-          // YEAR
-          // ------------------------------------------------------
-          _buildYearField(),
+          _buildEmissionField(),
         ],
       ),
     );
   }
 
   // ============================================================
-  // REGISTRATION NUMBER
+  // REGISTRATION
   // ============================================================
 
   Widget _buildRegistrationField() {
     return TextFormField(
       controller: _registrationController,
-      focusNode: _registrationFocusNode,
 
-      enabled: !_saving && !widget.isEdit,
+      enabled: !_saving,
 
       textCapitalization: TextCapitalization.characters,
-
-      inputFormatters: [
-        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 -]')),
-        UpperCaseTextFormatter(),
-      ],
-
-      decoration:
-          _inputDecoration(
-            label: 'Registration Number',
-            hint: 'TN 38 AB 1234',
-            icon: Icons.badge_outlined,
-          ).copyWith(
-            suffixIcon: _registrationChecking
-                ? const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Color(0xFF00652C),
-                      ),
-                    ),
-                  )
-                : widget.isEdit
-                ? const Icon(Icons.lock_outline, size: 20)
-                : IconButton(
-                    tooltip: 'Check registration',
-                    icon: Icon(
-                      _registrationExists
-                          ? Icons.error_outline
-                          : _registrationChecked
-                          ? Icons.check_circle_outline
-                          : Icons.search,
-                      color: _registrationExists
-                          ? const Color(0xFFBA1A1A)
-                          : _registrationChecked
-                          ? const Color(0xFF00652C)
-                          : null,
-                    ),
-                    onPressed: _checkRegistration,
-                  ),
-          ),
 
       onChanged: (_) {
         if (_registrationExists || _registrationChecked) {
@@ -461,9 +399,54 @@ class _ExcavatorMasterAddEditScreenState
         }
       },
 
+      inputFormatters: [
+        FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 -]')),
+        UpperCaseTextFormatter(),
+      ],
       onFieldSubmitted: (_) {
         _checkRegistration();
       },
+
+      decoration:
+          _inputDecoration(
+            label: 'Registration Number',
+            hint: 'TN 38 AB 1234',
+            icon: Icons.badge_outlined,
+          ).copyWith(
+            suffixIcon: _registrationChecking
+                ? const Padding(
+                    padding: EdgeInsets.all(12),
+
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Color(0xFF00652C),
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    tooltip: 'Check registration',
+
+                    icon: Icon(
+                      _registrationExists
+                          ? Icons.error_outline
+                          : _registrationChecked
+                          ? Icons.check_circle_outline
+                          : Icons.search,
+
+                      color: _registrationExists
+                          ? const Color(0xFFBA1A1A)
+                          : _registrationChecked
+                          ? const Color(0xFF00652C)
+                          : null,
+                    ),
+
+                    onPressed: _checkRegistration,
+                  ),
+          ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -480,213 +463,6 @@ class _ExcavatorMasterAddEditScreenState
   }
 
   // ============================================================
-  // VERIFY RC DETAILS
-  // ============================================================
-
-  Widget _buildVerifyRcButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: OutlinedButton.icon(
-        onPressed: _saving || _rcVerifying ? null : _verifyRc,
-        icon: _rcVerifying
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF00652C),
-                ),
-              )
-            : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF00652C),
-          side: const BorderSide(color: Color(0xFF00652C)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _verifyRc() async {
-    if (_rcVerifying) return;
-
-    final registration = _normalizeRegistration(_registrationController.text);
-
-    if (registration.isEmpty) {
-      _showError('Enter registration number first.');
-      return;
-    }
-
-    FocusScope.of(context).unfocus();
-
-    setState(() {
-      _rcVerifying = true;
-    });
-
-    try {
-      final rc = await Way2ApiService().getVehicleDetails(registration);
-
-      if (!mounted) return;
-
-      setState(() {
-        if (rc.manufacturer != null && rc.manufacturer!.trim().isNotEmpty) {
-          _manufacturerController.text = rc.manufacturer!.trim();
-        }
-
-        if (rc.model != null && rc.model!.trim().isNotEmpty) {
-          _modelController.text = rc.model!.trim();
-        }
-
-        if (rc.manufacturingDate != null &&
-            rc.manufacturingDate!.trim().isNotEmpty) {
-          final year = _extractYear(rc.manufacturingDate!);
-          if (year != null) {
-            _yearController.text = year.toString();
-          }
-        }
-
-        final insuranceDate = _parseWay2Date(rc.insuranceExpiry);
-        if (insuranceDate != null) {
-          _insuranceExpiry = insuranceDate;
-        }
-
-        final fitnessDate = _parseWay2Date(rc.fitnessExpiry);
-        if (fitnessDate != null) {
-          _fcExpiry = fitnessDate;
-        }
-
-        final permitDate = _parseWay2Date(rc.permitExpiry);
-        if (permitDate != null) {
-          _permitExpiry = permitDate;
-        }
-
-        final taxDate = _parseWay2Date(rc.taxExpiry);
-        if (taxDate != null) {
-          _taxExpiry = taxDate;
-        }
-
-        _registrationController.text = registration;
-      });
-
-      _showSuccess('RC verified successfully. Details auto-filled.');
-    } catch (e) {
-      if (!mounted) return;
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _rcVerifying = false;
-        });
-      }
-    }
-  }
-
-  int? _extractYear(String value) {
-    final match = RegExp(r'(19|20)\d{2}').firstMatch(value);
-    if (match == null) return null;
-    return int.tryParse(match.group(0)!);
-  }
-
-  DateTime? _parseWay2Date(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-
-    final text = value.trim();
-
-    final isoDate = DateTime.tryParse(text);
-    if (isoDate != null) {
-      return isoDate;
-    }
-
-    final parts = text.split(RegExp(r'[/-]'));
-
-    if (parts.length == 3) {
-      final first = int.tryParse(parts[0]);
-      final second = int.tryParse(parts[1]);
-      final third = int.tryParse(parts[2]);
-
-      if (first != null && second != null && third != null) {
-        if (first > 31) {
-          return DateTime(first, second, third);
-        }
-
-        return DateTime(third, second, first);
-      }
-    }
-
-    return null;
-  }
-
-  String _cleanWay2Error(Object error) {
-    final message = error.toString();
-
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
-    }
-
-    return message;
-  }
-
-  // ============================================================
-  // CHECK REGISTRATION
-  // ============================================================
-
-  Future<void> _checkRegistration() async {
-    if (_registrationChecking) {
-      return;
-    }
-
-    final registration = _normalizeRegistration(_registrationController.text);
-
-    if (registration.isEmpty) {
-      _showError('Enter registration number first.');
-      return;
-    }
-
-    FocusScope.of(context).unfocus();
-
-    setState(() {
-      _registrationChecking = true;
-      _registrationExists = false;
-      _registrationChecked = false;
-    });
-
-    try {
-      final provider = context.read<ExcavatorProvider>();
-
-      final exists = await provider.registrationExists(
-        registration,
-        excludeId: widget.excavatorId,
-      );
-
-      if (!mounted) return;
-
-      setState(() {
-        _registrationChecking = false;
-        _registrationExists = exists;
-        _registrationChecked = true;
-      });
-
-      if (exists) {
-        await _showAlreadyExistsDialog(registration);
-      } else {
-        _showSuccess('Registration number is available.');
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _registrationChecking = false;
-        _registrationChecked = false;
-      });
-
-      _showError('Unable to check registration: $e');
-    }
-  }
-
-  // ============================================================
   // MANUFACTURER
   // ============================================================
 
@@ -700,7 +476,7 @@ class _ExcavatorMasterAddEditScreenState
 
       decoration: _inputDecoration(
         label: 'Manufacturer',
-        hint: 'Example: Tata Hitachi',
+        hint: 'Example: Tata',
         icon: Icons.factory_outlined,
       ),
 
@@ -727,14 +503,14 @@ class _ExcavatorMasterAddEditScreenState
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Excavator Model',
-        hint: 'Example: EX 210',
-        icon: Icons.construction_outlined,
+        label: 'Vehicle Model',
+        hint: 'Example: Prima',
+        icon: Icons.local_shipping_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter excavator model';
+          return 'Enter vehicle model';
         }
 
         return null;
@@ -743,7 +519,7 @@ class _ExcavatorMasterAddEditScreenState
   }
 
   // ============================================================
-  // MANUFACTURING YEAR
+  // YEAR
   // ============================================================
 
   Widget _buildYearField() {
@@ -754,11 +530,6 @@ class _ExcavatorMasterAddEditScreenState
 
       keyboardType: TextInputType.number,
 
-      inputFormatters: [
-        FilteringTextInputFormatter.digitsOnly,
-        LengthLimitingTextInputFormatter(4),
-      ],
-
       decoration: _inputDecoration(
         label: 'Manufacturing Year',
         hint: '2024',
@@ -767,7 +538,7 @@ class _ExcavatorMasterAddEditScreenState
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return null;
+          return 'Enter manufacturing year';
         }
 
         final year = int.tryParse(value.trim());
@@ -776,9 +547,7 @@ class _ExcavatorMasterAddEditScreenState
           return 'Enter a valid year';
         }
 
-        final currentYear = DateTime.now().year;
-
-        if (year < 1950 || year > currentYear) {
+        if (year < 1900 || year > DateTime.now().year) {
           return 'Enter a valid year';
         }
 
@@ -788,25 +557,45 @@ class _ExcavatorMasterAddEditScreenState
   }
 
   // ============================================================
-  // COMPLIANCE SECTION
+  // EMISSION
+  // ============================================================
+
+  Widget _buildEmissionField() {
+    return TextFormField(
+      controller: _emissionController,
+
+      enabled: !_saving,
+
+      textCapitalization: TextCapitalization.characters,
+
+      decoration: _inputDecoration(
+        label: 'Emission Standard',
+        hint: 'Example: BS6',
+        icon: Icons.eco_outlined,
+      ),
+    );
+  }
+
+  // ============================================================
+  // COMPLIANCE
   // ============================================================
 
   Widget _buildComplianceSection() {
     return _sectionCard(
-      title: 'Vehicle Compliance',
-      icon: Icons.verified_user_outlined,
+      title: 'Compliance Documents',
+      icon: Icons.description_outlined,
+
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
-                child: _dateField(
+                child: _buildDateField(
                   label: 'Insurance Expiry',
                   value: _insuranceExpiry,
-                  icon: Icons.shield_outlined,
-                  onChanged: (value) {
+                  onChanged: (date) {
                     setState(() {
-                      _insuranceExpiry = value;
+                      _insuranceExpiry = date;
                     });
                   },
                 ),
@@ -815,13 +604,12 @@ class _ExcavatorMasterAddEditScreenState
               const SizedBox(width: 20),
 
               Expanded(
-                child: _dateField(
+                child: _buildDateField(
                   label: 'FC Expiry',
                   value: _fcExpiry,
-                  icon: Icons.fact_check_outlined,
-                  onChanged: (value) {
+                  onChanged: (date) {
                     setState(() {
-                      _fcExpiry = value;
+                      _fcExpiry = date;
                     });
                   },
                 ),
@@ -834,13 +622,12 @@ class _ExcavatorMasterAddEditScreenState
           Row(
             children: [
               Expanded(
-                child: _dateField(
+                child: _buildDateField(
                   label: 'Permit Expiry',
                   value: _permitExpiry,
-                  icon: Icons.assignment_outlined,
-                  onChanged: (value) {
+                  onChanged: (date) {
                     setState(() {
-                      _permitExpiry = value;
+                      _permitExpiry = date;
                     });
                   },
                 ),
@@ -849,13 +636,12 @@ class _ExcavatorMasterAddEditScreenState
               const SizedBox(width: 20),
 
               Expanded(
-                child: _dateField(
+                child: _buildDateField(
                   label: 'Tax Expiry',
                   value: _taxExpiry,
-                  icon: Icons.receipt_long_outlined,
-                  onChanged: (value) {
+                  onChanged: (date) {
                     setState(() {
-                      _taxExpiry = value;
+                      _taxExpiry = date;
                     });
                   },
                 ),
@@ -871,28 +657,22 @@ class _ExcavatorMasterAddEditScreenState
   // DATE FIELD
   // ============================================================
 
-  Widget _dateField({
+  Widget _buildDateField({
     required String label,
     required DateTime? value,
-    required IconData icon,
     required ValueChanged<DateTime?> onChanged,
   }) {
     return InkWell(
-      borderRadius: BorderRadius.circular(8),
-
       onTap: _saving
           ? null
           : () async {
+              final now = DateTime.now();
+
               final selected = await showDatePicker(
                 context: context,
-
-                initialDate: value ?? DateTime.now(),
-
+                initialDate: value ?? now,
                 firstDate: DateTime(2000),
-
                 lastDate: DateTime(2100),
-
-                helpText: 'Select $label',
               );
 
               if (selected != null) {
@@ -900,8 +680,13 @@ class _ExcavatorMasterAddEditScreenState
               }
             },
 
+      borderRadius: BorderRadius.circular(10),
+
       child: InputDecorator(
-        decoration: _inputDecoration(label: label, icon: icon),
+        decoration: _inputDecoration(
+          label: label,
+          icon: Icons.calendar_month_outlined,
+        ),
 
         child: Row(
           children: [
@@ -912,7 +697,7 @@ class _ExcavatorMasterAddEditScreenState
                 style: TextStyle(
                   fontSize: 14,
                   color: value == null
-                      ? const Color(0xFF6F7A6E)
+                      ? const Color(0xFF68717D)
                       : const Color(0xFF191C1E),
                 ),
               ),
@@ -950,18 +735,19 @@ class _ExcavatorMasterAddEditScreenState
     return _sectionCard(
       title: 'Status',
       icon: Icons.toggle_on_outlined,
+
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
 
         title: const Text(
-          'Active Excavator',
+          'Active Vehicle',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
 
         subtitle: Text(
           _status
-              ? 'This excavator is currently active.'
-              : 'This excavator is currently inactive.',
+              ? 'This vehicle is currently active.'
+              : 'This vehicle is currently inactive.',
         ),
 
         value: _status,
@@ -986,6 +772,7 @@ class _ExcavatorMasterAddEditScreenState
   Widget _buildBottomActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
+
       children: [
         OutlinedButton(
           onPressed: _saving
@@ -993,6 +780,7 @@ class _ExcavatorMasterAddEditScreenState
               : () {
                   Navigator.pop(context);
                 },
+
           child: const Text('Cancel'),
         ),
 
@@ -1012,7 +800,7 @@ class _ExcavatorMasterAddEditScreenState
                 )
               : const Icon(Icons.save_outlined),
 
-          label: Text(widget.isEdit ? 'Update Excavator' : 'Save Excavator'),
+          label: Text(widget.isEdit ? 'Update Vehicle' : 'Save Vehicle'),
 
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1042,33 +830,31 @@ class _ExcavatorMasterAddEditScreenState
       return;
     }
 
-    final provider = context.read<ExcavatorProvider>();
-
     // ==========================================================
     // FINAL DUPLICATE CHECK
     // ==========================================================
 
-    final exists = await provider.registrationExists(
-      registration,
-      excludeId: widget.excavatorId,
-    );
+    final provider = context.read<TransportProvider>();
 
-    if (!mounted) return;
-
-    if (exists) {
-      setState(() {
-        _registrationExists = true;
-        _registrationChecked = true;
-      });
-
-      await _showAlreadyExistsDialog(registration);
-
-      return;
-    }
-
-    // ==========================================================
-    // START SAVING
-    // ==========================================================
+    // If your provider has registrationExists(),
+    // this block can be enabled.
+    //
+    // final exists = await provider.registrationExists(
+    //   registration,
+    //   excludeId: widget.vehicleId,
+    // );
+    //
+    // if (!mounted) return;
+    //
+    // if (exists) {
+    //   setState(() {
+    //     _registrationExists = true;
+    //     _registrationChecked = true;
+    //   });
+    //
+    //   await _showAlreadyExistsDialog(registration);
+    //   return;
+    // }
 
     setState(() {
       _saving = true;
@@ -1077,8 +863,8 @@ class _ExcavatorMasterAddEditScreenState
     try {
       final now = DateTime.now().toIso8601String();
 
-      final excavator = ExcavatorModel(
-        id: widget.excavatorId,
+      final vehicle = TransportModel(
+        id: widget.vehicleId,
 
         registrationNumber: registration,
 
@@ -1087,6 +873,10 @@ class _ExcavatorMasterAddEditScreenState
         modelName: _modelController.text.trim(),
 
         manufacturingYear: int.tryParse(_yearController.text.trim()),
+
+        emissionStandard: _emissionController.text.trim().isEmpty
+            ? null
+            : _emissionController.text.trim(),
 
         insuranceExpiry: _formatDatabaseDate(_insuranceExpiry),
 
@@ -1106,9 +896,9 @@ class _ExcavatorMasterAddEditScreenState
       final bool success;
 
       if (widget.isEdit) {
-        success = await provider.updateExcavator(excavator);
+        success = await provider.updateVehicle(vehicle);
       } else {
-        success = await provider.addExcavator(excavator);
+        success = await provider.addVehicle(vehicle);
       }
 
       if (!mounted) return;
@@ -1116,18 +906,18 @@ class _ExcavatorMasterAddEditScreenState
       if (success) {
         _showSuccess(
           widget.isEdit
-              ? 'Excavator updated successfully.'
-              : 'Excavator added successfully.',
+              ? 'Transport vehicle updated successfully.'
+              : 'Transport vehicle added successfully.',
         );
 
         Navigator.pop(context, true);
       } else {
-        _showError(provider.error ?? 'Unable to save excavator.');
+        _showError(provider.error ?? 'Unable to save transport vehicle.');
       }
     } catch (e) {
       if (!mounted) return;
 
-      _showError('Unable to save excavator: $e');
+      _showError('Unable to save vehicle: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -1141,18 +931,93 @@ class _ExcavatorMasterAddEditScreenState
   // ORIGINAL CREATED DATE
   // ============================================================
 
-  Future<String> _getOriginalCreatedAt(ExcavatorProvider provider) async {
-    if (widget.excavatorId == null) {
+  Future<String> _getOriginalCreatedAt(TransportProvider provider) async {
+    if (widget.vehicleId == null) {
       return DateTime.now().toIso8601String();
     }
 
-    final existing = await provider.getById(widget.excavatorId!);
+    final existing = await provider.getById(widget.vehicleId!);
 
     return existing?.createdAt ?? DateTime.now().toIso8601String();
   }
 
   // ============================================================
-  // ALREADY EXISTS DIALOG
+  // CHECK REGISTRATION
+  // ============================================================
+
+  Future<void> _checkRegistration() async {
+    if (_registrationChecking) {
+      return;
+    }
+
+    final registration = _normalizeRegistration(_registrationController.text);
+
+    if (registration.isEmpty) {
+      _showError('Enter registration number first.');
+      return;
+    }
+
+    setState(() {
+      _registrationChecking = true;
+      _registrationExists = false;
+      _registrationChecked = false;
+    });
+
+    try {
+      /*
+       * Add registrationExists() to TransportProvider
+       * if you want the same instant duplicate-check
+       * behaviour as Excavator.
+       */
+
+      final exists = await _registrationExistsInList(registration);
+
+      if (!mounted) return;
+
+      setState(() {
+        _registrationChecking = false;
+
+        _registrationExists = exists;
+
+        _registrationChecked = true;
+      });
+
+      if (exists) {
+        await _showAlreadyExistsDialog(registration);
+      } else {
+        _showSuccess('Registration number is available.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _registrationChecking = false;
+
+        _registrationChecked = false;
+      });
+
+      _showError('Unable to check registration: $e');
+    }
+  }
+
+  // ============================================================
+  // REGISTRATION EXISTS
+  // ============================================================
+
+  Future<bool> _registrationExistsInList(String registration) async {
+    final provider = context.read<TransportProvider>();
+
+    final vehicles = provider.vehicles;
+
+    return vehicles.any(
+      (vehicle) =>
+          vehicle.id != widget.vehicleId &&
+          _normalizeRegistration(vehicle.registrationNumber) == registration,
+    );
+  }
+
+  // ============================================================
+  // ALREADY EXISTS
   // ============================================================
 
   Future<void> _showAlreadyExistsDialog(String registration) async {
@@ -1165,21 +1030,13 @@ class _ExcavatorMasterAddEditScreenState
 
       builder: (dialogContext) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-
           title: const Row(
             children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Color(0xFFBA1A1A),
-                size: 28,
-              ),
+              Icon(Icons.warning_amber_rounded, color: Color(0xFFBA1A1A)),
 
               SizedBox(width: 10),
 
-              Expanded(child: Text('Vehicle Already Exists')),
+              Text('Vehicle Already Exists'),
             ],
           ),
 
@@ -1191,13 +1048,13 @@ class _ExcavatorMasterAddEditScreenState
 
           actions: [
             FilledButton(
-              style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFF00652C),
-              ),
-
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
+
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFF00652C),
+              ),
 
               child: const Text('OK'),
             ),
@@ -1226,7 +1083,15 @@ class _ExcavatorMasterAddEditScreenState
 
         borderRadius: BorderRadius.circular(12),
 
-        border: Border.all(color: const Color(0xFFBECABC)),
+        border: Border.all(color: const Color(0xFFE1E5E9)),
+
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
 
       child: Column(
@@ -1235,15 +1100,27 @@ class _ExcavatorMasterAddEditScreenState
         children: [
           Row(
             children: [
-              Icon(icon, size: 20, color: const Color(0xFF00652C)),
+              Container(
+                width: 38,
+                height: 38,
 
-              const SizedBox(width: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8F5E9),
+
+                  borderRadius: BorderRadius.circular(8),
+                ),
+
+                child: Icon(icon, color: const Color(0xFF00652C), size: 20),
+              ),
+
+              const SizedBox(width: 12),
 
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
+                  color: Color(0xFF191C1E),
                 ),
               ),
             ],
@@ -1264,63 +1141,52 @@ class _ExcavatorMasterAddEditScreenState
   InputDecoration _inputDecoration({
     required String label,
     String? hint,
-    IconData? icon,
+    required IconData icon,
   }) {
     return InputDecoration(
       labelText: label,
-
       hintText: hint,
 
-      prefixIcon: icon == null ? null : Icon(icon),
+      prefixIcon: Icon(icon, size: 20),
 
       filled: true,
 
       fillColor: Colors.white,
 
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
 
-        borderSide: const BorderSide(color: Color(0xFFBECABC)),
+        borderSide: const BorderSide(color: Color(0xFFD8DDE3)),
       ),
 
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
 
-        borderSide: const BorderSide(color: Color(0xFFBECABC)),
+        borderSide: const BorderSide(color: Color(0xFFD8DDE3)),
       ),
 
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
 
-        borderSide: const BorderSide(color: Color(0xFF00652C), width: 2),
+        borderSide: const BorderSide(color: Color(0xFF00652C), width: 1.5),
       ),
 
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
 
         borderSide: const BorderSide(color: Color(0xFFBA1A1A)),
       ),
 
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(10),
 
-        borderSide: const BorderSide(color: Color(0xFFBA1A1A), width: 2),
+        borderSide: const BorderSide(color: Color(0xFFBA1A1A), width: 1.5),
       ),
     );
   }
 
   // ============================================================
-  // NORMALIZE REGISTRATION
-  // ============================================================
-
-  String _normalizeRegistration(String value) {
-    return value.replaceAll(' ', '').replaceAll('-', '').trim().toUpperCase();
-  }
-
-  // ============================================================
-  // DATE PARSE
+  // HELPERS
   // ============================================================
 
   DateTime? _parseDate(String? value) {
@@ -1328,83 +1194,45 @@ class _ExcavatorMasterAddEditScreenState
       return null;
     }
 
-    return DateTime.tryParse(value.trim());
+    return DateTime.tryParse(value);
   }
 
-  // ============================================================
-  // DATABASE DATE
-  // ============================================================
-
-  String? _formatDatabaseDate(DateTime? value) {
-    if (value == null) {
+  String? _formatDatabaseDate(DateTime? date) {
+    if (date == null) {
       return null;
     }
 
-    final month = value.month.toString().padLeft(2, '0');
-
-    final day = value.day.toString().padLeft(2, '0');
-
-    return '${value.year}-$month-$day';
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
   }
-
-  // ============================================================
-  // DISPLAY DATE
-  // ============================================================
 
   String _formatDate(DateTime date) {
-    final month = date.month.toString().padLeft(2, '0');
-
-    final day = date.day.toString().padLeft(2, '0');
-
-    return '$day/$month/${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
   }
 
-  // ============================================================
-  // SUCCESS MESSAGE
-  // ============================================================
+  String _normalizeRegistration(String value) {
+    return value.trim().toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
+  }
 
   void _showSuccess(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-
-          backgroundColor: const Color(0xFF00652C),
-
-          behavior: SnackBarBehavior.floating,
-
-          margin: const EdgeInsets.all(20),
-
-          duration: const Duration(seconds: 2),
-        ),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFF00652C),
+      ),
+    );
   }
 
-  // ============================================================
-  // ERROR MESSAGE
-  // ============================================================
-
   void _showError(String message) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(message),
-
-          backgroundColor: const Color(0xFFBA1A1A),
-
-          behavior: SnackBarBehavior.floating,
-
-          margin: const EdgeInsets.all(20),
-
-          duration: const Duration(seconds: 3),
-        ),
-      );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFBA1A1A),
+      ),
+    );
   }
 }
 
