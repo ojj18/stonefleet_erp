@@ -384,21 +384,21 @@ class ReportRepository {
   // DATE HELPERS
   // ============================================================
 
-  String _startOfDay(DateTime date) {
-    return DateTime(date.year, date.month, date.day).toIso8601String();
-  }
+  // String _startOfDay(DateTime date) {
+  //   return DateTime(date.year, date.month, date.day).toIso8601String();
+  // }
 
-  String _endOfDay(DateTime date) {
-    return DateTime(
-      date.year,
-      date.month,
-      date.day,
-      23,
-      59,
-      59,
-      999,
-    ).toIso8601String();
-  }
+  // String _endOfDay(DateTime date) {
+  //   return DateTime(
+  //     date.year,
+  //     date.month,
+  //     date.day,
+  //     23,
+  //     59,
+  //     59,
+  //     999,
+  //   ).toIso8601String();
+  // }
 
   String _dateOnly(DateTime date) {
     return '${date.year.toString().padLeft(4, '0')}-'

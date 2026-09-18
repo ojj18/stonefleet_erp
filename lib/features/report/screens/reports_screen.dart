@@ -445,31 +445,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  Widget _buildDropdown<T>({
-    required String label,
-    required T value,
-    required List<DropdownMenuItem<T>> items,
-    required ValueChanged<T?> onChanged,
-  }) {
-    return DropdownButtonFormField<T>(
-      value: value,
-      decoration: InputDecoration(
-        labelText: label,
-        filled: true,
-        fillColor: const Color(0xFFF8F9FB),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-        ),
-      ),
-      items: items,
-      onChanged: onChanged,
-    );
-  }
+  // Widget _buildDropdown<T>({
+  //   required String label,
+  //   required T value,
+  //   required List<DropdownMenuItem<T>> items,
+  //   required ValueChanged<T?> onChanged,
+  // }) {
+  //   return DropdownButtonFormField<T>(
+  //     value: value,
+  //     decoration: InputDecoration(
+  //       labelText: label,
+  //       filled: true,
+  //       fillColor: const Color(0xFFF8F9FB),
+  //       border: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+  //       ),
+  //       enabledBorder: OutlineInputBorder(
+  //         borderRadius: BorderRadius.circular(8),
+  //         borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+  //       ),
+  //     ),
+  //     items: items,
+  //     onChanged: onChanged,
+  //   );
+  // }
 
   Widget _buildDateField({
     required String label,
