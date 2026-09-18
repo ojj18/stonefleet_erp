@@ -297,58 +297,56 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               Row(
                 children: [
-                  Expanded(
-                    child: _buildDropdown<ReportType>(
-                      label: 'Report Type',
-                      value: provider.reportType,
-                      items: const [
-                        DropdownMenuItem(
-                          value: ReportType.maintenance,
-                          child: Text('Maintenance'),
-                        ),
-                        DropdownMenuItem(
-                          value: ReportType.service,
-                          child: Text('Service'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          provider.setReportType(value);
-                        }
-                      },
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: _buildDropdown<ReportType>(
+                  //     label: 'Report Type',
+                  //     value: provider.reportType,
+                  //     items: const [
+                  //       DropdownMenuItem(
+                  //         value: ReportType.maintenance,
+                  //         child: Text('Maintenance'),
+                  //       ),
+                  //       DropdownMenuItem(
+                  //         value: ReportType.service,
+                  //         child: Text('Service'),
+                  //       ),
+                  //     ],
+                  //     onChanged: (value) {
+                  //       if (value != null) {
+                  //         provider.setReportType(value);
+                  //       }
+                  //     },
+                  //   ),
+                  // ),
 
-                  const SizedBox(width: 12),
+                  // const SizedBox(width: 12),
 
-                  Expanded(
-                    child: _buildDropdown<EquipmentType>(
-                      label: 'Equipment',
-                      value: provider.equipmentType,
-                      items: const [
-                        DropdownMenuItem(
-                          value: EquipmentType.all,
-                          child: Text('All Equipment'),
-                        ),
-                        DropdownMenuItem(
-                          value: EquipmentType.excavator,
-                          child: Text('Excavator'),
-                        ),
-                        DropdownMenuItem(
-                          value: EquipmentType.transport,
-                          child: Text('Transport'),
-                        ),
-                      ],
-                      onChanged: (value) {
-                        if (value != null) {
-                          provider.setEquipmentType(value);
-                        }
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
+                  // Expanded(
+                  //   child: _buildDropdown<EquipmentType>(
+                  //     label: 'Equipment',
+                  //     value: provider.equipmentType,
+                  //     items: const [
+                  //       DropdownMenuItem(
+                  //         value: EquipmentType.all,
+                  //         child: Text('All Equipment'),
+                  //       ),
+                  //       DropdownMenuItem(
+                  //         value: EquipmentType.excavator,
+                  //         child: Text('Excavator'),
+                  //       ),
+                  //       DropdownMenuItem(
+                  //         value: EquipmentType.transport,
+                  //         child: Text('Transport'),
+                  //       ),
+                  //     ],
+                  //     onChanged: (value) {
+                  //       if (value != null) {
+                  //         provider.setEquipmentType(value);
+                  //       }
+                  //     },
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 12),
                   Expanded(
                     child: _buildDateField(
                       label: 'From Date',

@@ -22,15 +22,14 @@ class ReportRepository {
     final args = <dynamic>[];
 
     if (fromDate != null) {
-      conditions.add('em.created_at >= ?');
-      args.add(_startOfDay(fromDate));
+      conditions.add('date(em.created_at) >= date(?)');
+      args.add(_dateOnly(fromDate));
     }
 
     if (toDate != null) {
-      conditions.add('em.created_at <= ?');
-      args.add(_endOfDay(toDate));
+      conditions.add('date(em.created_at) <= date(?)');
+      args.add(_dateOnly(toDate));
     }
-
     if (excavatorId != null) {
       conditions.add('em.excavator_id = ?');
       args.add(excavatorId);
@@ -117,13 +116,13 @@ class ReportRepository {
     final args = <dynamic>[];
 
     if (fromDate != null) {
-      conditions.add('tm.created_at >= ?');
-      args.add(_startOfDay(fromDate));
+      conditions.add('date(tm.created_at) >= date(?)');
+      args.add(_dateOnly(fromDate));
     }
 
     if (toDate != null) {
-      conditions.add('tm.created_at <= ?');
-      args.add(_endOfDay(toDate));
+      conditions.add('date(tm.created_at) <= date(?)');
+      args.add(_dateOnly(toDate));
     }
 
     if (transportVehicleId != null) {
@@ -210,13 +209,13 @@ class ReportRepository {
     final args = <dynamic>[];
 
     if (fromDate != null) {
-      conditions.add('es.service_date >= ?');
-      args.add(_startOfDay(fromDate));
+      conditions.add('date(es.service_date) >= date(?)');
+      args.add(_dateOnly(fromDate));
     }
 
     if (toDate != null) {
-      conditions.add('es.service_date <= ?');
-      args.add(_endOfDay(toDate));
+      conditions.add('date(es.service_date) <= date(?)');
+      args.add(_dateOnly(toDate));
     }
 
     if (excavatorId != null) {
@@ -304,15 +303,14 @@ class ReportRepository {
     final args = <dynamic>[];
 
     if (fromDate != null) {
-      conditions.add('ts.service_date >= ?');
-      args.add(_startOfDay(fromDate));
+      conditions.add('date(ts.service_date) >= date(?)');
+      args.add(_dateOnly(fromDate));
     }
 
     if (toDate != null) {
-      conditions.add('ts.service_date <= ?');
-      args.add(_endOfDay(toDate));
+      conditions.add('date(ts.service_date) <= date(?)');
+      args.add(_dateOnly(toDate));
     }
-
     if (transportVehicleId != null) {
       conditions.add('ts.transport_vehicle_id = ?');
       args.add(transportVehicleId);
@@ -400,5 +398,11 @@ class ReportRepository {
       59,
       999,
     ).toIso8601String();
+  }
+
+  String _dateOnly(DateTime date) {
+    return '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
   }
 }

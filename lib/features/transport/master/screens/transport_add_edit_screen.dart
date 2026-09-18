@@ -326,15 +326,15 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           ),
         ),
 
-        OutlinedButton.icon(
-          onPressed: _saving
-              ? null
-              : () {
-                  Navigator.pop(context);
-                },
-          icon: const Icon(Icons.close, size: 18),
-          label: const Text('Cancel'),
-        ),
+        // OutlinedButton.icon(
+        //   onPressed: _saving
+        //       ? null
+        //       : () {
+        //           Navigator.pop(context);
+        //         },
+        //   icon: const Icon(Icons.close, size: 18),
+        //   label: const Text('Cancel'),
+        // ),
       ],
     );
   }
