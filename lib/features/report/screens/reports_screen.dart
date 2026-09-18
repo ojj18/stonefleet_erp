@@ -297,56 +297,58 @@ class _ReportsScreenState extends State<ReportsScreen> {
             children: [
               Row(
                 children: [
-                  // Expanded(
-                  //   child: _buildDropdown<ReportType>(
-                  //     label: 'Report Type',
-                  //     value: provider.reportType,
-                  //     items: const [
-                  //       DropdownMenuItem(
-                  //         value: ReportType.maintenance,
-                  //         child: Text('Maintenance'),
-                  //       ),
-                  //       DropdownMenuItem(
-                  //         value: ReportType.service,
-                  //         child: Text('Service'),
-                  //       ),
-                  //     ],
-                  //     onChanged: (value) {
-                  //       if (value != null) {
-                  //         provider.setReportType(value);
-                  //       }
-                  //     },
-                  //   ),
-                  // ),
+                  Expanded(
+                    child: _buildDropdown<ReportType>(
+                      label: 'Report Type',
+                      value: provider.reportType,
+                      items: const [
+                        DropdownMenuItem(
+                          value: ReportType.maintenance,
+                          child: Text('Maintenance'),
+                        ),
+                        DropdownMenuItem(
+                          value: ReportType.service,
+                          child: Text('Service'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          provider.setReportType(value);
+                          provider.generateReport();
+                        }
+                      },
+                    ),
+                  ),
 
-                  // const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                  // Expanded(
-                  //   child: _buildDropdown<EquipmentType>(
-                  //     label: 'Equipment',
-                  //     value: provider.equipmentType,
-                  //     items: const [
-                  //       DropdownMenuItem(
-                  //         value: EquipmentType.all,
-                  //         child: Text('All Equipment'),
-                  //       ),
-                  //       DropdownMenuItem(
-                  //         value: EquipmentType.excavator,
-                  //         child: Text('Excavator'),
-                  //       ),
-                  //       DropdownMenuItem(
-                  //         value: EquipmentType.transport,
-                  //         child: Text('Transport'),
-                  //       ),
-                  //     ],
-                  //     onChanged: (value) {
-                  //       if (value != null) {
-                  //         provider.setEquipmentType(value);
-                  //       }
-                  //     },
-                  //   ),
-                  // ),
-                  // const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildDropdown<EquipmentType>(
+                      label: 'Equipment',
+                      value: provider.equipmentType,
+                      items: const [
+                        DropdownMenuItem(
+                          value: EquipmentType.all,
+                          child: Text('All Equipment'),
+                        ),
+                        DropdownMenuItem(
+                          value: EquipmentType.excavator,
+                          child: Text('Excavator'),
+                        ),
+                        DropdownMenuItem(
+                          value: EquipmentType.transport,
+                          child: Text('Transport'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          provider.setEquipmentType(value);
+                          provider.generateReport();
+                        }
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: _buildDateField(
                       label: 'From Date',
@@ -445,31 +447,31 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
-  // Widget _buildDropdown<T>({
-  //   required String label,
-  //   required T value,
-  //   required List<DropdownMenuItem<T>> items,
-  //   required ValueChanged<T?> onChanged,
-  // }) {
-  //   return DropdownButtonFormField<T>(
-  //     value: value,
-  //     decoration: InputDecoration(
-  //       labelText: label,
-  //       filled: true,
-  //       fillColor: const Color(0xFFF8F9FB),
-  //       border: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(8),
-  //         borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-  //       ),
-  //       enabledBorder: OutlineInputBorder(
-  //         borderRadius: BorderRadius.circular(8),
-  //         borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-  //       ),
-  //     ),
-  //     items: items,
-  //     onChanged: onChanged,
-  //   );
-  // }
+  Widget _buildDropdown<T>({
+    required String label,
+    required T value,
+    required List<DropdownMenuItem<T>> items,
+    required ValueChanged<T?> onChanged,
+  }) {
+    return DropdownButtonFormField<T>(
+      value: value,
+      decoration: InputDecoration(
+        labelText: label,
+        filled: true,
+        fillColor: const Color(0xFFF8F9FB),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+        ),
+      ),
+      items: items,
+      onChanged: onChanged,
+    );
+  }
 
   Widget _buildDateField({
     required String label,
