@@ -660,16 +660,16 @@ class DatabaseMigrations {
 
       if (oldVersion < 4) {
         await db.execute('''
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT NOT NULL UNIQUE,
-      password TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'user',
-      is_active INTEGER NOT NULL DEFAULT 1,
-      created_at TEXT NOT NULL,
-      updated_at TEXT
-    )
-  ''');
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    is_active INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
 
         final now = DateTime.now().toIso8601String();
 
@@ -680,7 +680,7 @@ class DatabaseMigrations {
           'is_active': 1,
           'created_at': now,
           'updated_at': now,
-        });
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
         await db.insert('users', {
           'username': 'user',
@@ -689,8 +689,7 @@ class DatabaseMigrations {
           'is_active': 1,
           'created_at': now,
           'updated_at': now,
-        });
-
+        }, conflictAlgorithm: ConflictAlgorithm.ignore);
         log('Database migrated to version 4: users table created.');
       }
     }

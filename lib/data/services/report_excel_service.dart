@@ -4,6 +4,10 @@ import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
 
 class ReportExcelService {
+  // --------------------------------------------------------
+  // REPORT EXCEL
+  // --------------------------------------------------------
+
   Future<String> exportReport({
     required List<Map<String, dynamic>> records,
     required String reportType,
@@ -139,6 +143,190 @@ class ReportExcelService {
     await file.writeAsBytes(bytes);
 
     return filePath;
+  }
+
+  // --------------------------------------------------------
+  // COMPLIANCE EXCEL
+  // --------------------------------------------------------
+
+  Future<String> exportComplianceReport({
+    required List<Map<String, dynamic>> records,
+  }) async {
+    final excel = Excel.createExcel();
+
+    const sheetName = 'Compliance Report';
+    final sheet = excel[sheetName];
+
+    // ------------------------------------------------------------
+    // REMOVE DEFAULT SHEET
+    // ------------------------------------------------------------
+
+    if (excel.tables.keys.contains('Sheet1') && sheetName != 'Sheet1') {
+      excel.delete('Sheet1');
+    }
+
+    // ------------------------------------------------------------
+    // HEADER
+    // ------------------------------------------------------------
+
+    sheet.appendRow([
+      TextCellValue('Equipment'),
+      TextCellValue('Registration'),
+      TextCellValue('Manufacturer'),
+      TextCellValue('Model'),
+      TextCellValue('Insurance'),
+      TextCellValue('FC'),
+      TextCellValue('Permit'),
+      TextCellValue('Tax'),
+      TextCellValue('Overall Status'),
+    ]);
+
+    // ------------------------------------------------------------
+    // DATA
+    // ------------------------------------------------------------
+
+    for (final record in records) {
+      // Current data row index
+      final rowIndex = sheet.maxRows;
+
+      // Add row
+      sheet.appendRow([
+        TextCellValue(record['equipment_type']?.toString() ?? ''),
+        TextCellValue(record['registration_number']?.toString() ?? ''),
+        TextCellValue(record['manufacturer_name']?.toString() ?? ''),
+        TextCellValue(record['model_name']?.toString() ?? ''),
+        TextCellValue(_formatDateOrEmpty(record['insurance_expiry'])),
+        TextCellValue(_formatDateOrEmpty(record['fc_expiry'])),
+        TextCellValue(_formatDateOrEmpty(record['permit_expiry'])),
+        TextCellValue(_formatDateOrEmpty(record['tax_expiry'])),
+        TextCellValue(record['overall_status']?.toString() ?? ''),
+      ]);
+
+      // ----------------------------------------------------------
+      // EXPIRY COLUMNS
+      //
+      // Excel column index:
+      // 0 = Equipment
+      // 1 = Registration
+      // 2 = Manufacturer
+      // 3 = Model
+      // 4 = Insurance
+      // 5 = FC
+      // 6 = Permit
+      // 7 = Tax
+      // ----------------------------------------------------------
+
+      final expiryColumns = <int, String?>{
+        4: record['insurance_expiry']?.toString(),
+        5: record['fc_expiry']?.toString(),
+        6: record['permit_expiry']?.toString(),
+        7: record['tax_expiry']?.toString(),
+      };
+
+      // ----------------------------------------------------------
+      // APPLY RED BACKGROUND TO EXPIRED CELLS
+      // ----------------------------------------------------------
+
+      for (final entry in expiryColumns.entries) {
+        final columnIndex = entry.key;
+        final expiryValue = entry.value;
+
+        if (_isExpired(expiryValue)) {
+          final cell = sheet.cell(
+            CellIndex.indexByColumnRow(
+              columnIndex: columnIndex,
+              rowIndex: rowIndex,
+            ),
+          );
+
+          cell.cellStyle = CellStyle(
+            backgroundColorHex: ExcelColor.fromHexString('#FDECEC'),
+            fontColorHex: ExcelColor.fromHexString('#BA1A1A'),
+            bold: true,
+          );
+        }
+      }
+    }
+
+    // ------------------------------------------------------------
+    // COLUMN WIDTH
+    // ------------------------------------------------------------
+
+    final widths = <int, double>{
+      0: 18,
+      1: 20,
+      2: 24,
+      3: 24,
+      4: 16,
+      5: 16,
+      6: 16,
+      7: 16,
+      8: 20,
+    };
+
+    for (final entry in widths.entries) {
+      sheet.setColumnWidth(entry.key, entry.value);
+    }
+
+    // ------------------------------------------------------------
+    // SAVE
+    // ------------------------------------------------------------
+
+    final directory = await getApplicationDocumentsDirectory();
+
+    final reportsDirectory = Directory('${directory.path}/StoneFleet Reports');
+
+    if (!await reportsDirectory.exists()) {
+      await reportsDirectory.create(recursive: true);
+    }
+
+    final timestamp = _fileTimestamp();
+
+    final fileName = 'compliance_report_$timestamp.xlsx';
+
+    final filePath = '${reportsDirectory.path}/$fileName';
+
+    final bytes = excel.save();
+
+    if (bytes == null) {
+      throw Exception('Unable to create Compliance Excel file.');
+    }
+
+    final file = File(filePath);
+
+    await file.writeAsBytes(bytes);
+
+    return filePath;
+  }
+
+  bool _isExpired(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return false;
+    }
+
+    final date = DateTime.tryParse(value);
+
+    if (date == null) {
+      return false;
+    }
+
+    final today = DateTime.now();
+
+    final todayOnly = DateTime(today.year, today.month, today.day);
+
+    final expiryOnly = DateTime(date.year, date.month, date.day);
+
+    return expiryOnly.isBefore(todayOnly);
+  }
+
+  String _formatDateOrEmpty(dynamic value) {
+    if (value == null) return '';
+
+    final text = value.toString().trim();
+
+    if (text.isEmpty) return '';
+
+    return _formatDate(text);
   }
 
   CellValue _cellValue(dynamic value) {

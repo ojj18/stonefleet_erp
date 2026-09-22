@@ -6,6 +6,7 @@ import 'package:stonefleet_erp/features/transport/service/screens/transport_serv
 
 import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
+import '../../features/compliance/screens/compliance_screen.dart';
 import '../../features/dashboard/screen/dashboard_screen.dart';
 import '../../features/excavator/maintenance/screens/excavator_maintenance_screen.dart';
 import '../../features/excavator/master/screens/excavator_master_screen.dart';
@@ -78,10 +79,16 @@ class AppSidebar extends StatelessWidget {
             title: 'Service Notifications',
             index: 7,
           ),
+
           _menuItem(
             icon: Icons.assessment_outlined,
             title: 'Reports',
             index: 8,
+          ),
+          _menuItem(
+            icon: Icons.verified_outlined,
+            title: 'Compliance',
+            index: 9,
           ),
 
           const Spacer(),
@@ -291,6 +298,13 @@ void handleMenuTap(int index, {required BuildContext? context}) {
       Navigator.pushReplacement(
         context!,
         MaterialPageRoute(builder: (_) => const ReportsScreen()),
+      );
+      break;
+    case 9:
+      // Compliance
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const ComplianceScreen()),
       );
       break;
   }

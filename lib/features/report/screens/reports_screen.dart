@@ -454,7 +454,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     required ValueChanged<T?> onChanged,
   }) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
