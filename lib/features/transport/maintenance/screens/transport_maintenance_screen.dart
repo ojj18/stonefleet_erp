@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -123,7 +124,7 @@ class _TransportMaintenanceScreenState
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

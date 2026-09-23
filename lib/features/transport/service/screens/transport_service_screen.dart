@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../../data/models/transport_service_model.dart';
@@ -122,7 +123,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

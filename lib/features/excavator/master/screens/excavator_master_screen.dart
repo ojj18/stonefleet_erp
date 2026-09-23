@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
@@ -592,7 +593,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const Spacer(),

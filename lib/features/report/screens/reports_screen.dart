@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../app/app_config.dart';
 import '../../../data/services/report_excel_service.dart';
 import '../providers/report_provider.dart';
 
@@ -115,7 +116,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

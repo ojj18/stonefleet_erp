@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../../data/services/way2api_service.dart';
@@ -229,7 +230,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           const SizedBox(width: 8),
 
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

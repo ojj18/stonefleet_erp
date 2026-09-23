@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
@@ -237,7 +238,7 @@ class _ExcavatorMasterAddEditScreenState
           const SizedBox(width: 8),
 
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

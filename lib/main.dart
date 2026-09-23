@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
+import 'app/app_config.dart';
 import 'core/database/database_helper.dart';
 
 import 'data/services/vehicle_api_service.dart';
@@ -26,6 +27,7 @@ import 'features/excavator/service/providers/excavator_service_provider.dart';
 // ============================================================
 
 import 'features/report/providers/report_provider.dart';
+import 'features/splash/screens/splash_screen.dart';
 import 'features/transport/maintenance/providers/transport_maintenance_provider.dart';
 import 'features/transport/master/providers/transport_master_provider.dart';
 import 'features/transport/service/providers/transport_service_provider.dart';
@@ -55,7 +57,7 @@ Future<void> main() async {
   // TEST VEHICLE API
   // ------------------------------------------------------------
 
-  await testVehicleApi();
+  //await testVehicleApi();
 
   // ------------------------------------------------------------
   // APP
@@ -174,7 +176,7 @@ class StoneFleetApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
 
-        title: 'StoneFleet ERP Manager',
+        title: AppConfig.appName,
 
         theme: ThemeData(
           useMaterial3: true,
@@ -199,7 +201,7 @@ class StoneFleetApp extends StatelessWidget {
         // --------------------------------------------------------
         // INITIAL SCREEN
         // --------------------------------------------------------
-        home: const LoginScreen(),
+        home: const SplashScreen(),
       ),
     );
   }

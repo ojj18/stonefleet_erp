@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:stonefleet_erp/app/app_config.dart';
 
 import '../providers/auth_provider.dart';
 import '../../dashboard/screen/dashboard_screen.dart';
@@ -88,7 +89,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
 
                 Text(
-                  '© ${DateTime.now().year} StoneFleet ERP Manager',
+                  '© ${DateTime.now().year} ${AppConfig.companyName}',
                   style: const TextStyle(
                     fontSize: 12,
                     color: secondaryTextColor,
@@ -105,31 +106,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildBrand() {
     return Column(
       children: [
-        Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            color: primaryGreen,
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: primaryGreen.withValues(alpha: 0.18),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.construction_rounded,
-            color: Colors.white,
-            size: 38,
-          ),
-        ),
-
-        const SizedBox(height: 18),
+        Image.asset(AppConfig.logoPath, width: 100),
 
         const Text(
-          'StoneFleet ERP',
+          AppConfig.appName,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,

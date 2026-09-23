@@ -31,6 +31,7 @@ class AppSidebar extends StatelessWidget {
       width: 240,
       color: Colors.white,
       child: Column(
+        crossAxisAlignment: .center,
         children: [
           // Logo / App name
           _menuItem(

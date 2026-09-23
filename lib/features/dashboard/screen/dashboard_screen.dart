@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/app_config.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../../../data/models/dashboard_model.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
@@ -188,7 +189,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 
@@ -260,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'StoneFleet Dashboard',
+                '${AppConfig.appName} Dashboard',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),

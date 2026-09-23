@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../app/app_config.dart';
+
 class TopBar extends StatelessWidget {
   const TopBar({super.key});
 
@@ -15,7 +17,7 @@ class TopBar extends StatelessWidget {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           const SizedBox(width: 24),

@@ -2,6 +2,7 @@ import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/ocr/transport_maintenance_ocr_model.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
@@ -313,7 +314,7 @@ class _TransportMaintenanceAddEditScreenState
           const SizedBox(width: 8),
 
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 

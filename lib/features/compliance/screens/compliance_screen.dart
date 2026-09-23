@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/app_config.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../../../data/services/report_excel_service.dart';
 import '../models/compliance_model.dart';
@@ -67,7 +68,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w600,

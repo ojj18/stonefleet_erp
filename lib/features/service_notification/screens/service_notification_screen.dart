@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../app/app_config.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../providers/service_notification_provider.dart';
 import '../../../../data/models/service_notification_model.dart';
@@ -173,7 +174,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
       child: Row(
         children: [
           const Text(
-            'StoneFleet ERP Manager',
+            AppConfig.appName,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
 
