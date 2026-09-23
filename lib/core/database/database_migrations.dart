@@ -394,7 +394,6 @@ class DatabaseMigrations {
     await DatabaseSeed.seed(db);
 
     log('All 14 StoneFleet tables created successfully.');
-    await DatabaseSeed.seed(db);
   }
 
   static Future<bool> _hasColumn(

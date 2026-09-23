@@ -8,6 +8,7 @@ class DatabaseSeed {
     await _seedTransportModels(db);
     await _seedExcavatorModels(db);
     await _seedSpares(db);
+    await _seedUsers(db);
   }
 
   // ============================================================
@@ -439,5 +440,31 @@ class DatabaseSeed {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
+  }
+
+  // ============================================================
+  // USERS
+  // ============================================================
+
+  static Future<void> _seedUsers(Database db) async {
+    final now = DateTime.now().toIso8601String();
+
+    await db.insert('users', {
+      'username': 'admin',
+      'password': 'admin@194',
+      'role': 'admin',
+      'is_active': 1,
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
+
+    await db.insert('users', {
+      'username': 'user',
+      'password': 'user@123',
+      'role': 'user',
+      'is_active': 1,
+      'created_at': now,
+      'updated_at': now,
+    }, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 }
