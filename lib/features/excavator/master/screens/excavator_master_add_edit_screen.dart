@@ -34,6 +34,12 @@ class _ExcavatorMasterAddEditScreenState
   final _manufacturerController = TextEditingController();
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
+  final _ownerNameController = TextEditingController();
+  final _permanentAddressController = TextEditingController();
+  final _chasiNumberController = TextEditingController();
+  final _engineNumberController = TextEditingController();
+  final _colorController = TextEditingController();
+  final _insuranceCompanyController = TextEditingController();
 
   // ============================================================
   // FOCUS
@@ -99,6 +105,12 @@ class _ExcavatorMasterAddEditScreenState
           _modelController.text = excavator.modelName ?? '';
 
           _yearController.text = excavator.manufacturingYear?.toString() ?? '';
+          _ownerNameController.text = excavator.ownerName ?? '';
+          _permanentAddressController.text = excavator.permanentAddress ?? '';
+          _chasiNumberController.text = excavator.vehicleChasiNumber ?? '';
+          _engineNumberController.text = excavator.vehicleEngineNumber ?? '';
+          _colorController.text = excavator.color ?? '';
+          _insuranceCompanyController.text = excavator.insuranceCompany ?? '';
 
           _insuranceExpiry = _parseDate(excavator.insuranceExpiry);
 
@@ -147,6 +159,12 @@ class _ExcavatorMasterAddEditScreenState
     _manufacturerController.dispose();
     _modelController.dispose();
     _yearController.dispose();
+    _ownerNameController.dispose();
+    _permanentAddressController.dispose();
+    _chasiNumberController.dispose();
+    _engineNumberController.dispose();
+    _colorController.dispose();
+    _insuranceCompanyController.dispose();
 
     _registrationFocusNode.removeListener(_handleRegistrationFocusChange);
 
@@ -392,6 +410,30 @@ class _ExcavatorMasterAddEditScreenState
           // YEAR
           // ------------------------------------------------------
           _buildYearField(),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(child: _buildOwnerNameField()),
+              const SizedBox(width: 20),
+              Expanded(child: _buildColorField()),
+            ],
+          ),
+
+          const SizedBox(height: 20),
+
+          _buildPermanentAddressField(),
+
+          const SizedBox(height: 20),
+
+          Row(
+            children: [
+              Expanded(child: _buildChasiNumberField()),
+              const SizedBox(width: 20),
+              Expanded(child: _buildEngineNumberField()),
+            ],
+          ),
         ],
       ),
     );
@@ -537,6 +579,34 @@ class _ExcavatorMasterAddEditScreenState
 
         if (rc.model != null && rc.model!.trim().isNotEmpty) {
           _modelController.text = rc.model!.trim();
+        }
+
+        if (rc.ownerName != null && rc.ownerName!.trim().isNotEmpty) {
+          _ownerNameController.text = rc.ownerName!.trim();
+        }
+
+        if (rc.permanentAddress != null &&
+            rc.permanentAddress!.trim().isNotEmpty) {
+          _permanentAddressController.text = rc.permanentAddress!.trim();
+        }
+
+        if (rc.vehicleChasiNumber != null &&
+            rc.vehicleChasiNumber!.trim().isNotEmpty) {
+          _chasiNumberController.text = rc.vehicleChasiNumber!.trim();
+        }
+
+        if (rc.vehicleEngineNumber != null &&
+            rc.vehicleEngineNumber!.trim().isNotEmpty) {
+          _engineNumberController.text = rc.vehicleEngineNumber!.trim();
+        }
+
+        if (rc.color != null && rc.color!.trim().isNotEmpty) {
+          _colorController.text = rc.color!.trim();
+        }
+
+        if (rc.insuranceCompany != null &&
+            rc.insuranceCompany!.trim().isNotEmpty) {
+          _insuranceCompanyController.text = rc.insuranceCompany!.trim();
         }
 
         if (rc.manufacturingDate != null &&
@@ -792,12 +862,95 @@ class _ExcavatorMasterAddEditScreenState
   // COMPLIANCE SECTION
   // ============================================================
 
+  Widget _buildOwnerNameField() {
+    return TextFormField(
+      controller: _ownerNameController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.words,
+      decoration: _inputDecoration(
+        label: 'Owner Name',
+        hint: 'Vehicle owner name',
+        icon: Icons.person_outline,
+      ),
+    );
+  }
+
+  Widget _buildColorField() {
+    return TextFormField(
+      controller: _colorController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.words,
+      decoration: _inputDecoration(
+        label: 'Color',
+        hint: 'Example: Yellow',
+        icon: Icons.palette_outlined,
+      ),
+    );
+  }
+
+  Widget _buildPermanentAddressField() {
+    return TextFormField(
+      controller: _permanentAddressController,
+      enabled: !_saving,
+      maxLines: 2,
+      textCapitalization: TextCapitalization.sentences,
+      decoration: _inputDecoration(
+        label: 'Permanent Address',
+        hint: 'Owner permanent address',
+        icon: Icons.home_outlined,
+      ),
+    );
+  }
+
+  Widget _buildChasiNumberField() {
+    return TextFormField(
+      controller: _chasiNumberController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.characters,
+      decoration: _inputDecoration(
+        label: 'Vehicle Chasi Number',
+        hint: 'Chassis number',
+        icon: Icons.numbers_outlined,
+      ),
+    );
+  }
+
+  Widget _buildEngineNumberField() {
+    return TextFormField(
+      controller: _engineNumberController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.characters,
+      decoration: _inputDecoration(
+        label: 'Vehicle Engine Number',
+        hint: 'Engine number',
+        icon: Icons.settings_outlined,
+      ),
+    );
+  }
+
+  Widget _buildInsuranceCompanyField() {
+    return TextFormField(
+      controller: _insuranceCompanyController,
+      enabled: !_saving,
+      textCapitalization: TextCapitalization.words,
+      decoration: _inputDecoration(
+        label: 'Insurance Company',
+        hint: 'Example: ICICI Lombard',
+        icon: Icons.business_outlined,
+      ),
+    );
+  }
+
   Widget _buildComplianceSection() {
     return _sectionCard(
       title: 'Vehicle Compliance',
       icon: Icons.verified_user_outlined,
       child: Column(
         children: [
+          _buildInsuranceCompanyField(),
+
+          const SizedBox(height: 20),
+
           Row(
             children: [
               Expanded(
@@ -1088,6 +1241,24 @@ class _ExcavatorMasterAddEditScreenState
         modelName: _modelController.text.trim(),
 
         manufacturingYear: int.tryParse(_yearController.text.trim()),
+        ownerName: _ownerNameController.text.trim().isEmpty
+            ? null
+            : _ownerNameController.text.trim(),
+        permanentAddress: _permanentAddressController.text.trim().isEmpty
+            ? null
+            : _permanentAddressController.text.trim(),
+        vehicleChasiNumber: _chasiNumberController.text.trim().isEmpty
+            ? null
+            : _chasiNumberController.text.trim(),
+        vehicleEngineNumber: _engineNumberController.text.trim().isEmpty
+            ? null
+            : _engineNumberController.text.trim(),
+        color: _colorController.text.trim().isEmpty
+            ? null
+            : _colorController.text.trim(),
+        insuranceCompany: _insuranceCompanyController.text.trim().isEmpty
+            ? null
+            : _insuranceCompanyController.text.trim(),
 
         insuranceExpiry: _formatDatabaseDate(_insuranceExpiry),
 

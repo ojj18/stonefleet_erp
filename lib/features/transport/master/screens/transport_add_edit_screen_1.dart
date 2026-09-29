@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
-import '../../../../data/services/way2api_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/transport_master_provider.dart';
 
@@ -31,13 +30,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   final _manufacturerController = TextEditingController();
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
-
-  final _ownerNameController = TextEditingController();
-  final _permanentAddressController = TextEditingController();
-  final _chasiNumberController = TextEditingController();
-  final _engineNumberController = TextEditingController();
-  final _colorController = TextEditingController();
-  final _insuranceCompanyController = TextEditingController();
   final _emissionController = TextEditingController();
 
   // ============================================================
@@ -57,7 +49,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
   bool _initializing = true;
   bool _saving = false;
-  bool _rcVerifying = false;
 
   // ============================================================
   // INIT
@@ -101,13 +92,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
         _yearController.text = vehicle.manufacturingYear?.toString() ?? '';
 
-          _ownerNameController.text = vehicle.ownerName ?? '';
-          _permanentAddressController.text = vehicle.permanentAddress ?? '';
-          _chasiNumberController.text = vehicle.vehicleChasiNumber ?? '';
-          _engineNumberController.text = vehicle.vehicleEngineNumber ?? '';
-          _colorController.text = vehicle.color ?? '';
-          _insuranceCompanyController.text = vehicle.insuranceCompany ?? '';
-
         _emissionController.text = vehicle.emissionStandard ?? '';
 
         _insuranceExpiry = _parseDate(vehicle.insuranceExpiry);
@@ -143,12 +127,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     _manufacturerController.dispose();
     _modelController.dispose();
     _yearController.dispose();
-    _ownerNameController.dispose();
-    _permanentAddressController.dispose();
-    _chasiNumberController.dispose();
-    _engineNumberController.dispose();
-    _colorController.dispose();
-    _insuranceCompanyController.dispose();
     _emissionController.dispose();
 
     super.dispose();
@@ -347,15 +325,15 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           ),
         ),
 
-        // OutlinedButton.icon(
-        //   onPressed: _saving
-        //       ? null
-        //       : () {
-        //           Navigator.pop(context);
-        //         },
-        //   icon: const Icon(Icons.close, size: 18),
-        //   label: const Text('Cancel'),
-        // ),
+        OutlinedButton.icon(
+          onPressed: _saving
+              ? null
+              : () {
+                  Navigator.pop(context);
+                },
+          icon: const Icon(Icons.close, size: 18),
+          label: const Text('Cancel'),
+        ),
       ],
     );
   }
@@ -396,38 +374,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           const SizedBox(height: 20),
 
           _buildEmissionField(),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(child: _buildOwnerNameField()),
-              const SizedBox(width: 20),
-              Expanded(child: _buildColorField()),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          _buildPermanentAddressField(),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(child: _buildChasiNumberField()),
-              const SizedBox(width: 20),
-              Expanded(child: _buildEngineNumberField()),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          _buildInsuranceCompanyField(),
-
-          const SizedBox(height: 12),
-
-          _buildVerifyRcButton(),
         ],
       ),
     );
@@ -515,188 +461,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         return null;
       },
     );
-  }
-
-  // ============================================================
-  // VERIFY RC DETAILS
-  // ============================================================
-
-  Widget _buildVerifyRcButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: OutlinedButton.icon(
-        onPressed: _saving || _rcVerifying ? null : _verifyRc,
-        icon: _rcVerifying
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF00652C),
-                ),
-              )
-            : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF00652C),
-          side: const BorderSide(color: Color(0xFF00652C)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _verifyRc() async {
-    if (_rcVerifying) return;
-
-    final registration = _normalizeRegistration(_registrationController.text);
-
-    if (registration.isEmpty) {
-      _showError('Enter registration number first.');
-      return;
-    }
-
-    FocusScope.of(context).unfocus();
-
-    setState(() {
-      _rcVerifying = true;
-    });
-
-    try {
-      final rc = await Way2ApiService().getVehicleDetails(registration);
-
-      if (!mounted) return;
-
-      setState(() {
-        if (rc.manufacturer != null && rc.manufacturer!.trim().isNotEmpty) {
-          _manufacturerController.text = rc.manufacturer!.trim();
-        }
-
-        if (rc.model != null && rc.model!.trim().isNotEmpty) {
-          _modelController.text = rc.model!.trim();
-        }
-
-        if (rc.ownerName != null && rc.ownerName!.trim().isNotEmpty) {
-          _ownerNameController.text = rc.ownerName!.trim();
-        }
-
-        if (rc.permanentAddress != null && rc.permanentAddress!.trim().isNotEmpty) {
-          _permanentAddressController.text = rc.permanentAddress!.trim();
-        }
-
-        if (rc.vehicleChasiNumber != null &&
-            rc.vehicleChasiNumber!.trim().isNotEmpty) {
-          _chasiNumberController.text = rc.vehicleChasiNumber!.trim();
-        }
-
-        if (rc.vehicleEngineNumber != null &&
-            rc.vehicleEngineNumber!.trim().isNotEmpty) {
-          _engineNumberController.text = rc.vehicleEngineNumber!.trim();
-        }
-
-        if (rc.color != null && rc.color!.trim().isNotEmpty) {
-          _colorController.text = rc.color!.trim();
-        }
-
-        if (rc.insuranceCompany != null &&
-            rc.insuranceCompany!.trim().isNotEmpty) {
-          _insuranceCompanyController.text = rc.insuranceCompany!.trim();
-        }
-
-        if (rc.manufacturingDate != null &&
-            rc.manufacturingDate!.trim().isNotEmpty) {
-          final year = _extractYear(rc.manufacturingDate!);
-          if (year != null) {
-            _yearController.text = year.toString();
-          }
-        }
-
-        final insuranceDate = _parseWay2Date(rc.insuranceExpiry);
-        if (insuranceDate != null) {
-          _insuranceExpiry = insuranceDate;
-        }
-
-        final fitnessDate = _parseWay2Date(rc.fitnessExpiry);
-        if (fitnessDate != null) {
-          _fcExpiry = fitnessDate;
-        }
-
-        final permitDate = _parseWay2Date(rc.permitExpiry);
-        if (permitDate != null) {
-          _permitExpiry = permitDate;
-        }
-
-        final taxDate = _parseWay2Date(rc.taxExpiry);
-        if (taxDate != null) {
-          _taxExpiry = taxDate;
-        }
-
-        _registrationController.text = registration;
-      });
-
-      _showSuccess('RC verified successfully. Details auto-filled.');
-    } catch (e) {
-      if (!mounted) return;
-
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _rcVerifying = false;
-        });
-      }
-    }
-  }
-
-  int? _extractYear(String value) {
-    final match = RegExp(r'(19|20)\d{2}').firstMatch(value);
-
-    if (match == null) return null;
-
-    return int.tryParse(match.group(0)!);
-  }
-
-  DateTime? _parseWay2Date(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-
-    final text = value.trim();
-
-    // ISO / yyyy-MM-dd
-    final isoDate = DateTime.tryParse(text);
-    if (isoDate != null) {
-      return isoDate;
-    }
-
-    // dd/MM/yyyy or dd-MM-yyyy
-    final parts = text.split(RegExp(r'[/-]'));
-
-    if (parts.length == 3) {
-      final first = int.tryParse(parts[0]);
-      final second = int.tryParse(parts[1]);
-      final third = int.tryParse(parts[2]);
-
-      if (first != null && second != null && third != null) {
-        if (first > 31) {
-          return DateTime(first, second, third);
-        }
-
-        return DateTime(third, second, first);
-      }
-    }
-
-    return null;
-  }
-
-  String _cleanWay2Error(Object error) {
-    final message = error.toString();
-
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
-    }
-
-    return message;
   }
 
   // ============================================================
@@ -812,77 +576,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       ),
     );
   }
-
-  // ============================================================
-  // ADDITIONAL RC DETAILS
-  // ============================================================
-
-  Widget _buildOwnerNameField() => TextFormField(
-        controller: _ownerNameController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Owner Name',
-          hint: 'Vehicle owner name',
-          icon: Icons.person_outline,
-        ),
-      );
-
-  Widget _buildPermanentAddressField() => TextFormField(
-        controller: _permanentAddressController,
-        enabled: !_saving,
-        maxLines: 2,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Permanent Address',
-          hint: 'Permanent address',
-          icon: Icons.home_outlined,
-        ),
-      );
-
-  Widget _buildChasiNumberField() => TextFormField(
-        controller: _chasiNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Chasi Number',
-          hint: 'Chassis number',
-          icon: Icons.confirmation_number_outlined,
-        ),
-      );
-
-  Widget _buildEngineNumberField() => TextFormField(
-        controller: _engineNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Engine Number',
-          hint: 'Engine number',
-          icon: Icons.settings_outlined,
-        ),
-      );
-
-  Widget _buildColorField() => TextFormField(
-        controller: _colorController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Color',
-          hint: 'Vehicle color',
-          icon: Icons.palette_outlined,
-        ),
-      );
-
-  Widget _buildInsuranceCompanyField() => TextFormField(
-        controller: _insuranceCompanyController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Insurance Company',
-          hint: 'Insurance company',
-          icon: Icons.shield_outlined,
-        ),
-      );
 
   // ============================================================
   // COMPLIANCE
@@ -1181,31 +874,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         modelName: _modelController.text.trim(),
 
         manufacturingYear: int.tryParse(_yearController.text.trim()),
-
-        ownerName: _ownerNameController.text.trim().isEmpty
-            ? null
-            : _ownerNameController.text.trim(),
-
-        permanentAddress: _permanentAddressController.text.trim().isEmpty
-            ? null
-            : _permanentAddressController.text.trim(),
-
-        vehicleChasiNumber: _chasiNumberController.text.trim().isEmpty
-            ? null
-            : _chasiNumberController.text.trim(),
-
-        vehicleEngineNumber: _engineNumberController.text.trim().isEmpty
-            ? null
-            : _engineNumberController.text.trim(),
-
-        color: _colorController.text.trim().isEmpty
-            ? null
-            : _colorController.text.trim(),
-
-        insuranceCompany: _insuranceCompanyController.text.trim().isEmpty
-            ? null
-            : _insuranceCompanyController.text.trim(),
-
 
         emissionStandard: _emissionController.text.trim().isEmpty
             ? null

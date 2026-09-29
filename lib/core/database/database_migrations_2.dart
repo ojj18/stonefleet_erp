@@ -77,12 +77,6 @@ class DatabaseMigrations {
     model_name TEXT,
     manufacturing_year INTEGER,
 
-    owner_name TEXT,
-    permanent_address TEXT,
-    vehicle_chasi_number TEXT,
-    vehicle_engine_number TEXT,
-    color TEXT,
-    insurance_company TEXT,
     status INTEGER NOT NULL DEFAULT 1,
 
     insurance_expiry TEXT,
@@ -108,12 +102,6 @@ class DatabaseMigrations {
 
     manufacturing_year INTEGER,
 
-    owner_name TEXT,
-    permanent_address TEXT,
-    vehicle_chasi_number TEXT,
-    vehicle_engine_number TEXT,
-    color TEXT,
-    insurance_company TEXT,
     emission_standard TEXT,
 
     status INTEGER NOT NULL DEFAULT 1,
@@ -423,25 +411,6 @@ class DatabaseMigrations {
     int oldVersion,
     int newVersion,
   ) async {
-    if (oldVersion < 2) {
-      final tables = ['excavators', 'transport_vehicles'];
-      final columns = [
-        'owner_name',
-        'permanent_address',
-        'vehicle_chasi_number',
-        'vehicle_engine_number',
-        'color',
-        'insurance_company',
-      ];
-      for (final table in tables) {
-        for (final column in columns) {
-          if (!await _hasColumn(db, table, column)) {
-            await db.execute('ALTER TABLE $table ADD COLUMN $column TEXT');
-          }
-        }
-      }
-    }
-
     // ============================================================
     // VERSION 2
     // EXCAVATOR MIGRATION
@@ -483,12 +452,6 @@ class DatabaseMigrations {
             model_name TEXT,
             manufacturing_year INTEGER,
 
-                owner_name TEXT,
-                permanent_address TEXT,
-                vehicle_chasi_number TEXT,
-                vehicle_engine_number TEXT,
-                color TEXT,
-                insurance_company TEXT,
             status INTEGER NOT NULL DEFAULT 1,
 
             insurance_expiry TEXT,
@@ -574,7 +537,7 @@ class DatabaseMigrations {
     // TRANSPORT MIGRATION
     // ============================================================
 
-    if (oldVersion < 2) {
+    if (oldVersion < 3) {
       final transportHasManufacturerId = await _hasColumn(
         db,
         'transport_vehicles',
@@ -607,12 +570,6 @@ class DatabaseMigrations {
             model_name TEXT,
             manufacturing_year INTEGER,
 
-                owner_name TEXT,
-                permanent_address TEXT,
-                vehicle_chasi_number TEXT,
-                vehicle_engine_number TEXT,
-                color TEXT,
-                insurance_company TEXT,
             emission_standard TEXT,
 
             status INTEGER NOT NULL DEFAULT 1,

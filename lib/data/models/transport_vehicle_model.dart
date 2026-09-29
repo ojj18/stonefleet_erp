@@ -7,6 +7,13 @@ class TransportModel {
   final String? modelName;
   final int? manufacturingYear;
 
+  final String? ownerName;
+  final String? permanentAddress;
+  final String? vehicleChasiNumber;
+  final String? vehicleEngineNumber;
+  final String? color;
+  final String? insuranceCompany;
+
   final String? emissionStandard;
 
   final String? insuranceExpiry;
@@ -25,6 +32,12 @@ class TransportModel {
     this.manufacturerName,
     this.modelName,
     this.manufacturingYear,
+    this.ownerName,
+    this.permanentAddress,
+    this.vehicleChasiNumber,
+    this.vehicleEngineNumber,
+    this.color,
+    this.insuranceCompany,
     this.emissionStandard,
     this.insuranceExpiry,
     this.fcExpiry,
@@ -42,6 +55,12 @@ class TransportModel {
       manufacturerName: map['manufacturer_name'] as String?,
       modelName: map['model_name'] as String?,
       manufacturingYear: map['manufacturing_year'] as int?,
+      ownerName: map['owner_name'] as String?,
+      permanentAddress: map['permanent_address'] as String?,
+      vehicleChasiNumber: map['vehicle_chasi_number'] as String?,
+      vehicleEngineNumber: map['vehicle_engine_number'] as String?,
+      color: map['color'] as String?,
+      insuranceCompany: map['insurance_company'] as String?,
       emissionStandard: map['emission_standard'] as String?,
       insuranceExpiry: map['insurance_expiry'] as String?,
       fcExpiry: map['fc_expiry'] as String?,
@@ -60,6 +79,12 @@ class TransportModel {
       'manufacturer_name': manufacturerName,
       'model_name': modelName,
       'manufacturing_year': manufacturingYear,
+      'owner_name': ownerName,
+      'permanent_address': permanentAddress,
+      'vehicle_chasi_number': vehicleChasiNumber,
+      'vehicle_engine_number': vehicleEngineNumber,
+      'color': color,
+      'insurance_company': insuranceCompany,
       'emission_standard': emissionStandard,
       'insurance_expiry': insuranceExpiry,
       'fc_expiry': fcExpiry,
@@ -77,6 +102,12 @@ class TransportModel {
     String? manufacturerName,
     String? modelName,
     int? manufacturingYear,
+    String? ownerName,
+    String? permanentAddress,
+    String? vehicleChasiNumber,
+    String? vehicleEngineNumber,
+    String? color,
+    String? insuranceCompany,
     String? emissionStandard,
     String? insuranceExpiry,
     String? fcExpiry,
@@ -92,6 +123,12 @@ class TransportModel {
       manufacturerName: manufacturerName ?? this.manufacturerName,
       modelName: modelName ?? this.modelName,
       manufacturingYear: manufacturingYear ?? this.manufacturingYear,
+      ownerName: ownerName ?? this.ownerName,
+      permanentAddress: permanentAddress ?? this.permanentAddress,
+      vehicleChasiNumber: vehicleChasiNumber ?? this.vehicleChasiNumber,
+      vehicleEngineNumber: vehicleEngineNumber ?? this.vehicleEngineNumber,
+      color: color ?? this.color,
+      insuranceCompany: insuranceCompany ?? this.insuranceCompany,
       emissionStandard: emissionStandard ?? this.emissionStandard,
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       fcExpiry: fcExpiry ?? this.fcExpiry,

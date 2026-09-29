@@ -11,10 +11,6 @@ class VehicleRcModel {
   final String? vehicleCategoryDescription;
   final String? fuelType;
   final String? color;
-  final String? ownerName;
-  final String? permanentAddress;
-  final String? vehicleChasiNumber;
-  final String? vehicleEngineNumber;
 
   final String? fitnessExpiry;
   final String? insuranceExpiry;
@@ -36,10 +32,6 @@ class VehicleRcModel {
     this.vehicleCategoryDescription,
     this.fuelType,
     this.color,
-    this.ownerName,
-    this.permanentAddress,
-    this.vehicleChasiNumber,
-    this.vehicleEngineNumber,
     this.fitnessExpiry,
     this.insuranceExpiry,
     this.taxExpiry,
@@ -72,21 +64,6 @@ class VehicleRcModel {
       fuelType: _string(json['fuel_type']),
 
       color: _string(json['color']),
-      ownerName: _string(
-        json['owner_name'] ?? json['ownerName'],
-      ),
-      permanentAddress: _string(
-        json['permanent_address'] ?? json['permanentAddress'],
-      ),
-      vehicleChasiNumber: _string(
-        json['chassis_number'] ??
-            json['chasi_number'] ??
-            json['vehicle_chasi_number'],
-      ),
-      vehicleEngineNumber: _string(
-        json['engine_number'] ??
-            json['vehicle_engine_number'],
-      ),
 
       fitnessExpiry: _string(json['fit_up_to']),
 

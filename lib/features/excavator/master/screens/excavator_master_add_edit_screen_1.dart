@@ -4,23 +4,24 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
-import '../../../../data/models/transport_vehicle_model.dart';
-import '../../../../data/services/way2api_service.dart';
+import '../../../../data/models/excavator_model.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
-import '../providers/transport_master_provider.dart';
+import '../providers/excavator_provider.dart';
 
-class TransportAddEditScreen extends StatefulWidget {
-  final int? vehicleId;
+class ExcavatorMasterAddEditScreen extends StatefulWidget {
+  final int? excavatorId;
 
-  const TransportAddEditScreen({super.key, this.vehicleId});
+  const ExcavatorMasterAddEditScreen({super.key, this.excavatorId});
 
-  bool get isEdit => vehicleId != null;
+  bool get isEdit => excavatorId != null;
 
   @override
-  State<TransportAddEditScreen> createState() => _TransportAddEditScreenState();
+  State<ExcavatorMasterAddEditScreen> createState() =>
+      _ExcavatorMasterAddEditScreenState();
 }
 
-class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
+class _ExcavatorMasterAddEditScreenState
+    extends State<ExcavatorMasterAddEditScreen> {
   final _formKey = GlobalKey<FormState>();
 
   // ============================================================
@@ -32,16 +33,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   final _modelController = TextEditingController();
   final _yearController = TextEditingController();
 
-  final _ownerNameController = TextEditingController();
-  final _permanentAddressController = TextEditingController();
-  final _chasiNumberController = TextEditingController();
-  final _engineNumberController = TextEditingController();
-  final _colorController = TextEditingController();
-  final _insuranceCompanyController = TextEditingController();
-  final _emissionController = TextEditingController();
+  // ============================================================
+  // FOCUS
+  // ============================================================
+
+  final _registrationFocusNode = FocusNode();
 
   // ============================================================
-  // STATE
+  // DATE STATE
   // ============================================================
 
   DateTime? _insuranceExpiry;
@@ -49,15 +48,19 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   DateTime? _permitExpiry;
   DateTime? _taxExpiry;
 
-  bool _status = true;
+  // ============================================================
+  // STATE
+  // ============================================================
 
-  bool _registrationExists = false;
-  bool _registrationChecking = false;
-  bool _registrationChecked = false;
+  bool _status = true;
 
   bool _initializing = true;
   bool _saving = false;
-  bool _rcVerifying = false;
+
+  bool _registrationChecking = false;
+  bool _registrationExists = false;
+
+  bool _registrationChecked = false;
 
   // ============================================================
   // INIT
@@ -66,6 +69,8 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   @override
   void initState() {
     super.initState();
+
+    _registrationFocusNode.addListener(_handleRegistrationFocusChange);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initialize();
@@ -77,52 +82,35 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   // ============================================================
 
   Future<void> _initialize() async {
-    if (!widget.isEdit) {
-      if (mounted) {
-        setState(() {
-          _initializing = false;
-        });
-      }
-
-      return;
-    }
-
-    final provider = context.read<TransportProvider>();
+    final provider = context.read<ExcavatorProvider>();
 
     try {
-      final vehicle = await provider.getById(widget.vehicleId!);
+      if (widget.isEdit) {
+        final excavator = await provider.getById(widget.excavatorId!);
 
-      if (vehicle != null && mounted) {
-        _registrationController.text = vehicle.registrationNumber;
+        if (excavator != null && mounted) {
+          _registrationController.text = excavator.registrationNumber;
 
-        _manufacturerController.text = vehicle.manufacturerName ?? '';
+          _manufacturerController.text = excavator.manufacturerName ?? '';
 
-        _modelController.text = vehicle.modelName ?? '';
+          _modelController.text = excavator.modelName ?? '';
 
-        _yearController.text = vehicle.manufacturingYear?.toString() ?? '';
+          _yearController.text = excavator.manufacturingYear?.toString() ?? '';
 
-          _ownerNameController.text = vehicle.ownerName ?? '';
-          _permanentAddressController.text = vehicle.permanentAddress ?? '';
-          _chasiNumberController.text = vehicle.vehicleChasiNumber ?? '';
-          _engineNumberController.text = vehicle.vehicleEngineNumber ?? '';
-          _colorController.text = vehicle.color ?? '';
-          _insuranceCompanyController.text = vehicle.insuranceCompany ?? '';
+          _insuranceExpiry = _parseDate(excavator.insuranceExpiry);
 
-        _emissionController.text = vehicle.emissionStandard ?? '';
+          _fcExpiry = _parseDate(excavator.fcExpiry);
 
-        _insuranceExpiry = _parseDate(vehicle.insuranceExpiry);
+          _permitExpiry = _parseDate(excavator.permitExpiry);
 
-        _fcExpiry = _parseDate(vehicle.fcExpiry);
+          _taxExpiry = _parseDate(excavator.taxExpiry);
 
-        _permitExpiry = _parseDate(vehicle.permitExpiry);
-
-        _taxExpiry = _parseDate(vehicle.taxExpiry);
-
-        _status = vehicle.status;
+          _status = excavator.status;
+        }
       }
     } catch (e) {
       if (mounted) {
-        _showError('Unable to load vehicle: $e');
+        _showError('Unable to load excavator details: $e');
       }
     } finally {
       if (mounted) {
@@ -130,6 +118,19 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           _initializing = false;
         });
       }
+    }
+  }
+
+  // ============================================================
+  // REGISTRATION FOCUS
+  // ============================================================
+
+  void _handleRegistrationFocusChange() {
+    if (!_registrationFocusNode.hasFocus &&
+        !widget.isEdit &&
+        _registrationController.text.trim().isNotEmpty &&
+        !_registrationChecked) {
+      _checkRegistration();
     }
   }
 
@@ -143,13 +144,10 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     _manufacturerController.dispose();
     _modelController.dispose();
     _yearController.dispose();
-    _ownerNameController.dispose();
-    _permanentAddressController.dispose();
-    _chasiNumberController.dispose();
-    _engineNumberController.dispose();
-    _colorController.dispose();
-    _insuranceCompanyController.dispose();
-    _emissionController.dispose();
+
+    _registrationFocusNode.removeListener(_handleRegistrationFocusChange);
+
+    _registrationFocusNode.dispose();
 
     super.dispose();
   }
@@ -162,7 +160,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   Widget build(BuildContext context) {
     if (_initializing) {
       return const Scaffold(
-        backgroundColor: Color(0xFFF8F9FB),
         body: Center(
           child: CircularProgressIndicator(color: Color(0xFF00652C)),
         ),
@@ -171,7 +168,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
-
       body: Column(
         children: [
           _buildTopBar(),
@@ -179,23 +175,19 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(32),
-
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1100),
-
                   child: Form(
                     key: _formKey,
-
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         _buildHeader(),
 
                         const SizedBox(height: 24),
 
-                        _buildVehicleDetailsSection(),
+                        _buildMachineDetails(),
 
                         const SizedBox(height: 20),
 
@@ -227,15 +219,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   Widget _buildTopBar() {
     return Container(
       height: 64,
-
       padding: const EdgeInsets.symmetric(horizontal: 24),
-
       decoration: const BoxDecoration(
         color: Colors.white,
-
         border: Border(bottom: BorderSide(color: Color(0xFFBECABC))),
       ),
-
       child: Row(
         children: [
           IconButton(
@@ -255,6 +243,12 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           ),
 
           const Spacer(),
+
+          // IconButton(
+          //   onPressed: () {},
+          //   icon: const Icon(Icons.notifications_outlined),
+          // ),
+          const SizedBox(width: 8),
           // ======================================================
           // SERVICE NOTIFICATION
           // ======================================================
@@ -320,13 +314,9 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-
             children: [
               Text(
-                widget.isEdit
-                    ? 'Edit Transport Vehicle'
-                    : 'Add Transport Vehicle',
-
+                widget.isEdit ? 'Edit Excavator' : 'Add Excavator',
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -338,51 +328,47 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
               Text(
                 widget.isEdit
-                    ? 'Update transport vehicle details.'
-                    : 'Register a new transport vehicle in the fleet.',
-
+                    ? 'Update registered excavator details.'
+                    : 'Register a new excavator in the fleet.',
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
           ),
         ),
 
-        // OutlinedButton.icon(
-        //   onPressed: _saving
-        //       ? null
-        //       : () {
-        //           Navigator.pop(context);
-        //         },
-        //   icon: const Icon(Icons.close, size: 18),
-        //   label: const Text('Cancel'),
-        // ),
+        OutlinedButton.icon(
+          onPressed: _saving
+              ? null
+              : () {
+                  Navigator.pop(context);
+                },
+          icon: const Icon(Icons.close, size: 18),
+          label: const Text('Cancel'),
+        ),
       ],
     );
   }
 
   // ============================================================
-  // VEHICLE DETAILS
+  // MACHINE DETAILS
   // ============================================================
 
-  Widget _buildVehicleDetailsSection() {
+  Widget _buildMachineDetails() {
     return _sectionCard(
-      title: 'Vehicle Details',
-      icon: Icons.local_shipping_outlined,
-
+      title: 'Machine Details',
+      icon: Icons.precision_manufacturing_outlined,
       child: Column(
         children: [
-          Row(
-            children: [
-              Expanded(child: _buildRegistrationField()),
-
-              const SizedBox(width: 20),
-
-              Expanded(child: _buildYearField()),
-            ],
-          ),
+          // ------------------------------------------------------
+          // REGISTRATION
+          // ------------------------------------------------------
+          _buildRegistrationField(),
 
           const SizedBox(height: 20),
 
+          // ------------------------------------------------------
+          // MANUFACTURER + MODEL
+          // ------------------------------------------------------
           Row(
             children: [
               Expanded(child: _buildManufacturerField()),
@@ -395,72 +381,32 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
           const SizedBox(height: 20),
 
-          _buildEmissionField(),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(child: _buildOwnerNameField()),
-              const SizedBox(width: 20),
-              Expanded(child: _buildColorField()),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          _buildPermanentAddressField(),
-
-          const SizedBox(height: 20),
-
-          Row(
-            children: [
-              Expanded(child: _buildChasiNumberField()),
-              const SizedBox(width: 20),
-              Expanded(child: _buildEngineNumberField()),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          _buildInsuranceCompanyField(),
-
-          const SizedBox(height: 12),
-
-          _buildVerifyRcButton(),
+          // ------------------------------------------------------
+          // YEAR
+          // ------------------------------------------------------
+          _buildYearField(),
         ],
       ),
     );
   }
 
   // ============================================================
-  // REGISTRATION
+  // REGISTRATION NUMBER
   // ============================================================
 
   Widget _buildRegistrationField() {
     return TextFormField(
       controller: _registrationController,
+      focusNode: _registrationFocusNode,
 
-      enabled: !_saving,
+      enabled: !_saving && !widget.isEdit,
 
       textCapitalization: TextCapitalization.characters,
-
-      onChanged: (_) {
-        if (_registrationExists || _registrationChecked) {
-          setState(() {
-            _registrationExists = false;
-            _registrationChecked = false;
-          });
-        }
-      },
 
       inputFormatters: [
         FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z0-9 -]')),
         UpperCaseTextFormatter(),
       ],
-      onFieldSubmitted: (_) {
-        _checkRegistration();
-      },
 
       decoration:
           _inputDecoration(
@@ -471,37 +417,47 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
             suffixIcon: _registrationChecking
                 ? const Padding(
                     padding: EdgeInsets.all(12),
-
                     child: SizedBox(
                       width: 18,
                       height: 18,
-
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
                         color: Color(0xFF00652C),
                       ),
                     ),
                   )
+                : widget.isEdit
+                ? const Icon(Icons.lock_outline, size: 20)
                 : IconButton(
                     tooltip: 'Check registration',
-
                     icon: Icon(
                       _registrationExists
                           ? Icons.error_outline
                           : _registrationChecked
                           ? Icons.check_circle_outline
                           : Icons.search,
-
                       color: _registrationExists
                           ? const Color(0xFFBA1A1A)
                           : _registrationChecked
                           ? const Color(0xFF00652C)
                           : null,
                     ),
-
                     onPressed: _checkRegistration,
                   ),
           ),
+
+      onChanged: (_) {
+        if (_registrationExists || _registrationChecked) {
+          setState(() {
+            _registrationExists = false;
+            _registrationChecked = false;
+          });
+        }
+      },
+
+      onFieldSubmitted: (_) {
+        _checkRegistration();
+      },
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
@@ -518,36 +474,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   }
 
   // ============================================================
-  // VERIFY RC DETAILS
+  // CHECK REGISTRATION
   // ============================================================
 
-  Widget _buildVerifyRcButton() {
-    return Align(
-      alignment: Alignment.centerRight,
-      child: OutlinedButton.icon(
-        onPressed: _saving || _rcVerifying ? null : _verifyRc,
-        icon: _rcVerifying
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFF00652C),
-                ),
-              )
-            : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF00652C),
-          side: const BorderSide(color: Color(0xFF00652C)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _verifyRc() async {
-    if (_rcVerifying) return;
+  Future<void> _checkRegistration() async {
+    if (_registrationChecking) {
+      return;
+    }
 
     final registration = _normalizeRegistration(_registrationController.text);
 
@@ -559,144 +492,42 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     FocusScope.of(context).unfocus();
 
     setState(() {
-      _rcVerifying = true;
+      _registrationChecking = true;
+      _registrationExists = false;
+      _registrationChecked = false;
     });
 
     try {
-      final rc = await Way2ApiService().getVehicleDetails(registration);
+      final provider = context.read<ExcavatorProvider>();
+
+      final exists = await provider.registrationExists(
+        registration,
+        excludeId: widget.excavatorId,
+      );
 
       if (!mounted) return;
 
       setState(() {
-        if (rc.manufacturer != null && rc.manufacturer!.trim().isNotEmpty) {
-          _manufacturerController.text = rc.manufacturer!.trim();
-        }
-
-        if (rc.model != null && rc.model!.trim().isNotEmpty) {
-          _modelController.text = rc.model!.trim();
-        }
-
-        if (rc.ownerName != null && rc.ownerName!.trim().isNotEmpty) {
-          _ownerNameController.text = rc.ownerName!.trim();
-        }
-
-        if (rc.permanentAddress != null && rc.permanentAddress!.trim().isNotEmpty) {
-          _permanentAddressController.text = rc.permanentAddress!.trim();
-        }
-
-        if (rc.vehicleChasiNumber != null &&
-            rc.vehicleChasiNumber!.trim().isNotEmpty) {
-          _chasiNumberController.text = rc.vehicleChasiNumber!.trim();
-        }
-
-        if (rc.vehicleEngineNumber != null &&
-            rc.vehicleEngineNumber!.trim().isNotEmpty) {
-          _engineNumberController.text = rc.vehicleEngineNumber!.trim();
-        }
-
-        if (rc.color != null && rc.color!.trim().isNotEmpty) {
-          _colorController.text = rc.color!.trim();
-        }
-
-        if (rc.insuranceCompany != null &&
-            rc.insuranceCompany!.trim().isNotEmpty) {
-          _insuranceCompanyController.text = rc.insuranceCompany!.trim();
-        }
-
-        if (rc.manufacturingDate != null &&
-            rc.manufacturingDate!.trim().isNotEmpty) {
-          final year = _extractYear(rc.manufacturingDate!);
-          if (year != null) {
-            _yearController.text = year.toString();
-          }
-        }
-
-        final insuranceDate = _parseWay2Date(rc.insuranceExpiry);
-        if (insuranceDate != null) {
-          _insuranceExpiry = insuranceDate;
-        }
-
-        final fitnessDate = _parseWay2Date(rc.fitnessExpiry);
-        if (fitnessDate != null) {
-          _fcExpiry = fitnessDate;
-        }
-
-        final permitDate = _parseWay2Date(rc.permitExpiry);
-        if (permitDate != null) {
-          _permitExpiry = permitDate;
-        }
-
-        final taxDate = _parseWay2Date(rc.taxExpiry);
-        if (taxDate != null) {
-          _taxExpiry = taxDate;
-        }
-
-        _registrationController.text = registration;
+        _registrationChecking = false;
+        _registrationExists = exists;
+        _registrationChecked = true;
       });
 
-      _showSuccess('RC verified successfully. Details auto-filled.');
+      if (exists) {
+        await _showAlreadyExistsDialog(registration);
+      } else {
+        _showSuccess('Registration number is available.');
+      }
     } catch (e) {
       if (!mounted) return;
 
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _rcVerifying = false;
-        });
-      }
+      setState(() {
+        _registrationChecking = false;
+        _registrationChecked = false;
+      });
+
+      _showError('Unable to check registration: $e');
     }
-  }
-
-  int? _extractYear(String value) {
-    final match = RegExp(r'(19|20)\d{2}').firstMatch(value);
-
-    if (match == null) return null;
-
-    return int.tryParse(match.group(0)!);
-  }
-
-  DateTime? _parseWay2Date(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return null;
-    }
-
-    final text = value.trim();
-
-    // ISO / yyyy-MM-dd
-    final isoDate = DateTime.tryParse(text);
-    if (isoDate != null) {
-      return isoDate;
-    }
-
-    // dd/MM/yyyy or dd-MM-yyyy
-    final parts = text.split(RegExp(r'[/-]'));
-
-    if (parts.length == 3) {
-      final first = int.tryParse(parts[0]);
-      final second = int.tryParse(parts[1]);
-      final third = int.tryParse(parts[2]);
-
-      if (first != null && second != null && third != null) {
-        if (first > 31) {
-          return DateTime(first, second, third);
-        }
-
-        return DateTime(third, second, first);
-      }
-    }
-
-    return null;
-  }
-
-  String _cleanWay2Error(Object error) {
-    final message = error.toString();
-
-    if (message.startsWith('Exception: ')) {
-      return message.substring(11);
-    }
-
-    return message;
   }
 
   // ============================================================
@@ -713,7 +544,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       decoration: _inputDecoration(
         label: 'Manufacturer',
-        hint: 'Example: Tata',
+        hint: 'Example: Tata Hitachi',
         icon: Icons.factory_outlined,
       ),
 
@@ -740,14 +571,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Vehicle Model',
-        hint: 'Example: Prima',
-        icon: Icons.local_shipping_outlined,
+        label: 'Excavator Model',
+        hint: 'Example: EX 210',
+        icon: Icons.construction_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter vehicle model';
+          return 'Enter excavator model';
         }
 
         return null;
@@ -756,7 +587,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   }
 
   // ============================================================
-  // YEAR
+  // MANUFACTURING YEAR
   // ============================================================
 
   Widget _buildYearField() {
@@ -767,6 +598,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       keyboardType: TextInputType.number,
 
+      inputFormatters: [
+        FilteringTextInputFormatter.digitsOnly,
+        LengthLimitingTextInputFormatter(4),
+      ],
+
       decoration: _inputDecoration(
         label: 'Manufacturing Year',
         hint: '2024',
@@ -775,7 +611,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter manufacturing year';
+          return null;
         }
 
         final year = int.tryParse(value.trim());
@@ -784,7 +620,9 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           return 'Enter a valid year';
         }
 
-        if (year < 1900 || year > DateTime.now().year) {
+        final currentYear = DateTime.now().year;
+
+        if (year < 1950 || year > currentYear) {
           return 'Enter a valid year';
         }
 
@@ -794,116 +632,25 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   }
 
   // ============================================================
-  // EMISSION
-  // ============================================================
-
-  Widget _buildEmissionField() {
-    return TextFormField(
-      controller: _emissionController,
-
-      enabled: !_saving,
-
-      textCapitalization: TextCapitalization.characters,
-
-      decoration: _inputDecoration(
-        label: 'Emission Standard',
-        hint: 'Example: BS6',
-        icon: Icons.eco_outlined,
-      ),
-    );
-  }
-
-  // ============================================================
-  // ADDITIONAL RC DETAILS
-  // ============================================================
-
-  Widget _buildOwnerNameField() => TextFormField(
-        controller: _ownerNameController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Owner Name',
-          hint: 'Vehicle owner name',
-          icon: Icons.person_outline,
-        ),
-      );
-
-  Widget _buildPermanentAddressField() => TextFormField(
-        controller: _permanentAddressController,
-        enabled: !_saving,
-        maxLines: 2,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Permanent Address',
-          hint: 'Permanent address',
-          icon: Icons.home_outlined,
-        ),
-      );
-
-  Widget _buildChasiNumberField() => TextFormField(
-        controller: _chasiNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Chasi Number',
-          hint: 'Chassis number',
-          icon: Icons.confirmation_number_outlined,
-        ),
-      );
-
-  Widget _buildEngineNumberField() => TextFormField(
-        controller: _engineNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Engine Number',
-          hint: 'Engine number',
-          icon: Icons.settings_outlined,
-        ),
-      );
-
-  Widget _buildColorField() => TextFormField(
-        controller: _colorController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Color',
-          hint: 'Vehicle color',
-          icon: Icons.palette_outlined,
-        ),
-      );
-
-  Widget _buildInsuranceCompanyField() => TextFormField(
-        controller: _insuranceCompanyController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Insurance Company',
-          hint: 'Insurance company',
-          icon: Icons.shield_outlined,
-        ),
-      );
-
-  // ============================================================
-  // COMPLIANCE
+  // COMPLIANCE SECTION
   // ============================================================
 
   Widget _buildComplianceSection() {
     return _sectionCard(
-      title: 'Compliance Documents',
-      icon: Icons.description_outlined,
-
+      title: 'Vehicle Compliance',
+      icon: Icons.verified_user_outlined,
       child: Column(
         children: [
           Row(
             children: [
               Expanded(
-                child: _buildDateField(
+                child: _dateField(
                   label: 'Insurance Expiry',
                   value: _insuranceExpiry,
-                  onChanged: (date) {
+                  icon: Icons.shield_outlined,
+                  onChanged: (value) {
                     setState(() {
-                      _insuranceExpiry = date;
+                      _insuranceExpiry = value;
                     });
                   },
                 ),
@@ -912,12 +659,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
               const SizedBox(width: 20),
 
               Expanded(
-                child: _buildDateField(
+                child: _dateField(
                   label: 'FC Expiry',
                   value: _fcExpiry,
-                  onChanged: (date) {
+                  icon: Icons.fact_check_outlined,
+                  onChanged: (value) {
                     setState(() {
-                      _fcExpiry = date;
+                      _fcExpiry = value;
                     });
                   },
                 ),
@@ -930,12 +678,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           Row(
             children: [
               Expanded(
-                child: _buildDateField(
+                child: _dateField(
                   label: 'Permit Expiry',
                   value: _permitExpiry,
-                  onChanged: (date) {
+                  icon: Icons.assignment_outlined,
+                  onChanged: (value) {
                     setState(() {
-                      _permitExpiry = date;
+                      _permitExpiry = value;
                     });
                   },
                 ),
@@ -944,12 +693,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
               const SizedBox(width: 20),
 
               Expanded(
-                child: _buildDateField(
+                child: _dateField(
                   label: 'Tax Expiry',
                   value: _taxExpiry,
-                  onChanged: (date) {
+                  icon: Icons.receipt_long_outlined,
+                  onChanged: (value) {
                     setState(() {
-                      _taxExpiry = date;
+                      _taxExpiry = value;
                     });
                   },
                 ),
@@ -965,22 +715,28 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   // DATE FIELD
   // ============================================================
 
-  Widget _buildDateField({
+  Widget _dateField({
     required String label,
     required DateTime? value,
+    required IconData icon,
     required ValueChanged<DateTime?> onChanged,
   }) {
     return InkWell(
+      borderRadius: BorderRadius.circular(8),
+
       onTap: _saving
           ? null
           : () async {
-              final now = DateTime.now();
-
               final selected = await showDatePicker(
                 context: context,
-                initialDate: value ?? now,
+
+                initialDate: value ?? DateTime.now(),
+
                 firstDate: DateTime(2000),
+
                 lastDate: DateTime(2100),
+
+                helpText: 'Select $label',
               );
 
               if (selected != null) {
@@ -988,13 +744,8 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
               }
             },
 
-      borderRadius: BorderRadius.circular(10),
-
       child: InputDecorator(
-        decoration: _inputDecoration(
-          label: label,
-          icon: Icons.calendar_month_outlined,
-        ),
+        decoration: _inputDecoration(label: label, icon: icon),
 
         child: Row(
           children: [
@@ -1005,7 +756,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 style: TextStyle(
                   fontSize: 14,
                   color: value == null
-                      ? const Color(0xFF68717D)
+                      ? const Color(0xFF6F7A6E)
                       : const Color(0xFF191C1E),
                 ),
               ),
@@ -1043,19 +794,18 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     return _sectionCard(
       title: 'Status',
       icon: Icons.toggle_on_outlined,
-
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
 
         title: const Text(
-          'Active Vehicle',
+          'Active Excavator',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
 
         subtitle: Text(
           _status
-              ? 'This vehicle is currently active.'
-              : 'This vehicle is currently inactive.',
+              ? 'This excavator is currently active.'
+              : 'This excavator is currently inactive.',
         ),
 
         value: _status,
@@ -1080,7 +830,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   Widget _buildBottomActions() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.end,
-
       children: [
         OutlinedButton(
           onPressed: _saving
@@ -1088,7 +837,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
               : () {
                   Navigator.pop(context);
                 },
-
           child: const Text('Cancel'),
         ),
 
@@ -1108,7 +856,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 )
               : const Icon(Icons.save_outlined),
 
-          label: Text(widget.isEdit ? 'Update Vehicle' : 'Save Vehicle'),
+          label: Text(widget.isEdit ? 'Update Excavator' : 'Save Excavator'),
 
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1138,31 +886,33 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       return;
     }
 
+    final provider = context.read<ExcavatorProvider>();
+
     // ==========================================================
     // FINAL DUPLICATE CHECK
     // ==========================================================
 
-    final provider = context.read<TransportProvider>();
+    final exists = await provider.registrationExists(
+      registration,
+      excludeId: widget.excavatorId,
+    );
 
-    // If your provider has registrationExists(),
-    // this block can be enabled.
-    //
-    // final exists = await provider.registrationExists(
-    //   registration,
-    //   excludeId: widget.vehicleId,
-    // );
-    //
-    // if (!mounted) return;
-    //
-    // if (exists) {
-    //   setState(() {
-    //     _registrationExists = true;
-    //     _registrationChecked = true;
-    //   });
-    //
-    //   await _showAlreadyExistsDialog(registration);
-    //   return;
-    // }
+    if (!mounted) return;
+
+    if (exists) {
+      setState(() {
+        _registrationExists = true;
+        _registrationChecked = true;
+      });
+
+      await _showAlreadyExistsDialog(registration);
+
+      return;
+    }
+
+    // ==========================================================
+    // START SAVING
+    // ==========================================================
 
     setState(() {
       _saving = true;
@@ -1171,8 +921,8 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     try {
       final now = DateTime.now().toIso8601String();
 
-      final vehicle = TransportModel(
-        id: widget.vehicleId,
+      final excavator = ExcavatorModel(
+        id: widget.excavatorId,
 
         registrationNumber: registration,
 
@@ -1181,35 +931,6 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         modelName: _modelController.text.trim(),
 
         manufacturingYear: int.tryParse(_yearController.text.trim()),
-
-        ownerName: _ownerNameController.text.trim().isEmpty
-            ? null
-            : _ownerNameController.text.trim(),
-
-        permanentAddress: _permanentAddressController.text.trim().isEmpty
-            ? null
-            : _permanentAddressController.text.trim(),
-
-        vehicleChasiNumber: _chasiNumberController.text.trim().isEmpty
-            ? null
-            : _chasiNumberController.text.trim(),
-
-        vehicleEngineNumber: _engineNumberController.text.trim().isEmpty
-            ? null
-            : _engineNumberController.text.trim(),
-
-        color: _colorController.text.trim().isEmpty
-            ? null
-            : _colorController.text.trim(),
-
-        insuranceCompany: _insuranceCompanyController.text.trim().isEmpty
-            ? null
-            : _insuranceCompanyController.text.trim(),
-
-
-        emissionStandard: _emissionController.text.trim().isEmpty
-            ? null
-            : _emissionController.text.trim(),
 
         insuranceExpiry: _formatDatabaseDate(_insuranceExpiry),
 
@@ -1229,9 +950,9 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       final bool success;
 
       if (widget.isEdit) {
-        success = await provider.updateVehicle(vehicle);
+        success = await provider.updateExcavator(excavator);
       } else {
-        success = await provider.addVehicle(vehicle);
+        success = await provider.addExcavator(excavator);
       }
 
       if (!mounted) return;
@@ -1239,18 +960,18 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       if (success) {
         _showSuccess(
           widget.isEdit
-              ? 'Transport vehicle updated successfully.'
-              : 'Transport vehicle added successfully.',
+              ? 'Excavator updated successfully.'
+              : 'Excavator added successfully.',
         );
 
         Navigator.pop(context, true);
       } else {
-        _showError(provider.error ?? 'Unable to save transport vehicle.');
+        _showError(provider.error ?? 'Unable to save excavator.');
       }
     } catch (e) {
       if (!mounted) return;
 
-      _showError('Unable to save vehicle: $e');
+      _showError('Unable to save excavator: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -1264,93 +985,18 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   // ORIGINAL CREATED DATE
   // ============================================================
 
-  Future<String> _getOriginalCreatedAt(TransportProvider provider) async {
-    if (widget.vehicleId == null) {
+  Future<String> _getOriginalCreatedAt(ExcavatorProvider provider) async {
+    if (widget.excavatorId == null) {
       return DateTime.now().toIso8601String();
     }
 
-    final existing = await provider.getById(widget.vehicleId!);
+    final existing = await provider.getById(widget.excavatorId!);
 
     return existing?.createdAt ?? DateTime.now().toIso8601String();
   }
 
   // ============================================================
-  // CHECK REGISTRATION
-  // ============================================================
-
-  Future<void> _checkRegistration() async {
-    if (_registrationChecking) {
-      return;
-    }
-
-    final registration = _normalizeRegistration(_registrationController.text);
-
-    if (registration.isEmpty) {
-      _showError('Enter registration number first.');
-      return;
-    }
-
-    setState(() {
-      _registrationChecking = true;
-      _registrationExists = false;
-      _registrationChecked = false;
-    });
-
-    try {
-      /*
-       * Add registrationExists() to TransportProvider
-       * if you want the same instant duplicate-check
-       * behaviour as Excavator.
-       */
-
-      final exists = await _registrationExistsInList(registration);
-
-      if (!mounted) return;
-
-      setState(() {
-        _registrationChecking = false;
-
-        _registrationExists = exists;
-
-        _registrationChecked = true;
-      });
-
-      if (exists) {
-        await _showAlreadyExistsDialog(registration);
-      } else {
-        _showSuccess('Registration number is available.');
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _registrationChecking = false;
-
-        _registrationChecked = false;
-      });
-
-      _showError('Unable to check registration: $e');
-    }
-  }
-
-  // ============================================================
-  // REGISTRATION EXISTS
-  // ============================================================
-
-  Future<bool> _registrationExistsInList(String registration) async {
-    final provider = context.read<TransportProvider>();
-
-    final vehicles = provider.vehicles;
-
-    return vehicles.any(
-      (vehicle) =>
-          vehicle.id != widget.vehicleId &&
-          _normalizeRegistration(vehicle.registrationNumber) == registration,
-    );
-  }
-
-  // ============================================================
-  // ALREADY EXISTS
+  // ALREADY EXISTS DIALOG
   // ============================================================
 
   Future<void> _showAlreadyExistsDialog(String registration) async {
@@ -1363,13 +1009,21 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       builder: (dialogContext) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+
           title: const Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFBA1A1A)),
+              Icon(
+                Icons.warning_amber_rounded,
+                color: Color(0xFFBA1A1A),
+                size: 28,
+              ),
 
               SizedBox(width: 10),
 
-              Text('Vehicle Already Exists'),
+              Expanded(child: Text('Vehicle Already Exists')),
             ],
           ),
 
@@ -1381,13 +1035,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
           actions: [
             FilledButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-              },
-
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
               ),
+
+              onPressed: () {
+                Navigator.pop(dialogContext);
+              },
 
               child: const Text('OK'),
             ),
@@ -1416,15 +1070,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
         borderRadius: BorderRadius.circular(12),
 
-        border: Border.all(color: const Color(0xFFE1E5E9)),
-
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFBECABC)),
       ),
 
       child: Column(
@@ -1433,27 +1079,15 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         children: [
           Row(
             children: [
-              Container(
-                width: 38,
-                height: 38,
+              Icon(icon, size: 20, color: const Color(0xFF00652C)),
 
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-
-                  borderRadius: BorderRadius.circular(8),
-                ),
-
-                child: Icon(icon, color: const Color(0xFF00652C), size: 20),
-              ),
-
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
 
               Text(
                 title,
                 style: const TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFF191C1E),
                 ),
               ),
             ],
@@ -1474,52 +1108,63 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   InputDecoration _inputDecoration({
     required String label,
     String? hint,
-    required IconData icon,
+    IconData? icon,
   }) {
     return InputDecoration(
       labelText: label,
+
       hintText: hint,
 
-      prefixIcon: Icon(icon, size: 20),
+      prefixIcon: icon == null ? null : Icon(icon),
 
       filled: true,
 
       fillColor: Colors.white,
 
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
 
-        borderSide: const BorderSide(color: Color(0xFFD8DDE3)),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+
+        borderSide: const BorderSide(color: Color(0xFFBECABC)),
       ),
 
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
 
-        borderSide: const BorderSide(color: Color(0xFFD8DDE3)),
+        borderSide: const BorderSide(color: Color(0xFFBECABC)),
       ),
 
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
 
-        borderSide: const BorderSide(color: Color(0xFF00652C), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFF00652C), width: 2),
       ),
 
       errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
 
         borderSide: const BorderSide(color: Color(0xFFBA1A1A)),
       ),
 
       focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
 
-        borderSide: const BorderSide(color: Color(0xFFBA1A1A), width: 1.5),
+        borderSide: const BorderSide(color: Color(0xFFBA1A1A), width: 2),
       ),
     );
   }
 
   // ============================================================
-  // HELPERS
+  // NORMALIZE REGISTRATION
+  // ============================================================
+
+  String _normalizeRegistration(String value) {
+    return value.replaceAll(' ', '').replaceAll('-', '').trim().toUpperCase();
+  }
+
+  // ============================================================
+  // DATE PARSE
   // ============================================================
 
   DateTime? _parseDate(String? value) {
@@ -1527,45 +1172,83 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       return null;
     }
 
-    return DateTime.tryParse(value);
+    return DateTime.tryParse(value.trim());
   }
 
-  String? _formatDatabaseDate(DateTime? date) {
-    if (date == null) {
+  // ============================================================
+  // DATABASE DATE
+  // ============================================================
+
+  String? _formatDatabaseDate(DateTime? value) {
+    if (value == null) {
       return null;
     }
 
-    return '${date.year.toString().padLeft(4, '0')}-'
-        '${date.month.toString().padLeft(2, '0')}-'
-        '${date.day.toString().padLeft(2, '0')}';
+    final month = value.month.toString().padLeft(2, '0');
+
+    final day = value.day.toString().padLeft(2, '0');
+
+    return '${value.year}-$month-$day';
   }
+
+  // ============================================================
+  // DISPLAY DATE
+  // ============================================================
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
+    final month = date.month.toString().padLeft(2, '0');
+
+    final day = date.day.toString().padLeft(2, '0');
+
+    return '$day/$month/${date.year}';
   }
 
-  String _normalizeRegistration(String value) {
-    return value.trim().toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
-  }
+  // ============================================================
+  // SUCCESS MESSAGE
+  // ============================================================
 
   void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFF00652C),
-      ),
-    );
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+
+          backgroundColor: const Color(0xFF00652C),
+
+          behavior: SnackBarBehavior.floating,
+
+          margin: const EdgeInsets.all(20),
+
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
+  // ============================================================
+  // ERROR MESSAGE
+  // ============================================================
+
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFBA1A1A),
-      ),
-    );
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+
+          backgroundColor: const Color(0xFFBA1A1A),
+
+          behavior: SnackBarBehavior.floating,
+
+          margin: const EdgeInsets.all(20),
+
+          duration: const Duration(seconds: 3),
+        ),
+      );
   }
 }
 

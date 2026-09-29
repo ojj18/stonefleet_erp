@@ -6,12 +6,6 @@ class ExcavatorModel {
   final String? manufacturerName;
   final String? modelName;
   final int? manufacturingYear;
-  final String? ownerName;
-  final String? permanentAddress;
-  final String? vehicleChasiNumber;
-  final String? vehicleEngineNumber;
-  final String? color;
-  final String? insuranceCompany;
 
   // Document expiry
   final String? insuranceExpiry;
@@ -32,12 +26,6 @@ class ExcavatorModel {
     this.manufacturerName,
     this.modelName,
     this.manufacturingYear,
-    this.ownerName,
-    this.permanentAddress,
-    this.vehicleChasiNumber,
-    this.vehicleEngineNumber,
-    this.color,
-    this.insuranceCompany,
     this.insuranceExpiry,
     this.fcExpiry,
     this.permitExpiry,
@@ -58,12 +46,6 @@ class ExcavatorModel {
       manufacturerName: map['manufacturer_name'] as String?,
       modelName: map['model_name'] as String?,
       manufacturingYear: map['manufacturing_year'] as int?,
-      ownerName: map['owner_name'] as String?,
-      permanentAddress: map['permanent_address'] as String?,
-      vehicleChasiNumber: map['vehicle_chasi_number'] as String?,
-      vehicleEngineNumber: map['vehicle_engine_number'] as String?,
-      color: map['color'] as String?,
-      insuranceCompany: map['insurance_company'] as String?,
       insuranceExpiry: map['insurance_expiry'] as String?,
       fcExpiry: map['fc_expiry'] as String?,
       permitExpiry: map['permit_expiry'] as String?,
@@ -85,12 +67,6 @@ class ExcavatorModel {
       'manufacturer_name': manufacturerName,
       'model_name': modelName,
       'manufacturing_year': manufacturingYear,
-      'owner_name': ownerName,
-      'permanent_address': permanentAddress,
-      'vehicle_chasi_number': vehicleChasiNumber,
-      'vehicle_engine_number': vehicleEngineNumber,
-      'color': color,
-      'insurance_company': insuranceCompany,
       'insurance_expiry': insuranceExpiry,
       'fc_expiry': fcExpiry,
       'permit_expiry': permitExpiry,
@@ -111,12 +87,6 @@ class ExcavatorModel {
     String? manufacturerName,
     String? modelName,
     int? manufacturingYear,
-    String? ownerName,
-    String? permanentAddress,
-    String? vehicleChasiNumber,
-    String? vehicleEngineNumber,
-    String? color,
-    String? insuranceCompany,
     String? insuranceExpiry,
     String? fcExpiry,
     String? permitExpiry,
@@ -131,12 +101,6 @@ class ExcavatorModel {
       manufacturerName: manufacturerName ?? this.manufacturerName,
       modelName: modelName ?? this.modelName,
       manufacturingYear: manufacturingYear ?? this.manufacturingYear,
-      ownerName: ownerName ?? this.ownerName,
-      permanentAddress: permanentAddress ?? this.permanentAddress,
-      vehicleChasiNumber: vehicleChasiNumber ?? this.vehicleChasiNumber,
-      vehicleEngineNumber: vehicleEngineNumber ?? this.vehicleEngineNumber,
-      color: color ?? this.color,
-      insuranceCompany: insuranceCompany ?? this.insuranceCompany,
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       fcExpiry: fcExpiry ?? this.fcExpiry,
       permitExpiry: permitExpiry ?? this.permitExpiry,

@@ -56,7 +56,7 @@ class _TransportMaintenanceAddEditScreenState
   double _totalKm = 0;
   double _dieselExpense = 0;
   double _dieselConsumptionPerKm = 0;
-  double _dieselCostPerKm = 0;
+  //double _dieselCostPerKm = 0;
 
   bool _initializing = true;
   bool _saving = false;
@@ -199,12 +199,12 @@ class _TransportMaintenanceAddEditScreenState
     final dieselExpense = dieselFilled * dieselRate;
 
     double dieselConsumptionPerKm = 0;
-    double dieselCostPerKm = 0;
+    //double dieselCostPerKm = 0;
 
     if (totalKm > 0 && dieselFilled > 0) {
-      dieselConsumptionPerKm = dieselFilled / totalKm;
+      dieselConsumptionPerKm = totalKm / dieselFilled;
 
-      dieselCostPerKm = dieselExpense / totalKm;
+      //dieselCostPerKm = dieselExpense / totalKm;
     }
 
     if (!mounted) {
@@ -215,7 +215,7 @@ class _TransportMaintenanceAddEditScreenState
       _totalKm = totalKm;
       _dieselExpense = dieselExpense;
       _dieselConsumptionPerKm = dieselConsumptionPerKm;
-      _dieselCostPerKm = dieselCostPerKm;
+      //_dieselCostPerKm = dieselCostPerKm;
     });
   }
 
@@ -650,16 +650,6 @@ class _TransportMaintenanceAddEditScreenState
                   icon: Icons.currency_rupee,
                 ),
               ),
-
-              const SizedBox(width: 20),
-
-              Expanded(
-                child: _buildCalculatedField(
-                  label: 'Diesel Expense',
-                  value: _formatCurrency(_dieselExpense),
-                  icon: Icons.receipt_long_outlined,
-                ),
-              ),
             ],
           ),
 
@@ -670,24 +660,19 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildCalculatedField(
                   label: 'Diesel Consumption',
-                  value: '${_dieselConsumptionPerKm.toStringAsFixed(2)} L/km',
+                  value: '${_dieselConsumptionPerKm.toStringAsFixed(2)} L/KM',
                   icon: Icons.speed_outlined,
                 ),
               ),
 
               const SizedBox(width: 20),
-
               Expanded(
                 child: _buildCalculatedField(
-                  label: 'Diesel Cost',
-                  value: '${_formatCurrency(_dieselCostPerKm)}/km',
-                  icon: Icons.currency_rupee,
+                  label: 'Diesel Expense',
+                  value: _formatCurrency(_dieselExpense),
+                  icon: Icons.receipt_long_outlined,
                 ),
               ),
-
-              const SizedBox(width: 20),
-
-              const Expanded(child: SizedBox()),
             ],
           ),
         ],

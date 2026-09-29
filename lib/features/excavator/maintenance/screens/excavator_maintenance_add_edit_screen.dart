@@ -242,15 +242,15 @@ class _ExcavatorMaintenanceAddEditScreenState
     }
 
     // Diesel consumption per hour
-    final dieselPerHour = diesel / workingHours;
+    final dieselPerHour = workingHours / diesel;
 
     // Diesel cost per hour
-    final dieselCostPerHour = (diesel * (rate ?? 0)) / workingHours;
+    // final dieselCostPerHour = (diesel * (rate ?? 0)) / workingHours;
 
     _dieselPerHourController.text = dieselPerHour.toStringAsFixed(2);
 
     if (rate != null) {
-      _dieselCostPerHourController.text = dieselCostPerHour.toStringAsFixed(2);
+      //  _dieselCostPerHourController.text = dieselCostPerHour.toStringAsFixed(2);
     } else {
       _dieselCostPerHourController.clear();
     }
@@ -1488,26 +1488,26 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselPerHourController,
-                  label: 'Diesel Consumption (L/hr)',
+                  label: 'Diesel Consumption (L/KM)',
                   icon: Icons.speed_outlined,
                   readOnly: true,
                   required: false,
                 ),
               ),
 
-              const SizedBox(width: 20),
+              //const SizedBox(width: 20),
 
-              Expanded(
-                child: _numberField(
-                  controller: _dieselCostPerHourController,
-                  label: 'Diesel Cost (₹/hr)',
-                  icon: Icons.currency_rupee,
-                  readOnly: true,
-                  required: false,
-                ),
-              ),
+              // Expanded(
+              //   child: _numberField(
+              //     controller: _dieselCostPerHourController,
+              //     label: 'Diesel Cost (₹/hr)',
+              //     icon: Icons.currency_rupee,
+              //     readOnly: true,
+              //     required: false,
+              //   ),
+              // ),
 
-              const Spacer(),
+              // const Spacer(),
             ],
           ),
         ],

@@ -91,8 +91,6 @@ class TransportRepository {
 
     final data = model.toMap();
 
-    // Vehicle detail fields (owner, address, chassis, engine, color,
-    // insurance company) are persisted through TransportModel.toMap().
     // SQLite generates the ID.
     data.remove('id');
 
@@ -116,8 +114,6 @@ class TransportRepository {
 
     final data = model.toMap();
 
-    // Vehicle detail fields (owner, address, chassis, engine, color,
-    // insurance company) are persisted through TransportModel.toMap().
     // ID should not be updated.
     data.remove('id');
 
