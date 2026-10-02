@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:excel/excel.dart';
 import 'package:path_provider/path_provider.dart';
+import '../models/quarry_blasting_purchase_model.dart';
 
 class ReportExcelService {
   // --------------------------------------------------------
@@ -296,6 +297,149 @@ class ReportExcelService {
 
     await file.writeAsBytes(bytes);
 
+    return filePath;
+  }
+
+  Future<String> exportInventoryReport({
+    required List<Map<String, dynamic>> records,
+    required String period,
+  }) async {
+    final excel = Excel.createExcel();
+    const sheetName = 'Inventory Report';
+    final sheet = excel[sheetName];
+    if (excel.tables.keys.contains('Sheet1') && sheetName != 'Sheet1') {
+      excel.delete('Sheet1');
+    }
+
+    sheet.appendRow([
+      TextCellValue('Spare Item'),
+      TextCellValue('Unit'),
+      TextCellValue('Purchased Qty'),
+      TextCellValue('Used Qty'),
+      TextCellValue('Remaining Qty'),
+      TextCellValue('Purchase Cost'),
+    ]);
+
+    for (final record in records) {
+      sheet.appendRow([
+        TextCellValue(record['item_name']?.toString() ?? ''),
+        TextCellValue(record['unit']?.toString() ?? ''),
+        _cellValue(record['purchased_qty'] ?? 0),
+        _cellValue(record['used_qty'] ?? 0),
+        _cellValue(record['remaining_qty'] ?? 0),
+        _cellValue(record['purchase_cost'] ?? 0),
+      ]);
+    }
+
+    const widths = <int, double>{0: 30, 1: 12, 2: 18, 3: 15, 4: 18, 5: 18};
+    for (final entry in widths.entries) {
+      sheet.setColumnWidth(entry.key, entry.value);
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    final reportsDirectory = Directory('${directory.path}/StoneFleet Reports');
+    if (!await reportsDirectory.exists()) {
+      await reportsDirectory.create(recursive: true);
+    }
+
+    final timestamp = _fileTimestamp();
+    final filePath = '${reportsDirectory.path}/inventory_${period.toLowerCase()}_$timestamp.xlsx';
+    final bytes = excel.save();
+    if (bytes == null) throw Exception('Unable to create Inventory Excel file.');
+    await File(filePath).writeAsBytes(bytes);
+    return filePath;
+  }
+
+  Future<String> exportQuarryBlastingReport({
+    required List<QuarryBlastingPurchase> records,
+    required String period,
+    required QuarryPurchaseSummary summary,
+  }) async {
+    final excel = Excel.createExcel();
+    const sheetName = 'Blasting Purchase Report';
+    final sheet = excel[sheetName];
+
+    if (excel.tables.keys.contains('Sheet1') && sheetName != 'Sheet1') {
+      excel.delete('Sheet1');
+    }
+
+    sheet.appendRow([
+      TextCellValue('Date'),
+      TextCellValue('Bullet Qty'),
+      TextCellValue('Bullet Unit Price'),
+      TextCellValue('Bullet Total'),
+      TextCellValue('3m Wire Qty'),
+      TextCellValue('3m Wire Unit Price'),
+      TextCellValue('3m Wire Total'),
+      TextCellValue('4m Wire Qty'),
+      TextCellValue('4m Wire Unit Price'),
+      TextCellValue('4m Wire Total'),
+      TextCellValue('ED Qty'),
+      TextCellValue('ED Unit Price'),
+      TextCellValue('ED Total'),
+      TextCellValue('Grand Total'),
+    ]);
+
+    for (final record in records) {
+      sheet.appendRow([
+        TextCellValue(_formatDate(record.purchaseDate)),
+        _cellValue(record.bulletQuantity),
+        _cellValue(record.bulletPrice),
+        _cellValue(record.bulletTotal),
+        _cellValue(record.wire3mQuantity),
+        _cellValue(record.wire3mPrice),
+        _cellValue(record.wire3mTotal),
+        _cellValue(record.wire4mQuantity),
+        _cellValue(record.wire4mPrice),
+        _cellValue(record.wire4mTotal),
+        _cellValue(record.edQuantity),
+        _cellValue(record.edPrice),
+        _cellValue(record.edTotal),
+        _cellValue(record.totalCost),
+      ]);
+    }
+
+    sheet.appendRow([]);
+    sheet.appendRow([TextCellValue('Period Summary')]);
+    sheet.appendRow([TextCellValue('Item'), TextCellValue('Total Quantity'), TextCellValue('Total Cost')]);
+    sheet.appendRow([TextCellValue('Bullet'), _cellValue(summary.bulletQuantity), _cellValue(summary.bulletCost)]);
+    sheet.appendRow([TextCellValue('3m Wire'), _cellValue(summary.wire3mQuantity), _cellValue(summary.wire3mCost)]);
+    sheet.appendRow([TextCellValue('4m Wire'), _cellValue(summary.wire4mQuantity), _cellValue(summary.wire4mCost)]);
+    sheet.appendRow([TextCellValue('ED'), _cellValue(summary.edQuantity), _cellValue(summary.edCost)]);
+    sheet.appendRow([TextCellValue('Grand Total Cost'), TextCellValue(''), _cellValue(summary.totalCost)]);
+
+    const widths = <int, double>{
+      0: 14,
+      1: 14,
+      2: 18,
+      3: 16,
+      4: 15,
+      5: 19,
+      6: 17,
+      7: 15,
+      8: 19,
+      9: 17,
+      10: 12,
+      11: 17,
+      12: 15,
+      13: 17,
+    };
+
+    for (final entry in widths.entries) {
+      sheet.setColumnWidth(entry.key, entry.value);
+    }
+
+    final directory = await getApplicationDocumentsDirectory();
+    final reportsDirectory = Directory('${directory.path}/StoneFleet Reports');
+    if (!await reportsDirectory.exists()) {
+      await reportsDirectory.create(recursive: true);
+    }
+
+    final timestamp = _fileTimestamp();
+    final filePath = '${reportsDirectory.path}/quarry_blasting_${period.toLowerCase().replaceAll(' ', '_')}_$timestamp.xlsx';
+    final bytes = excel.save();
+    if (bytes == null) throw Exception('Unable to create Quarry Blasting Excel file.');
+    await File(filePath).writeAsBytes(bytes);
     return filePath;
   }
 

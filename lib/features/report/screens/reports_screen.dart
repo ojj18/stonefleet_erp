@@ -1,9 +1,14 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:printing/printing.dart';
 
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../core/widgets/pagination_footer.dart';
 import '../../../app/app_config.dart';
 import '../../../data/services/report_excel_service.dart';
+import '../../../data/services/pdf_report_service.dart';
 import '../providers/report_provider.dart';
 
 class ReportsScreen extends StatefulWidget {
@@ -15,6 +20,9 @@ class ReportsScreen extends StatefulWidget {
 
 class _ReportsScreenState extends State<ReportsScreen> {
   final TextEditingController _searchController = TextEditingController();
+
+  int _currentPage = 1;
+  int _rowsPerPage = 10;
 
   String _searchQuery = '';
 
@@ -32,6 +40,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (!mounted) return;
 
       setState(() {
+        _currentPage = 1;
         _searchQuery = _searchController.text.trim().toLowerCase();
       });
     });
@@ -171,7 +180,24 @@ class _ReportsScreenState extends State<ReportsScreen> {
           onPressed: _exportExcel,
           icon: const Icon(Icons.file_download_outlined, size: 20),
           label: const Text('Export Excel'),
-          style: OutlinedButton.styleFrom(minimumSize: const Size(150, 52)),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(145, 52)),
+        ),
+        const SizedBox(width: 10),
+        OutlinedButton.icon(
+          onPressed: _exportPdf,
+          icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
+          label: const Text('Export PDF'),
+          style: OutlinedButton.styleFrom(minimumSize: const Size(135, 52)),
+        ),
+        const SizedBox(width: 10),
+        FilledButton.icon(
+          onPressed: _printReport,
+          icon: const Icon(Icons.print_outlined, size: 20),
+          label: const Text('Print'),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size(105, 52),
+            backgroundColor: const Color(0xFF00652C),
+          ),
         ),
       ],
     );
@@ -510,6 +536,28 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
+  List<T> _pageItems<T>(List<T> items) {
+    final maxPage = items.isEmpty ? 1 : (items.length / _rowsPerPage).ceil();
+    if (_currentPage > maxPage) _currentPage = maxPage;
+    final start = (_currentPage - 1) * _rowsPerPage;
+    if (start >= items.length) return <T>[];
+    final end = (start + _rowsPerPage).clamp(0, items.length).toInt();
+    return items.sublist(start, end);
+  }
+
+  Widget _pagination(int totalItems) {
+    return PaginationFooter(
+      currentPage: _currentPage,
+      rowsPerPage: _rowsPerPage,
+      totalItems: totalItems,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      onRowsPerPageChanged: (value) => setState(() {
+        _rowsPerPage = value;
+        _currentPage = 1;
+      }),
+    );
+  }
+
   // ============================================================
   // TABLE
   // ============================================================
@@ -542,9 +590,10 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
               const Divider(height: 1),
 
-              ...provider.reportData.map(
+              ..._pageItems(provider.reportData).map(
                 (record) => _buildReportRow(record, provider.reportType),
               ),
+              _pagination(provider.reportData.length),
             ],
           ),
         );
@@ -747,6 +796,78 @@ class _ReportsScreenState extends State<ReportsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Excel export failed: $e'),
+          backgroundColor: const Color(0xFFBA1A1A),
+        ),
+      );
+    }
+  }
+
+  Future<Uint8List> _buildReportPdf() async {
+    final provider = context.read<ReportProvider>();
+
+    return PdfReportService().buildMaintenanceServiceReport(
+      records: provider.reportData,
+      reportType: provider.reportType == ReportType.service
+          ? 'service'
+          : 'maintenance',
+      equipmentType: provider.equipmentType == EquipmentType.excavator
+          ? 'excavator'
+          : provider.equipmentType == EquipmentType.transport
+          ? 'transport'
+          : 'all',
+      fromDate: provider.fromDate,
+      toDate: provider.toDate,
+    );
+  }
+
+  Future<void> _exportPdf() async {
+    final provider = context.read<ReportProvider>();
+
+    if (provider.reportData.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No report data available to export.')),
+      );
+      return;
+    }
+
+    try {
+      final bytes = await _buildReportPdf();
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'stonefleet_${provider.reportType.name}_report.pdf',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('PDF export failed: $e'),
+          backgroundColor: const Color(0xFFBA1A1A),
+        ),
+      );
+    }
+  }
+
+  Future<void> _printReport() async {
+    final provider = context.read<ReportProvider>();
+
+    if (provider.reportData.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No report data available to print.')),
+      );
+      return;
+    }
+
+    try {
+      final bytes = await _buildReportPdf();
+      await Printing.layoutPdf(
+        name: 'StoneFleet ${provider.reportType.name} Report',
+        onLayout: (_) async => bytes,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Print failed: $e'),
           backgroundColor: const Color(0xFFBA1A1A),
         ),
       );

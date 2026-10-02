@@ -8,6 +8,7 @@ import '../models/ocr/excavator_maintenance_ocr_model.dart';
 import '../models/ocr/excavator_service_ocr_model.dart';
 import '../models/ocr/transport_maintenance_ocr_model.dart';
 import '../models/ocr/transport_service_ocr_model.dart';
+import '../models/ocr/spare_purchase_ocr_model.dart';
 
 class OcrService {
   const OcrService();
@@ -152,6 +153,36 @@ class OcrService {
     final data = responseJson['data'] as Map<String, dynamic>;
 
     return TransportServiceOcrModel.fromJson(data);
+  }
+
+  Future<SparePurchaseOcrModel> extractSparePurchase(XFile imageFile) async {
+    final imageBytes = await imageFile.readAsBytes();
+    final imageBase64 = base64Encode(imageBytes);
+    final mimeType = _getMimeType(imageFile.name);
+
+    final response = await http.post(
+      Uri.parse(
+        'https://us-central1-stonefleeterp.cloudfunctions.net/'
+        'extractSparePurchase',
+      ),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'imageBase64': imageBase64, 'mimeType': mimeType}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'OCR request failed: ${response.statusCode}\n${response.body}',
+      );
+    }
+
+    final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+    if (responseJson['success'] != true) {
+      throw Exception(responseJson['message'] ?? 'OCR extraction failed.');
+    }
+
+    return SparePurchaseOcrModel.fromJson(
+      Map<String, dynamic>.from(responseJson['data'] as Map),
+    );
   }
 
   String _getMimeType(String fileName) {

@@ -403,9 +403,143 @@ class DatabaseMigrations {
   )
 ''');
 
+    // ============================================================
+    // 15. INVENTORY ITEMS
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_name TEXT NOT NULL,
+    category TEXT,
+    unit TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
+
+    // ============================================================
+    // 16. INVENTORY PURCHASES
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bill_number TEXT,
+    supplier_name TEXT,
+    purchase_date TEXT NOT NULL,
+    bill_image_path TEXT,
+    subtotal REAL NOT NULL DEFAULT 0,
+    gst_amount REAL NOT NULL DEFAULT 0,
+    grand_total REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
+
+    // ============================================================
+    // 17. INVENTORY PURCHASE ITEMS
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_purchase_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    quantity REAL NOT NULL DEFAULT 0,
+    unit_price REAL NOT NULL DEFAULT 0,
+    gst_percentage REAL NOT NULL DEFAULT 0,
+    subtotal REAL NOT NULL DEFAULT 0,
+    gst_amount REAL NOT NULL DEFAULT 0,
+    total_cost REAL NOT NULL DEFAULT 0,
+
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (purchase_id)
+      REFERENCES inventory_purchases(id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE,
+
+    FOREIGN KEY (item_id)
+      REFERENCES inventory_items(id)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
+  )
+''');
+
+    // ============================================================
+    // 18. INVENTORY USAGE
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER NOT NULL,
+    quantity_used REAL NOT NULL DEFAULT 0,
+    usage_date TEXT NOT NULL,
+    used_for TEXT,
+    remarks TEXT,
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (item_id)
+      REFERENCES inventory_items(id)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
+  )
+''');
+
+    // ============================================================
+    // 19. INVENTORY STOCK MOVEMENTS
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_stock_movements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER NOT NULL,
+    transaction_type TEXT NOT NULL,
+    quantity REAL NOT NULL,
+    previous_stock REAL NOT NULL DEFAULT 0,
+    current_stock REAL NOT NULL DEFAULT 0,
+    reference_id INTEGER,
+    transaction_date TEXT NOT NULL,
+    remarks TEXT,
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (item_id)
+      REFERENCES inventory_items(id)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
+  )
+''');
+
+    // ============================================================
+    // 20. QUARRY BLASTING PURCHASES
+    // ============================================================
+    await db.execute('''
+      CREATE TABLE quarry_blasting_purchases (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        purchase_date TEXT NOT NULL,
+
+        bullet_quantity REAL NOT NULL DEFAULT 0,
+        bullet_price REAL NOT NULL DEFAULT 0,
+        bullet_total REAL NOT NULL DEFAULT 0,
+
+        wire_3m_quantity REAL NOT NULL DEFAULT 0,
+        wire_3m_price REAL NOT NULL DEFAULT 0,
+        wire_3m_total REAL NOT NULL DEFAULT 0,
+
+        wire_4m_quantity REAL NOT NULL DEFAULT 0,
+        wire_4m_price REAL NOT NULL DEFAULT 0,
+        wire_4m_total REAL NOT NULL DEFAULT 0,
+
+        ed_quantity REAL NOT NULL DEFAULT 0,
+        ed_price REAL NOT NULL DEFAULT 0,
+        ed_total REAL NOT NULL DEFAULT 0,
+
+        total_cost REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
+      )
+    ''');
+
     await DatabaseSeed.seed(db);
 
-    log('All 14 StoneFleet tables created successfully.');
+    log('All StoneFleet tables created successfully.');
   }
 
   static Future<bool> _hasColumn(
@@ -695,13 +829,14 @@ class DatabaseMigrations {
           'Migration skipped.',
         );
       }
-      // ============================================================
-      // VERSION 4
-      // USERS / AUTHENTICATION
-      // ============================================================
+    }
+    // ============================================================
+    // VERSION 4
+    // USERS / AUTHENTICATION
+    // ============================================================
 
-      if (oldVersion < 4) {
-        await db.execute('''
+    if (oldVersion < 2) {
+      await db.execute('''
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -713,27 +848,192 @@ class DatabaseMigrations {
   )
 ''');
 
-        final now = DateTime.now().toIso8601String();
+      final now = DateTime.now().toIso8601String();
 
-        await db.insert('users', {
-          'username': 'admin',
-          'password': 'admin@194',
-          'role': 'admin',
-          'is_active': 1,
-          'created_at': now,
-          'updated_at': now,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert('users', {
+        'username': 'admin',
+        'password': 'admin@194',
+        'role': 'admin',
+        'is_active': 1,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-        await db.insert('users', {
-          'username': 'user',
-          'password': 'user@123',
-          'role': 'user',
-          'is_active': 1,
-          'created_at': now,
-          'updated_at': now,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-        log('Database migrated to version 4: users table created.');
-      }
+      await db.insert('users', {
+        'username': 'user',
+        'password': 'user@123',
+        'role': 'user',
+        'is_active': 1,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      log('Database migrated to version 4: users table created.');
+    }
+
+    // ============================================================
+    // VERSION 4
+    // INVENTORY SCHEMA
+    //
+    // Development DB reset:
+    // - inventory_purchase_items uses item_id (not spare_id)
+    // - inventory_stock_movements uses item_id (not spare_id)
+    // - inventory_usage uses item_id
+    // - inventory tables remain separate from the Spare Master (spares)
+    // ============================================================
+
+    if (oldVersion < 3) {
+      // ------------------------------------------------------------
+      // 1. Inventory item master
+      // ------------------------------------------------------------
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          item_name TEXT NOT NULL,
+          category TEXT,
+          unit TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT
+        )
+      ''');
+
+      // ------------------------------------------------------------
+      // 2. Inventory purchases
+      // ------------------------------------------------------------
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS inventory_purchases (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          bill_number TEXT,
+          supplier_name TEXT,
+          purchase_date TEXT NOT NULL,
+          bill_image_path TEXT,
+          subtotal REAL NOT NULL DEFAULT 0,
+          gst_amount REAL NOT NULL DEFAULT 0,
+          grand_total REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT
+        )
+      ''');
+
+      // ------------------------------------------------------------
+      // 3. Recreate purchase items with item_id.
+      //
+      // This is intentionally destructive because this is the
+      // development database and the old spare_id schema is being
+      // replaced by the separate Inventory Item schema.
+      // ------------------------------------------------------------
+      await db.execute('DROP TABLE IF EXISTS inventory_purchase_items');
+
+      await db.execute('''
+        CREATE TABLE inventory_purchase_items (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          purchase_id INTEGER NOT NULL,
+          item_id INTEGER NOT NULL,
+          quantity REAL NOT NULL DEFAULT 0,
+          unit_price REAL NOT NULL DEFAULT 0,
+          gst_percentage REAL NOT NULL DEFAULT 0,
+          subtotal REAL NOT NULL DEFAULT 0,
+          gst_amount REAL NOT NULL DEFAULT 0,
+          total_cost REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+
+          FOREIGN KEY (purchase_id)
+            REFERENCES inventory_purchases(id)
+            ON DELETE CASCADE
+            ON UPDATE CASCADE,
+
+          FOREIGN KEY (item_id)
+            REFERENCES inventory_items(id)
+            ON DELETE RESTRICT
+            ON UPDATE CASCADE
+        )
+      ''');
+
+      // ------------------------------------------------------------
+      // 4. Inventory usage
+      // ------------------------------------------------------------
+      await db.execute('DROP TABLE IF EXISTS inventory_usage');
+
+      await db.execute('''
+        CREATE TABLE inventory_usage (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          item_id INTEGER NOT NULL,
+          quantity_used REAL NOT NULL DEFAULT 0,
+          usage_date TEXT NOT NULL,
+          used_for TEXT,
+          remarks TEXT,
+          created_at TEXT NOT NULL,
+
+          FOREIGN KEY (item_id)
+            REFERENCES inventory_items(id)
+            ON DELETE RESTRICT
+            ON UPDATE CASCADE
+        )
+      ''');
+
+      // ------------------------------------------------------------
+      // 5. Recreate stock movements with item_id.
+      // ------------------------------------------------------------
+      await db.execute('DROP TABLE IF EXISTS inventory_stock_movements');
+
+      await db.execute('''
+        CREATE TABLE inventory_stock_movements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          item_id INTEGER NOT NULL,
+          transaction_type TEXT NOT NULL,
+          quantity REAL NOT NULL,
+          previous_stock REAL NOT NULL DEFAULT 0,
+          current_stock REAL NOT NULL DEFAULT 0,
+          reference_id INTEGER,
+          transaction_date TEXT NOT NULL,
+          remarks TEXT,
+          created_at TEXT NOT NULL,
+
+          FOREIGN KEY (item_id)
+            REFERENCES inventory_items(id)
+            ON DELETE RESTRICT
+            ON UPDATE CASCADE
+        )
+      ''');
+
+      log(
+        'Database migrated to version 4: '
+        'inventory schema updated.',
+      );
+    }
+
+    // ============================================================
+    // VERSION 6
+    // QUARRY BLASTING PURCHASES
+    // ============================================================
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quarry_blasting_purchases (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          purchase_date TEXT NOT NULL,
+
+          bullet_quantity REAL NOT NULL DEFAULT 0,
+          bullet_price REAL NOT NULL DEFAULT 0,
+          bullet_total REAL NOT NULL DEFAULT 0,
+
+          wire_3m_quantity REAL NOT NULL DEFAULT 0,
+          wire_3m_price REAL NOT NULL DEFAULT 0,
+          wire_3m_total REAL NOT NULL DEFAULT 0,
+
+          wire_4m_quantity REAL NOT NULL DEFAULT 0,
+          wire_4m_price REAL NOT NULL DEFAULT 0,
+          wire_4m_total REAL NOT NULL DEFAULT 0,
+
+          ed_quantity REAL NOT NULL DEFAULT 0,
+          ed_price REAL NOT NULL DEFAULT 0,
+          ed_total REAL NOT NULL DEFAULT 0,
+
+          total_cost REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT
+        )
+      ''');
+
+      log('Database migrated to version 6: quarry blasting purchases created.');
     }
   }
 }

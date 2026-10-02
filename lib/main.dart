@@ -36,6 +36,8 @@ import 'features/transport/service/providers/transport_service_provider.dart';
 // ============================================================
 
 import 'features/service_notification/providers/service_notification_provider.dart';
+import 'features/inventory/providers/inventory_provider.dart';
+import 'features/quarry_blasting/providers/quarry_blasting_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -167,6 +169,16 @@ class StoneFleetApp extends StatelessWidget {
         // COMPLIANCE
         // --------------------------------------------------------
         ChangeNotifierProvider(create: (_) => ComplianceProvider()),
+
+        // --------------------------------------------------------
+        // SPARE INVENTORY
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => InventoryProvider()),
+
+        // --------------------------------------------------------
+        // QUARRY BLASTING PURCHASES
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => QuarryBlastingProvider()),
       ],
 
       // ==========================================================

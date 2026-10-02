@@ -11,6 +11,14 @@ import '../../features/dashboard/screen/dashboard_screen.dart';
 import '../../features/excavator/maintenance/screens/excavator_maintenance_screen.dart';
 import '../../features/excavator/master/screens/excavator_master_screen.dart';
 import '../../features/excavator/service/screens/excavator_service_screen.dart';
+import '../../features/inventory/screens/inventory_dashboard_screen.dart';
+import '../../features/inventory/screens/inventory_reports_screen.dart';
+import '../../features/inventory/screens/spare_purchase_ocr_screen.dart';
+import '../../features/inventory/screens/spare_stock_screen.dart';
+import '../../features/inventory/screens/spare_usage_screen.dart';
+import '../../features/quarry_blasting/screens/quarry_blasting_dashboard_screen.dart';
+import '../../features/quarry_blasting/screens/quarry_blasting_purchase_history_screen.dart';
+import '../../features/quarry_blasting/screens/quarry_blasting_purchase_reports_screen.dart';
 import '../../features/report/screens/reports_screen.dart';
 import '../../features/service_notification/screens/service_notification_screen.dart';
 
@@ -31,68 +39,162 @@ class AppSidebar extends StatelessWidget {
       width: 240,
       color: Colors.white,
       child: Column(
-        crossAxisAlignment: .center,
         children: [
-          // Logo / App name
-          _menuItem(
-            icon: Icons.dashboard_outlined,
-            title: 'Dashboard',
-            index: 0,
-          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: .center,
+                children: [
+                  _menuItem(
+                    icon: Icons.dashboard_outlined,
+                    title: 'Dashboard',
+                    index: 0,
+                  ),
 
-          _menuItem(
-            icon: Icons.agriculture_outlined,
-            title: 'Excavators',
-            index: 1,
-          ),
+                  _menuItem(
+                    icon: Icons.agriculture_outlined,
+                    title: 'Excavators',
+                    index: 1,
+                  ),
 
-          _menuItem(
-            icon: Icons.build_outlined,
-            title: 'Excavator Maintenance',
-            index: 2,
-          ),
+                  _menuItem(
+                    icon: Icons.build_outlined,
+                    title: 'Excavator Maintenance',
+                    index: 2,
+                  ),
 
-          _menuItem(
-            icon: Icons.handyman_outlined,
-            title: 'Excavator Service',
-            index: 3,
-          ),
+                  _menuItem(
+                    icon: Icons.handyman_outlined,
+                    title: 'Excavator Service',
+                    index: 3,
+                  ),
 
-          _menuItem(
-            icon: Icons.local_shipping_outlined,
-            title: 'Transport',
-            index: 4,
-          ),
+                  _menuItem(
+                    icon: Icons.local_shipping_outlined,
+                    title: 'Transport',
+                    index: 4,
+                  ),
 
-          _menuItem(
-            icon: Icons.build_outlined,
-            title: 'Transport Maintenance',
-            index: 5,
-          ),
+                  _menuItem(
+                    icon: Icons.build_outlined,
+                    title: 'Transport Maintenance',
+                    index: 5,
+                  ),
 
-          _menuItem(
-            icon: Icons.handyman_outlined,
-            title: 'Transport Service',
-            index: 6,
-          ),
-          _menuItem(
-            icon: Icons.notifications_active_outlined,
-            title: 'Service Notifications',
-            index: 7,
-          ),
+                  _menuItem(
+                    icon: Icons.handyman_outlined,
+                    title: 'Transport Service',
+                    index: 6,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Operations & Audit',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.notifications_active_outlined,
+                    title: 'Service Notifications',
+                    index: 7,
+                  ),
 
-          _menuItem(
-            icon: Icons.assessment_outlined,
-            title: 'Reports',
-            index: 8,
-          ),
-          _menuItem(
-            icon: Icons.verified_outlined,
-            title: 'Compliance',
-            index: 9,
-          ),
+                  _menuItem(
+                    icon: Icons.assessment_outlined,
+                    title: 'Reports',
+                    index: 8,
+                  ),
+                  _menuItem(
+                    icon: Icons.verified_outlined,
+                    title: 'Compliance',
+                    index: 9,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Inventory',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.dashboard_outlined,
+                    title: 'Inventory Dashboard',
+                    index: 10,
+                  ),
 
-          const Spacer(),
+                  _menuItem(
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Spare Stock',
+                    index: 11,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Spare Purchase & OCR',
+                    index: 12,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.build_circle_outlined,
+                    title: 'Spare Usage',
+                    index: 13,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.assessment_outlined,
+                    title: 'Inventory Reports',
+                    index: 14,
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Quarry Blasting',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.dashboard_outlined,
+                    title: 'Blasting Dashboard',
+                    index: 15,
+                  ),
+                  _menuItem(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Purchase History',
+                    index: 16,
+                  ),
+                  _menuItem(
+                    icon: Icons.assessment_outlined,
+                    title: 'Blasting Reports',
+                    index: 17,
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           _buildUserSection(context),
         ],
@@ -306,6 +408,55 @@ void handleMenuTap(int index, {required BuildContext? context}) {
       Navigator.pushReplacement(
         context!,
         MaterialPageRoute(builder: (_) => const ComplianceScreen()),
+      );
+      break;
+
+    case 10:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const InventoryDashboardScreen()),
+      );
+      break;
+    case 11:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const SpareStockScreen()),
+      );
+      break;
+    case 12:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const SparePurchaseOcrScreen()),
+      );
+      break;
+    case 13:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const SpareUsageScreen()),
+      );
+      break;
+    case 14:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const InventoryReportsScreen()),
+      );
+      break;
+    case 15:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const QuarryBlastingDashboardScreen()),
+      );
+      break;
+    case 16:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const QuarryBlastingPurchaseHistoryScreen()),
+      );
+      break;
+    case 17:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const QuarryBlastingPurchaseReportsScreen()),
       );
       break;
   }

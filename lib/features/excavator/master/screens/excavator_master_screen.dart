@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../core/widgets/pagination_footer.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/excavator_provider.dart';
@@ -17,6 +18,9 @@ class ExcavatorMasterScreen extends StatefulWidget {
 
 class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
   final TextEditingController _searchController = TextEditingController();
+
+  int _currentPage = 1;
+  int _rowsPerPage = 10;
 
   String _statusFilter = 'All';
 
@@ -143,7 +147,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
             flex: 2,
             child: TextField(
               controller: _searchController,
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) => setState(() => _currentPage = 1),
               decoration: InputDecoration(
                 labelText: 'Search Machine',
                 hintText: 'Registration number...',
@@ -174,12 +178,35 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
 
                 setState(() {
                   _statusFilter = value;
+                  _currentPage = 1;
                 });
               },
             ),
           ),
         ],
       ),
+    );
+  }
+
+  List<T> _pageItems<T>(List<T> items) {
+    final maxPage = items.isEmpty ? 1 : (items.length / _rowsPerPage).ceil();
+    if (_currentPage > maxPage) _currentPage = maxPage;
+    final start = (_currentPage - 1) * _rowsPerPage;
+    if (start >= items.length) return <T>[];
+    final end = (start + _rowsPerPage).clamp(0, items.length).toInt();
+    return items.sublist(start, end);
+  }
+
+  Widget _pagination(int totalItems) {
+    return PaginationFooter(
+      currentPage: _currentPage,
+      rowsPerPage: _rowsPerPage,
+      totalItems: totalItems,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      onRowsPerPageChanged: (value) => setState(() {
+        _rowsPerPage = value;
+        _currentPage = 1;
+      }),
     );
   }
 
@@ -235,7 +262,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                             DataColumn(label: Text('COMPLIANCE')),
                             DataColumn(label: Text('ACTIONS')),
                           ],
-                          rows: excavators.map((excavator) {
+                          rows: _pageItems(excavators).map((excavator) {
                             return DataRow(
                               cells: [
                                 DataCell(
@@ -300,7 +327,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                 ),
               ),
 
-              _buildFooter(excavators.length),
+              _pagination(excavators.length),
             ],
           ),
         );
@@ -392,43 +419,43 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
   // FOOTER
   // ============================================================
 
-  Widget _buildFooter(int count) {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: const BoxDecoration(
-        color: Color(0xFFF3F4F6),
-        border: Border(top: BorderSide(color: Color(0xFFBECABC))),
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Showing $count entries',
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-          const Spacer(),
-          IconButton(onPressed: null, icon: const Icon(Icons.chevron_left)),
-          Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: const Color(0xFF00652C),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: const Text(
-              '1',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          IconButton(onPressed: null, icon: const Icon(Icons.chevron_right)),
-        ],
-      ),
-    );
-  }
+  // Widget _buildFooter(int count) {
+  //   return Container(
+  //     height: 56,
+  //     padding: const EdgeInsets.symmetric(horizontal: 20),
+  //     decoration: const BoxDecoration(
+  //       color: Color(0xFFF3F4F6),
+  //       border: Border(top: BorderSide(color: Color(0xFFBECABC))),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         Text(
+  //           'Showing $count entries',
+  //           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+  //         ),
+  //         const Spacer(),
+  //         IconButton(onPressed: null, icon: const Icon(Icons.chevron_left)),
+  //         Container(
+  //           width: 32,
+  //           height: 32,
+  //           alignment: Alignment.center,
+  //           decoration: BoxDecoration(
+  //             color: const Color(0xFF00652C),
+  //             borderRadius: BorderRadius.circular(6),
+  //           ),
+  //           child: const Text(
+  //             '1',
+  //             style: TextStyle(
+  //               color: Colors.white,
+  //               fontWeight: FontWeight.w600,
+  //             ),
+  //           ),
+  //         ),
+  //         IconButton(onPressed: null, icon: const Icon(Icons.chevron_right)),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   // ============================================================
   // EMPTY

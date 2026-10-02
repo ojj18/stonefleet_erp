@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/models/excavator_service_model.dart';
 import '../../../../data/repositories/excavator_service_repository.dart';
@@ -22,6 +23,9 @@ class ExcavatorServiceScreen extends StatefulWidget {
 class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
   final TextEditingController _searchController = TextEditingController();
 
+  int _currentPage = 1;
+  int _rowsPerPage = 10;
+
   String _searchQuery = '';
 
   @override
@@ -39,6 +43,7 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
       if (!mounted) return;
 
       setState(() {
+        _currentPage = 1;
         _searchQuery = _searchController.text.trim().toLowerCase();
       });
     });
@@ -375,6 +380,28 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
     );
   }
 
+  List<T> _pageItems<T>(List<T> items) {
+    final maxPage = items.isEmpty ? 1 : (items.length / _rowsPerPage).ceil();
+    if (_currentPage > maxPage) _currentPage = maxPage;
+    final start = (_currentPage - 1) * _rowsPerPage;
+    if (start >= items.length) return <T>[];
+    final end = (start + _rowsPerPage).clamp(0, items.length).toInt();
+    return items.sublist(start, end);
+  }
+
+  Widget _pagination(int totalItems) {
+    return PaginationFooter(
+      currentPage: _currentPage,
+      rowsPerPage: _rowsPerPage,
+      totalItems: totalItems,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      onRowsPerPageChanged: (value) => setState(() {
+        _rowsPerPage = value;
+        _currentPage = 1;
+      }),
+    );
+  }
+
   // ============================================================
   // TABLE
   // ============================================================
@@ -410,12 +437,13 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
             children: [
               _buildTableHeader(),
               const Divider(height: 1),
-              ...filtered.map(
+              ..._pageItems(filtered).map(
                 (service) => _buildServiceRow(
                   service,
                   context.read<ExcavatorProvider>().excavators,
                 ),
               ),
+              _pagination(filtered.length),
             ],
           ),
         );

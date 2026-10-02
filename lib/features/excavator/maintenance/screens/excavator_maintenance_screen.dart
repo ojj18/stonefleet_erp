@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
+import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/excavator_maintenance_list_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 import '../../../auth/providers/auth_provider.dart';
@@ -22,6 +23,9 @@ class _ExcavatorMaintenanceScreenState
     extends State<ExcavatorMaintenanceScreen> {
   final TextEditingController _searchController = TextEditingController();
 
+  int _currentPage = 1;
+  int _rowsPerPage = 10;
+
   String _searchQuery = '';
   String _selectedShift = 'All';
 
@@ -35,6 +39,7 @@ class _ExcavatorMaintenanceScreenState
 
     _searchController.addListener(() {
       setState(() {
+        _currentPage = 1;
         _searchQuery = _searchController.text.trim().toLowerCase();
       });
     });
@@ -444,6 +449,28 @@ class _ExcavatorMaintenanceScreenState
     );
   }
 
+  List<T> _pageItems<T>(List<T> items) {
+    final maxPage = items.isEmpty ? 1 : (items.length / _rowsPerPage).ceil();
+    if (_currentPage > maxPage) _currentPage = maxPage;
+    final start = (_currentPage - 1) * _rowsPerPage;
+    if (start >= items.length) return <T>[];
+    final end = (start + _rowsPerPage).clamp(0, items.length).toInt();
+    return items.sublist(start, end);
+  }
+
+  Widget _pagination(int totalItems) {
+    return PaginationFooter(
+      currentPage: _currentPage,
+      rowsPerPage: _rowsPerPage,
+      totalItems: totalItems,
+      onPageChanged: (page) => setState(() => _currentPage = page),
+      onRowsPerPageChanged: (value) => setState(() {
+        _rowsPerPage = value;
+        _currentPage = 1;
+      }),
+    );
+  }
+
   // ============================================================
   // TABLE
   // ============================================================
@@ -480,9 +507,10 @@ class _ExcavatorMaintenanceScreenState
 
                 const Divider(height: 1),
 
-                ...records.map(
+                ..._pageItems(records).map(
                   (record) => _buildTableRow(record, provider.listRecords),
                 ),
+                _pagination(records.length),
               ],
             ),
           ),

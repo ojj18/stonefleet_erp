@@ -77,6 +77,12 @@ class DatabaseMigrations {
     model_name TEXT,
     manufacturing_year INTEGER,
 
+    owner_name TEXT,
+    permanent_address TEXT,
+    vehicle_chasi_number TEXT,
+    vehicle_engine_number TEXT,
+    color TEXT,
+    insurance_company TEXT,
     status INTEGER NOT NULL DEFAULT 1,
 
     insurance_expiry TEXT,
@@ -102,6 +108,12 @@ class DatabaseMigrations {
 
     manufacturing_year INTEGER,
 
+    owner_name TEXT,
+    permanent_address TEXT,
+    vehicle_chasi_number TEXT,
+    vehicle_engine_number TEXT,
+    color TEXT,
+    insurance_company TEXT,
     emission_standard TEXT,
 
     status INTEGER NOT NULL DEFAULT 1,
@@ -391,6 +403,87 @@ class DatabaseMigrations {
   )
 ''');
 
+    // ============================================================
+    // 15. INVENTORY ITEMS
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_name TEXT NOT NULL,
+    category TEXT,
+    unit TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
+
+    // ============================================================
+    // 16. INVENTORY PURCHASES
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_purchases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    bill_number TEXT,
+    supplier_name TEXT,
+    purchase_date TEXT NOT NULL,
+    bill_image_path TEXT,
+    subtotal REAL NOT NULL DEFAULT 0,
+    gst_amount REAL NOT NULL DEFAULT 0,
+    grand_total REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT
+  )
+''');
+
+    // ============================================================
+    // 17. INVENTORY PURCHASE ITEMS
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_purchase_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    item_id INTEGER NOT NULL,
+    quantity REAL NOT NULL DEFAULT 0,
+    unit_price REAL NOT NULL DEFAULT 0,
+    gst_percentage REAL NOT NULL DEFAULT 0,
+    subtotal REAL NOT NULL DEFAULT 0,
+    gst_amount REAL NOT NULL DEFAULT 0,
+    total_cost REAL NOT NULL DEFAULT 0,
+
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (purchase_id)
+      REFERENCES inventory_purchases(id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE,
+
+    FOREIGN KEY (item_id)
+      REFERENCES inventory_items(id)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
+  )
+''');
+
+    // ============================================================
+    // 18. INVENTORY USAGE
+    // ============================================================
+    await db.execute('''
+  CREATE TABLE inventory_usage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    item_id INTEGER NOT NULL,
+    quantity_used REAL NOT NULL DEFAULT 0,
+    usage_date TEXT NOT NULL,
+    used_for TEXT,
+    remarks TEXT,
+    created_at TEXT NOT NULL,
+
+    FOREIGN KEY (item_id)
+      REFERENCES inventory_items(id)
+      ON DELETE RESTRICT
+      ON UPDATE CASCADE
+  )
+''');
+
     await DatabaseSeed.seed(db);
 
     log('All 14 StoneFleet tables created successfully.');
@@ -411,6 +504,25 @@ class DatabaseMigrations {
     int oldVersion,
     int newVersion,
   ) async {
+    if (oldVersion < 2) {
+      final tables = ['excavators', 'transport_vehicles'];
+      final columns = [
+        'owner_name',
+        'permanent_address',
+        'vehicle_chasi_number',
+        'vehicle_engine_number',
+        'color',
+        'insurance_company',
+      ];
+      for (final table in tables) {
+        for (final column in columns) {
+          if (!await _hasColumn(db, table, column)) {
+            await db.execute('ALTER TABLE $table ADD COLUMN $column TEXT');
+          }
+        }
+      }
+    }
+
     // ============================================================
     // VERSION 2
     // EXCAVATOR MIGRATION
@@ -452,6 +564,12 @@ class DatabaseMigrations {
             model_name TEXT,
             manufacturing_year INTEGER,
 
+                owner_name TEXT,
+                permanent_address TEXT,
+                vehicle_chasi_number TEXT,
+                vehicle_engine_number TEXT,
+                color TEXT,
+                insurance_company TEXT,
             status INTEGER NOT NULL DEFAULT 1,
 
             insurance_expiry TEXT,
@@ -537,7 +655,7 @@ class DatabaseMigrations {
     // TRANSPORT MIGRATION
     // ============================================================
 
-    if (oldVersion < 3) {
+    if (oldVersion < 2) {
       final transportHasManufacturerId = await _hasColumn(
         db,
         'transport_vehicles',
@@ -570,6 +688,12 @@ class DatabaseMigrations {
             model_name TEXT,
             manufacturing_year INTEGER,
 
+                owner_name TEXT,
+                permanent_address TEXT,
+                vehicle_chasi_number TEXT,
+                vehicle_engine_number TEXT,
+                color TEXT,
+                insurance_company TEXT,
             emission_standard TEXT,
 
             status INTEGER NOT NULL DEFAULT 1,
@@ -652,13 +776,14 @@ class DatabaseMigrations {
           'Migration skipped.',
         );
       }
-      // ============================================================
-      // VERSION 4
-      // USERS / AUTHENTICATION
-      // ============================================================
+    }
+    // ============================================================
+    // VERSION 4
+    // USERS / AUTHENTICATION
+    // ============================================================
 
-      if (oldVersion < 4) {
-        await db.execute('''
+    if (oldVersion < 2) {
+      await db.execute('''
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT NOT NULL UNIQUE,
@@ -670,27 +795,100 @@ class DatabaseMigrations {
   )
 ''');
 
-        final now = DateTime.now().toIso8601String();
+      final now = DateTime.now().toIso8601String();
 
-        await db.insert('users', {
-          'username': 'admin',
-          'password': 'admin@194',
-          'role': 'admin',
-          'is_active': 1,
-          'created_at': now,
-          'updated_at': now,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      await db.insert('users', {
+        'username': 'admin',
+        'password': 'admin@194',
+        'role': 'admin',
+        'is_active': 1,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
 
-        await db.insert('users', {
-          'username': 'user',
-          'password': 'user@123',
-          'role': 'user',
-          'is_active': 1,
-          'created_at': now,
-          'updated_at': now,
-        }, conflictAlgorithm: ConflictAlgorithm.ignore);
-        log('Database migrated to version 4: users table created.');
-      }
+      await db.insert('users', {
+        'username': 'user',
+        'password': 'user@123',
+        'role': 'user',
+        'is_active': 1,
+        'created_at': now,
+        'updated_at': now,
+      }, conflictAlgorithm: ConflictAlgorithm.ignore);
+      log('Database migrated to version 4: users table created.');
+    }
+
+    if (oldVersion < 3) {
+      // ============================================================
+      // INVENTORY TABLES
+      // ============================================================
+
+      await db.execute('''
+    CREATE TABLE IF NOT EXISTS inventory_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_name TEXT NOT NULL,
+      category TEXT,
+      unit TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    )
+  ''');
+
+      await db.execute('''
+    CREATE TABLE IF NOT EXISTS inventory_purchases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      bill_number TEXT,
+      supplier_name TEXT,
+      purchase_date TEXT NOT NULL,
+      bill_image_path TEXT,
+      subtotal REAL NOT NULL DEFAULT 0,
+      gst_amount REAL NOT NULL DEFAULT 0,
+      grand_total REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+      updated_at TEXT
+    )
+  ''');
+
+      await db.execute('''
+    CREATE TABLE IF NOT EXISTS inventory_purchase_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      purchase_id INTEGER NOT NULL,
+      item_id INTEGER NOT NULL,
+      quantity REAL NOT NULL DEFAULT 0,
+      unit_price REAL NOT NULL DEFAULT 0,
+      gst_percentage REAL NOT NULL DEFAULT 0,
+      subtotal REAL NOT NULL DEFAULT 0,
+      gst_amount REAL NOT NULL DEFAULT 0,
+      total_cost REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL,
+
+      FOREIGN KEY (purchase_id)
+        REFERENCES inventory_purchases(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+
+      FOREIGN KEY (item_id)
+        REFERENCES inventory_items(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+    )
+  ''');
+
+      await db.execute('''
+    CREATE TABLE IF NOT EXISTS inventory_usage (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      item_id INTEGER NOT NULL,
+      quantity_used REAL NOT NULL DEFAULT 0,
+      usage_date TEXT NOT NULL,
+      used_for TEXT,
+      remarks TEXT,
+      created_at TEXT NOT NULL,
+
+      FOREIGN KEY (item_id)
+        REFERENCES inventory_items(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE
+    )
+  ''');
     }
   }
 }
