@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/diesel_provider.dart';
@@ -60,9 +61,9 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DieselPageHeader(
-                  title: 'Vehicle Consumption',
+                  title: AppLocalization.t('Vehicle Consumption'),
                   subtitle:
-                      'Compare diesel consumption and cost vehicle by vehicle.',
+                      AppLocalization.t('Compare diesel consumption and cost vehicle by vehicle.'),
                 ),
                 const SizedBox(height: 24),
                 DieselCard(
@@ -93,7 +94,7 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                         value: type,
                         items: const ['All', 'Excavator', 'Transport']
                             .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                              (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
                             )
                             .toList(),
                         onChanged: (v) async {
@@ -108,11 +109,11 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                       if (type != 'All')
                         DropdownButton<int?>(
                           value: vehicleId,
-                          hint: const Text('All Vehicles'),
+                          hint: Text(AppLocalization.t('All Vehicles')),
                           items: [
-                            const DropdownMenuItem<int?>(
+                            DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('All Vehicles'),
+                              child: Text(AppLocalization.t('All Vehicles')),
                             ),
                             ...p.vehicles
                                 .where((v) => v.type == type)
@@ -140,9 +141,9 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Vehicles',
+                            title: AppLocalization.t('Vehicles'),
                             value: '${p.consumption.length}',
-                            subtitle: 'Selected period',
+                            subtitle: AppLocalization.t('Selected period'),
                             icon: Icons.directions_car_outlined,
                           ),
                         ),
@@ -150,9 +151,9 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Diesel Used',
+                            title: AppLocalization.t('Diesel Used'),
                             value: '${dieselQty(totalLitres)} L',
-                            subtitle: 'Selected period',
+                            subtitle: AppLocalization.t('Selected period'),
                             icon: Icons.local_gas_station_outlined,
                           ),
                         ),
@@ -160,9 +161,9 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Total Cost',
+                            title: AppLocalization.t('Total Cost'),
                             value: dieselMoney(totalCost),
-                            subtitle: 'Selected period',
+                            subtitle: AppLocalization.t('Selected period'),
                             icon: Icons.currency_rupee_outlined,
                           ),
                         ),
@@ -175,17 +176,21 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const DieselSectionTitle(
-                        title: 'Vehicle-wise Diesel Consumption',
+                      DieselSectionTitle(
+                        title: AppLocalization.t(
+                          'Vehicle-wise Diesel Consumption',
+                        ),
                         icon: Icons.bar_chart_outlined,
                       ),
                       const SizedBox(height: 18),
                       if (p.consumption.isEmpty)
-                        const Center(
+                        Center(
                           child: Padding(
-                            padding: EdgeInsets.all(20),
+                            padding: const EdgeInsets.all(20),
                             child: Text(
-                              'No diesel consumption recorded for this period.',
+                              AppLocalization.t(
+                                'No diesel consumption recorded for this period.',
+                              ),
                             ),
                           ),
                         )
@@ -193,19 +198,29 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('Vehicle')),
-                              DataColumn(label: Text('Type')),
-                              DataColumn(label: Text('Diesel Used')),
-                              DataColumn(label: Text('Total Cost')),
-                              DataColumn(label: Text('Fillings')),
+                            columns: [
+                              DataColumn(
+                                label: Text(AppLocalization.t('Vehicle')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Type')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Diesel Used')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Total Cost')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Fillings')),
+                              ),
                             ],
                             rows: p.consumption
                                 .map(
                                   (r) => DataRow(
                                     cells: [
                                       DataCell(Text(r.vehicleRegistration)),
-                                      DataCell(Text(r.vehicleType)),
+                                      DataCell(Text(AppLocalization.t(r.vehicleType))),
                                       DataCell(
                                         Text(
                                           '${dieselQty(r.quantityLitres)} L',

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/quarry_blasting_purchase_model.dart';
@@ -12,10 +13,12 @@ class QuarryBlastingPurchaseHistoryScreen extends StatefulWidget {
   const QuarryBlastingPurchaseHistoryScreen({super.key});
 
   @override
-  State<QuarryBlastingPurchaseHistoryScreen> createState() => _QuarryBlastingPurchaseHistoryScreenState();
+  State<QuarryBlastingPurchaseHistoryScreen> createState() =>
+      _QuarryBlastingPurchaseHistoryScreenState();
 }
 
-class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurchaseHistoryScreen> {
+class _QuarryBlastingPurchaseHistoryScreenState
+    extends State<QuarryBlastingPurchaseHistoryScreen> {
   DateTime? _from;
   DateTime? _to;
 
@@ -58,7 +61,9 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
   Future<void> _openNew() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const QuarryBlastingNewPurchaseScreen()),
+      MaterialPageRoute(
+        builder: (_) => const QuarryBlastingNewPurchaseScreen(),
+      ),
     );
     if (mounted) _load();
   }
@@ -77,39 +82,82 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Purchase Details'),
+        title: Text(AppLocalization.t('Purchase Details')),
         content: SizedBox(
           width: 520,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               _detailRow('Purchase Date', formatDate(purchase.purchaseDate)),
-              _detailRow('Bullet', '${formatQty(purchase.bulletQuantity)} × ${formatMoney(purchase.bulletPrice)}', total: purchase.bulletTotal),
-              _detailRow('3m Wire', '${formatQty(purchase.wire3mQuantity)} × ${formatMoney(purchase.wire3mPrice)}', total: purchase.wire3mTotal),
-              _detailRow('4m Wire', '${formatQty(purchase.wire4mQuantity)} × ${formatMoney(purchase.wire4mPrice)}', total: purchase.wire4mTotal),
-              _detailRow('ED', '${formatQty(purchase.edQuantity)} × ${formatMoney(purchase.edPrice)}', total: purchase.edTotal),
+              _detailRow(
+                'Bullet',
+                '${formatQty(purchase.bulletQuantity)} × ${formatMoney(purchase.bulletPrice)}',
+                total: purchase.bulletTotal,
+              ),
+              _detailRow(
+                '3m Wire',
+                '${formatQty(purchase.wire3mQuantity)} × ${formatMoney(purchase.wire3mPrice)}',
+                total: purchase.wire3mTotal,
+              ),
+              _detailRow(
+                '4m Wire',
+                '${formatQty(purchase.wire4mQuantity)} × ${formatMoney(purchase.wire4mPrice)}',
+                total: purchase.wire4mTotal,
+              ),
+              _detailRow(
+                'ED',
+                '${formatQty(purchase.edQuantity)} × ${formatMoney(purchase.edPrice)}',
+                total: purchase.edTotal,
+              ),
               const Divider(height: 24),
-              _detailRow('Grand Total', formatMoney(purchase.totalCost), bold: true),
+              _detailRow(
+                'Grand Total',
+                formatMoney(purchase.totalCost),
+                bold: true,
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close')),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Close')),
+          ),
         ],
       ),
     );
   }
 
-  Widget _detailRow(String label, String value, {double? total, bool bold = false}) {
+  Widget _detailRow(
+    String label,
+    String value, {
+    double? total,
+    bool bold = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: TextStyle(fontWeight: bold ? FontWeight.w700 : FontWeight.w500))),
-          Text(value, style: TextStyle(fontWeight: bold ? FontWeight.w700 : FontWeight.w500)),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
           if (total != null) ...[
             const SizedBox(width: 18),
-            Text(formatMoney(total), style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              formatMoney(total),
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
           ],
         ],
       ),
@@ -120,14 +168,23 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Purchase?'),
-        content: const Text('This purchase record will be permanently deleted. This action cannot be undone.'),
+        title: Text(AppLocalization.t('Delete Purchase?')),
+        content: Text(
+          AppLocalization.t(
+            'This purchase record will be permanently deleted. This action cannot be undone.',
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: const Color(0xFFBA1A1A)),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFBA1A1A),
+            ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(AppLocalization.t('Delete')),
           ),
         ],
       ),
@@ -138,10 +195,16 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
     await provider.deletePurchase(purchase.id!);
     if (!mounted) return;
     if (provider.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.error!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppLocalization.t(provider.error!))));
       return;
     }
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Purchase deleted successfully.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalization.t('Purchase deleted successfully.')),
+      ),
+    );
     await _load();
   }
 
@@ -161,28 +224,43 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     QuarryPageHeader(
-                      title: 'Purchase History',
-                      subtitle: 'View and filter all quarry blasting material purchase records.',
+                      title: AppLocalization.t('Purchase History'),
+                      subtitle:
+                          AppLocalization.t('View and filter all quarry blasting material purchase records.'),
                       action: FilledButton.icon(
                         onPressed: _openNew,
                         icon: const Icon(Icons.add, size: 20),
-                        label: const Text('New Purchase'),
+                        label: Text(AppLocalization.t('New Purchase')),
                         style: FilledButton.styleFrom(
                           backgroundColor: const Color(0xFF00652C),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 24),
                     QuarryCard(
-                      title: 'Filters',
+                      title: AppLocalization.t('Filters'),
                       icon: Icons.filter_alt_outlined,
                       child: Row(
                         children: [
-
-                          Expanded(child: _dateButton('From Date', _from, () => _pickDate(true))),
+                          Expanded(
+                            child: _dateButton(
+                              AppLocalization.t('From Date'),
+                              _from,
+                              () => _pickDate(true),
+                            ),
+                          ),
                           const SizedBox(width: 12),
-                          Expanded(child: _dateButton('To Date', _to, () => _pickDate(false))),
+                          Expanded(
+                            child: _dateButton(
+                              AppLocalization.t('To Date'),
+                              _to,
+                              () => _pickDate(false),
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           OutlinedButton.icon(
                             onPressed: () {
@@ -193,7 +271,7 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
                               _load();
                             },
                             icon: const Icon(Icons.clear),
-                            label: const Text('Clear'),
+                            label: Text(AppLocalization.t('Clear')),
                           ),
                         ],
                       ),
@@ -201,25 +279,61 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
                     const SizedBox(height: 18),
                     Row(
                       children: [
-                        Expanded(child: QuarryKpiCard(title: 'Bullet Qty', value: formatQty(summary.bulletQuantity), icon: Icons.inventory_2_outlined)),
+                        Expanded(
+                          child: QuarryKpiCard(
+                            title: AppLocalization.t('Bullet Qty'),
+                            value: formatQty(summary.bulletQuantity),
+                            icon: Icons.inventory_2_outlined,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: QuarryKpiCard(title: '3m Wire Qty', value: formatQty(summary.wire3mQuantity), icon: Icons.cable_outlined)),
+                        Expanded(
+                          child: QuarryKpiCard(
+                            title: AppLocalization.t('3m Wire Qty'),
+                            value: formatQty(summary.wire3mQuantity),
+                            icon: Icons.cable_outlined,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: QuarryKpiCard(title: '4m Wire Qty', value: formatQty(summary.wire4mQuantity), icon: Icons.cable_outlined)),
+                        Expanded(
+                          child: QuarryKpiCard(
+                            title: AppLocalization.t('4m Wire Qty'),
+                            value: formatQty(summary.wire4mQuantity),
+                            icon: Icons.cable_outlined,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: QuarryKpiCard(title: 'ED Qty', value: formatQty(summary.edQuantity), icon: Icons.bolt_outlined)),
+                        Expanded(
+                          child: QuarryKpiCard(
+                            title: AppLocalization.t('ED Qty'),
+                            value: formatQty(summary.edQuantity),
+                            icon: Icons.bolt_outlined,
+                          ),
+                        ),
                         const SizedBox(width: 12),
-                        Expanded(child: QuarryKpiCard(title: 'Total Cost', value: formatMoney(summary.totalCost), icon: Icons.currency_rupee_outlined)),
+                        Expanded(
+                          child: QuarryKpiCard(
+                            title: AppLocalization.t('Total Cost'),
+                            value: formatMoney(summary.totalCost),
+                            icon: Icons.currency_rupee_outlined,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 18),
                     QuarryCard(
-                      title: 'Purchase Records',
+                      title: AppLocalization.t('Purchase Records'),
                       icon: Icons.table_rows_outlined,
                       child: provider.purchases.isEmpty
-                          ? const Padding(
+                          ? Padding(
                               padding: EdgeInsets.symmetric(vertical: 36),
-                              child: Center(child: Text('No purchase records found for the selected filters.')),
+                              child: Center(
+                                child: Text(
+                                  AppLocalization.t(
+                                    'No purchase records found for the selected filters.',
+                                  ),
+                                ),
+                              ),
                             )
                           : _buildTable(provider.purchases),
                     ),
@@ -242,7 +356,9 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
           border: const OutlineInputBorder(),
           suffixIcon: const Icon(Icons.calendar_today_outlined),
         ),
-        child: Text(value == null ? 'Select date' : formatDate(value.toIso8601String())),
+        child: Text(
+          value == null ? AppLocalization.t('Select date') : formatDate(value.toIso8601String()),
+        ),
       ),
     );
   }
@@ -253,52 +369,73 @@ class _QuarryBlastingPurchaseHistoryScreenState extends State<QuarryBlastingPurc
       child: DataTable(
         columnSpacing: 22,
         headingRowColor: const WidgetStatePropertyAll(Color(0xFFF8F9FB)),
-        columns: const [
-          DataColumn(label: Text('Date')),
-          DataColumn(label: Text('Bullet Qty')),
-          DataColumn(label: Text('Bullet Price')),
-          DataColumn(label: Text('3m Wire Qty')),
-          DataColumn(label: Text('3m Wire Price')),
-          DataColumn(label: Text('4m Wire Qty')),
-          DataColumn(label: Text('4m Wire Price')),
-          DataColumn(label: Text('ED Qty')),
-          DataColumn(label: Text('ED Price')),
-          DataColumn(label: Text('Total Cost')),
-          DataColumn(label: Text('Actions')),
+        columns: [
+          DataColumn(label: Text(AppLocalization.t('Date'))),
+          DataColumn(label: Text(AppLocalization.t('Bullet Qty'))),
+          DataColumn(label: Text(AppLocalization.t('Bullet Price'))),
+          DataColumn(label: Text(AppLocalization.t('3m Wire Qty'))),
+          DataColumn(label: Text(AppLocalization.t('3m Wire Price'))),
+          DataColumn(label: Text(AppLocalization.t('4m Wire Qty'))),
+          DataColumn(label: Text(AppLocalization.t('4m Wire Price'))),
+          DataColumn(label: Text(AppLocalization.t('ED Qty'))),
+          DataColumn(label: Text(AppLocalization.t('ED Price'))),
+          DataColumn(label: Text(AppLocalization.t('Total Cost'))),
+          DataColumn(label: Text(AppLocalization.t('Actions'))),
         ],
-        rows: purchases.map<DataRow>((p) => DataRow(cells: [
-          DataCell(Text(formatDate(p.purchaseDate))),
-          DataCell(Text(formatQty(p.bulletQuantity))),
-          DataCell(Text(formatMoney(p.bulletPrice))),
-          DataCell(Text(formatQty(p.wire3mQuantity))),
-          DataCell(Text(formatMoney(p.wire3mPrice))),
-          DataCell(Text(formatQty(p.wire4mQuantity))),
-          DataCell(Text(formatMoney(p.wire4mPrice))),
-          DataCell(Text(formatQty(p.edQuantity))),
-          DataCell(Text(formatMoney(p.edPrice))),
-          DataCell(Text(formatMoney(p.totalCost), style: const TextStyle(fontWeight: FontWeight.w700))),
-          DataCell(Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                tooltip: 'View',
-                onPressed: p.id == null ? null : () => _viewPurchase(p),
-                icon: const Icon(Icons.visibility_outlined, size: 19),
+        rows: purchases
+            .map<DataRow>(
+              (p) => DataRow(
+                cells: [
+                  DataCell(Text(formatDate(p.purchaseDate))),
+                  DataCell(Text(formatQty(p.bulletQuantity))),
+                  DataCell(Text(formatMoney(p.bulletPrice))),
+                  DataCell(Text(formatQty(p.wire3mQuantity))),
+                  DataCell(Text(formatMoney(p.wire3mPrice))),
+                  DataCell(Text(formatQty(p.wire4mQuantity))),
+                  DataCell(Text(formatMoney(p.wire4mPrice))),
+                  DataCell(Text(formatQty(p.edQuantity))),
+                  DataCell(Text(formatMoney(p.edPrice))),
+                  DataCell(
+                    Text(
+                      formatMoney(p.totalCost),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  DataCell(
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: AppLocalization.t('View'),
+                          onPressed: p.id == null
+                              ? null
+                              : () => _viewPurchase(p),
+                          icon: const Icon(Icons.visibility_outlined, size: 19),
+                        ),
+                        IconButton(
+                          tooltip: AppLocalization.t('Edit'),
+                          onPressed: p.id == null ? null : () => _openEdit(p),
+                          icon: const Icon(Icons.edit_outlined, size: 19),
+                        ),
+                        if (context.watch<AuthProvider>().isAdmin)
+                          IconButton(
+                            tooltip: AppLocalization.t('Delete'),
+                            onPressed: p.id == null
+                                ? null
+                                : () => _confirmDelete(p),
+                            icon: const Icon(
+                              Icons.delete_outline,
+                              size: 19,
+                              color: Color(0xFFBA1A1A),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              IconButton(
-                tooltip: 'Edit',
-                onPressed: p.id == null ? null : () => _openEdit(p),
-                icon: const Icon(Icons.edit_outlined, size: 19),
-              ),
-              if (context.watch<AuthProvider>().isAdmin)
-                IconButton(
-                  tooltip: 'Delete',
-                  onPressed: p.id == null ? null : () => _confirmDelete(p),
-                  icon: const Icon(Icons.delete_outline, size: 19, color: Color(0xFFBA1A1A)),
-                ),
-            ],
-          )),
-        ])).toList(),
+            )
+            .toList(),
       ),
     );
   }

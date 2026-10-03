@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/services/diesel_excel_service.dart';
@@ -61,7 +62,9 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
     final p = context.read<DieselProvider>();
     if (p.reportRows.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No records available for export.')),
+        SnackBar(
+          content: Text(AppLocalization.t('No records available for export.')),
+        ),
       );
       return;
     }
@@ -72,14 +75,14 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
         toDate: range.end,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Excel report saved: $path')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalization.t('Excel report saved: ') + path)),
+      );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Export failed: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalization.t('Export failed: ') + e.toString())),
+      );
     }
   }
 
@@ -99,13 +102,13 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 DieselPageHeader(
-                  title: 'Diesel Reports',
+                  title: AppLocalization.t('Diesel Reports'),
                   subtitle:
-                      'Generate daily, weekly, monthly and custom diesel reports.',
+                      AppLocalization.t('Generate daily, weekly, monthly and custom diesel reports.'),
                   action: FilledButton.icon(
                     onPressed: p.isLoading ? null : _export,
                     icon: const Icon(Icons.file_download_outlined),
-                    label: const Text('Export Excel'),
+                    label: Text(AppLocalization.t('Export Excel')),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF00652C),
                     ),
@@ -121,7 +124,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         value: period,
                         items: const ['Daily', 'Weekly', 'Monthly', 'Custom']
                             .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                              (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
                             )
                             .toList(),
                         onChanged: (v) async {
@@ -149,7 +152,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         value: type,
                         items: const ['All', 'Excavator', 'Transport']
                             .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                              (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
                             )
                             .toList(),
                         onChanged: (v) async {
@@ -164,11 +167,11 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                       if (type != 'All')
                         DropdownButton<int?>(
                           value: vehicleId,
-                          hint: const Text('All Vehicles'),
+                          hint: Text(AppLocalization.t('All Vehicles')),
                           items: [
-                            const DropdownMenuItem<int?>(
+                            DropdownMenuItem<int?>(
                               value: null,
-                              child: Text('All Vehicles'),
+                              child: Text(AppLocalization.t('All Vehicles')),
                             ),
                             ...p.vehicles
                                 .where((v) => v.type == type)
@@ -219,7 +222,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Diesel Received',
+                            title: AppLocalization.t('Diesel Received'),
                             value: '${dieselQty(p.summary.received)} L',
                             subtitle: period,
                             icon: Icons.south_west_outlined,
@@ -228,7 +231,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Diesel Used',
+                            title: AppLocalization.t('Diesel Used'),
                             value: '${dieselQty(litres)} L',
                             subtitle: period,
                             icon: Icons.outbound_outlined,
@@ -237,7 +240,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Total Cost',
+                            title: AppLocalization.t('Total Cost'),
                             value: dieselMoney(cost),
                             subtitle: period,
                             icon: Icons.currency_rupee_outlined,
@@ -246,9 +249,9 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         SizedBox(
                           width: w,
                           child: DieselKpiCard(
-                            title: 'Average Rate',
+                            title: AppLocalization.t('Average Rate'),
                             value: dieselMoney(averageRate.toDouble()),
-                            subtitle: 'Per litre',
+                            subtitle: AppLocalization.t('Per litre'),
                             icon: Icons.calculate_outlined,
                           ),
                         ),
@@ -261,17 +264,19 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const DieselSectionTitle(
-                        title: 'Diesel Filling Report',
+                      DieselSectionTitle(
+                        title: AppLocalization.t('Diesel Filling Report'),
                         icon: Icons.assessment_outlined,
                       ),
                       const SizedBox(height: 16),
                       if (p.reportRows.isEmpty)
-                        const Center(
+                        Center(
                           child: Padding(
                             padding: EdgeInsets.all(24),
                             child: Text(
-                              'No records found for the selected filters.',
+                              AppLocalization.t(
+                                'No records found for the selected filters.',
+                              ),
                             ),
                           ),
                         )
@@ -279,13 +284,25 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('Date')),
-                              DataColumn(label: Text('Vehicle')),
-                              DataColumn(label: Text('Type')),
-                              DataColumn(label: Text('Diesel')),
-                              DataColumn(label: Text('Rate')),
-                              DataColumn(label: Text('Cost')),
+                            columns: [
+                              DataColumn(
+                                label: Text(AppLocalization.t('Date')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Vehicle')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Type')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Diesel')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Rate')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('Cost')),
+                              ),
                             ],
                             rows: p.reportRows
                                 .map(
@@ -293,7 +310,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                                     cells: [
                                       DataCell(Text(dieselDisplayDate(r.date))),
                                       DataCell(Text(r.vehicleRegistration)),
-                                      DataCell(Text(r.vehicleType)),
+                                      DataCell(Text(AppLocalization.t(r.vehicleType))),
                                       DataCell(
                                         Text('${dieselQty(r.litres)} L'),
                                       ),

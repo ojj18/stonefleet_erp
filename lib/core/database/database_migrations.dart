@@ -115,6 +115,7 @@ class DatabaseMigrations {
     color TEXT,
     insurance_company TEXT,
     emission_standard TEXT,
+    unit REAL NOT NULL DEFAULT 0,
 
     status INTEGER NOT NULL DEFAULT 1,
 
@@ -534,6 +535,23 @@ class DatabaseMigrations {
         total_cost REAL NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS quarry_boulder_trips (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        trip_date TEXT NOT NULL,
+        transport_vehicle_id INTEGER NOT NULL,
+        registration_number TEXT NOT NULL,
+        driver_name TEXT NOT NULL,
+        unit REAL NOT NULL DEFAULT 0,
+        trips INTEGER NOT NULL DEFAULT 0,
+        total_load REAL NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        updated_at TEXT,
+        FOREIGN KEY (transport_vehicle_id) REFERENCES transport_vehicles(id)
+          ON DELETE RESTRICT ON UPDATE CASCADE
       )
     ''');
 
@@ -1035,5 +1053,35 @@ class DatabaseMigrations {
 
       log('Database migrated to version 6: quarry blasting purchases created.');
     }
+    // ============================================================
+    // VERSION 4
+    // TRANSPORT UNIT + QUARRY BOULDER TRIPS
+    // ============================================================
+    if (oldVersion < 4) {
+      if (!await _hasColumn(db, 'transport_vehicles', 'unit')) {
+        await db.execute(
+          'ALTER TABLE transport_vehicles ADD COLUMN unit REAL NOT NULL DEFAULT 0',
+        );
+      }
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quarry_boulder_trips (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          trip_date TEXT NOT NULL,
+          transport_vehicle_id INTEGER NOT NULL,
+          registration_number TEXT NOT NULL,
+          driver_name TEXT NOT NULL,
+          unit REAL NOT NULL DEFAULT 0,
+          trips INTEGER NOT NULL DEFAULT 0,
+          total_load REAL NOT NULL DEFAULT 0,
+          created_at TEXT NOT NULL,
+          updated_at TEXT,
+          FOREIGN KEY (transport_vehicle_id) REFERENCES transport_vehicles(id)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      ''');
+      log('Database migrated to version 4: transport unit and quarry boulder trips created.');
+    }
+
   }
 }

@@ -843,3 +843,224 @@ Use contextual understanding rather than positional assumptions.
       }
     },
 );
+
+
+exports.extractSparePurchase = onRequest(
+    {
+      secrets: [openaiApiKey],
+      cors: true,
+    },
+    async (req, res) => {
+      try {
+        if (req.method !== "POST") {
+          return res.status(405).json({
+            success: false,
+            message: "Only POST requests are allowed.",
+          });
+        }
+
+        const {imageBase64, mimeType} = req.body || {};
+
+        if (!imageBase64) {
+          return res.status(400).json({
+            success: false,
+            message: "imageBase64 is required.",
+          });
+        }
+
+        const client = new OpenAI({
+          apiKey: openaiApiKey.value(),
+        });
+
+        const response = await client.responses.create({
+          model: "gpt-5.4-mini",
+          input: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "input_text",
+                  text: `
+You are an OCR and data extraction assistant for a Stone Crusher ERP.
+
+The uploaded image is a spare-parts purchase bill/invoice. Extract the
+purchase information that is visibly present on the bill.
+
+IMPORTANT RULES:
+
+1. Do NOT assume fields are written in a fixed order.
+2. Use the bill's labels, table structure, surrounding text and context.
+3. Do NOT invent missing information.
+4. If a value is missing, unreadable, or uncertain, return null for that
+   field. For numeric item fields, return null rather than guessing.
+5. Preserve the bill number, supplier name, item names and remarks as
+   accurately as possible.
+6. Do NOT calculate subtotal, GST, grand total, or item totals when they are
+   not explicitly present on the bill. Extract printed/handwritten totals
+   when they are visible.
+7. Do not silently correct or reinterpret product names.
+8. The purchase date should be returned as YYYY-MM-DD when the date can be
+   determined confidently; otherwise return the value as written or null.
+9. Quantity, unit price, GST percentage, subtotal, GST amount and total cost
+   must represent the values shown on the bill. Do not derive them from other
+   values.
+10. Return only the requested structured data.
+
+Field definitions:
+
+bill_number:
+Invoice/bill number, invoice ID, or bill reference number.
+
+supplier_name:
+Supplier/vendor/company name shown on the purchase bill.
+
+purchase_date:
+Date of purchase/invoice.
+
+subtotal:
+Subtotal shown on the bill before GST/tax. Return null if not shown.
+
+gst_amount:
+Total GST/tax amount shown on the bill. Return null if not shown.
+
+grand_total:
+Final invoice total/payable amount shown on the bill. Return null if not shown.
+
+items:
+Every visible purchased spare/item row on the bill.
+
+item_name:
+The item/product description exactly as reliably readable.
+
+quantity:
+Purchased quantity shown for the item.
+
+unit_price:
+Price per unit shown for the item.
+
+gst_percentage:
+GST/tax percentage shown for that item, if available.
+
+subtotal:
+Line subtotal shown for that item, if available.
+
+gst_amount:
+Line GST/tax amount shown for that item, if available.
+
+total_cost:
+Line total shown for that item, if available.
+
+If the bill contains additional text that is clearly a purchase-related
+remark but does not fit these fields, do not invent an extra field; preserve
+only the requested fields.
+                  `,
+                },
+                {
+                  type: "input_image",
+                  image_url:
+`data:${mimeType || "image/jpeg"};base64,${imageBase64}`,
+                  detail: "high",
+                },
+              ],
+            },
+          ],
+          text: {
+            format: {
+              type: "json_schema",
+              name: "spare_purchase_ocr",
+              strict: true,
+              schema: {
+                type: "object",
+                additionalProperties: false,
+                properties: {
+                  bill_number: {
+                    type: ["string", "null"],
+                  },
+                  supplier_name: {
+                    type: ["string", "null"],
+                  },
+                  purchase_date: {
+                    type: ["string", "null"],
+                  },
+                  subtotal: {
+                    type: ["number", "null"],
+                  },
+                  gst_amount: {
+                    type: ["number", "null"],
+                  },
+                  grand_total: {
+                    type: ["number", "null"],
+                  },
+                  items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      additionalProperties: false,
+                      properties: {
+                        item_name: {
+                          type: ["string", "null"],
+                        },
+                        quantity: {
+                          type: ["number", "null"],
+                        },
+                        unit_price: {
+                          type: ["number", "null"],
+                        },
+                        gst_percentage: {
+                          type: ["number", "null"],
+                        },
+                        subtotal: {
+                          type: ["number", "null"],
+                        },
+                        gst_amount: {
+                          type: ["number", "null"],
+                        },
+                        total_cost: {
+                          type: ["number", "null"],
+                        },
+                      },
+                      required: [
+                        "item_name",
+                        "quantity",
+                        "unit_price",
+                        "gst_percentage",
+                        "subtotal",
+                        "gst_amount",
+                        "total_cost",
+                      ],
+                    },
+                  },
+                },
+                required: [
+                  "bill_number",
+                  "supplier_name",
+                  "purchase_date",
+                  "subtotal",
+                  "gst_amount",
+                  "grand_total",
+                  "items",
+                ],
+              },
+            },
+          },
+        });
+
+        const data = JSON.parse(response.output_text);
+
+        logger.info("Spare purchase bill extracted successfully.");
+
+        return res.status(200).json({
+          success: true,
+          data,
+        });
+      } catch (error) {
+        logger.error("Spare purchase OCR extraction failed.", error);
+
+        return res.status(500).json({
+          success: false,
+          message: "Failed to extract spare purchase data.",
+          error: error.message,
+        });
+      }
+    },
+);

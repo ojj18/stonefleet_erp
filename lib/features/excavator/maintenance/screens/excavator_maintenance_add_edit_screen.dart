@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -260,8 +261,8 @@ class _ExcavatorMaintenanceAddEditScreenState
   // ------------------------------------------------------------
 
   Future<void> _pickMaintenanceSheet() async {
-    const XTypeGroup imageTypeGroup = XTypeGroup(
-      label: 'Images',
+    XTypeGroup imageTypeGroup = XTypeGroup(
+      label: AppLocalization.t('Images'),
       extensions: <String>['jpg', 'jpeg', 'png', 'webp'],
     );
 
@@ -305,7 +306,7 @@ class _ExcavatorMaintenanceAddEditScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Uploaded Sheet'),
+          title: Text(AppLocalization.t('Uploaded Sheet')),
           content: SizedBox(
             width: 700,
             height: 500,
@@ -323,7 +324,7 @@ class _ExcavatorMaintenanceAddEditScreenState
                   _selectedSheet = null;
                 });
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             ElevatedButton.icon(
               onPressed: () async {
@@ -343,7 +344,7 @@ class _ExcavatorMaintenanceAddEditScreenState
                     )
                   : const Icon(Icons.upload_file_outlined),
 
-              label: const Text('Use Image'),
+              label: Text(AppLocalization.t('Use Image')),
 
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
@@ -375,7 +376,7 @@ class _ExcavatorMaintenanceAddEditScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return const AlertDialog(
+        return AlertDialog(
           content: SizedBox(
             width: 320,
             child: Padding(
@@ -386,12 +387,12 @@ class _ExcavatorMaintenanceAddEditScreenState
                   CircularProgressIndicator(),
                   SizedBox(height: 20),
                   Text(
-                    'Extracting Data...',
+                    AppLocalization.t('Extracting Data...'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                   SizedBox(height: 8),
                   Text(
-                    'Analyzing the uploaded sheet',
+                    AppLocalization.t('Analyzing the uploaded sheet'),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -443,9 +444,11 @@ class _ExcavatorMaintenanceAddEditScreenState
 
       Navigator.of(context, rootNavigator: true).pop();
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to extract data: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalization.t('Failed to extract data: ') + e.toString()),
+        ),
+      );
     }
   }
 
@@ -464,7 +467,7 @@ class _ExcavatorMaintenanceAddEditScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Review Extracted Data'),
+          title: Text(AppLocalization.t('Review Extracted Data')),
           content: SizedBox(
             width: 600,
             child: SingleChildScrollView(
@@ -506,14 +509,14 @@ class _ExcavatorMaintenanceAddEditScreenState
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('Change'),
+              child: Text(AppLocalization.t('Change')),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
                 _applyOcrResultToForm();
               },
-              child: const Text('Use These Values'),
+              child: Text(AppLocalization.t('Use These Values')),
             ),
           ],
         );
@@ -539,7 +542,7 @@ class _ExcavatorMaintenanceAddEditScreenState
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(flex: 3, child: Text(value ?? 'Not detected')),
+          Expanded(flex: 3, child: Text(value ?? AppLocalization.t('Not detected'))),
         ],
       ),
     );
@@ -786,15 +789,15 @@ class _ExcavatorMaintenanceAddEditScreenState
         SnackBar(
           content: Text(
             widget.isEdit
-                ? 'Maintenance updated successfully.'
-                : 'Maintenance added successfully.',
+                ? AppLocalization.t('Maintenance updated successfully.')
+                : AppLocalization.t('Maintenance added successfully.'),
           ),
         ),
       );
 
       Navigator.of(context).pop(true);
     } else {
-      _showError(provider.error ?? 'Something went wrong.');
+      _showError(AppLocalization.t(provider.error ?? 'Something went wrong.'));
     }
   }
 
@@ -826,7 +829,7 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   String? _requiredValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return AppLocalization.t('Required');
     }
 
     return null;
@@ -834,11 +837,11 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   String? _numberValidator(String? value) {
     if (value == null || value.trim().isEmpty) {
-      return 'Required';
+      return AppLocalization.t('Required');
     }
 
     if (double.tryParse(value.trim()) == null) {
-      return 'Enter a valid number';
+      return AppLocalization.t('Enter a valid number');
     }
 
     return null;
@@ -930,7 +933,7 @@ class _ExcavatorMaintenanceAddEditScreenState
   //       children: [
   //         const SizedBox(height: 28),
 
-  //         const Padding(
+  //         Padding(
   //           padding: EdgeInsets.symmetric(horizontal: 20),
   //           child: Row(
   //             children: [
@@ -1044,7 +1047,7 @@ class _ExcavatorMaintenanceAddEditScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -1099,7 +1102,7 @@ class _ExcavatorMaintenanceAddEditScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.isEdit ? 'Edit Maintenance' : 'Add Maintenance',
+              widget.isEdit ? AppLocalization.t('Edit Maintenance') : AppLocalization.t('Add Maintenance'),
               style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
 
@@ -1107,8 +1110,8 @@ class _ExcavatorMaintenanceAddEditScreenState
 
             Text(
               widget.isEdit
-                  ? 'Update excavator maintenance details'
-                  : 'Record daily excavator maintenance details',
+                  ? AppLocalization.t('Update excavator maintenance details')
+                  : AppLocalization.t('Record daily excavator maintenance details'),
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
           ],
@@ -1128,7 +1131,7 @@ class _ExcavatorMaintenanceAddEditScreenState
                 )
               : const Icon(Icons.upload_file_outlined),
 
-          label: Text('Upload Image'),
+          label: Text(AppLocalization.t('Upload Image')),
 
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1149,7 +1152,7 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildExcavatorSection() {
     return _sectionCard(
-      title: 'Excavator Details',
+      title: AppLocalization.t('Excavator Details'),
       icon: Icons.agriculture_outlined,
       child: Consumer<ExcavatorProvider>(
         builder: (context, provider, child) {
@@ -1177,13 +1180,13 @@ class _ExcavatorMaintenanceAddEditScreenState
                   isExpanded: true,
 
                   decoration: _inputDecoration(
-                    'Registration Number',
+                    AppLocalization.t('Registration Number'),
                     Icons.pin_outlined,
                   ),
 
                   validator: (_) {
                     if (_selectedExcavator == null) {
-                      return 'Select excavator';
+                      return AppLocalization.t('Select excavator');
                     }
 
                     return null;
@@ -1229,7 +1232,7 @@ class _ExcavatorMaintenanceAddEditScreenState
         ),
         alignment: Alignment.centerLeft,
         child: Text(
-          'Select an excavator to view details',
+          AppLocalization.t('Select an excavator to view details'),
           style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
         ),
       );
@@ -1277,14 +1280,14 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildOperationSection() {
     return _sectionCard(
-      title: 'Operation Details',
+      title: AppLocalization.t('Operation Details'),
       icon: Icons.person_outline,
       child: Row(
         children: [
           Expanded(
             child: _textField(
               controller: _operatorController,
-              label: 'Operator Name',
+              label: AppLocalization.t('Operator Name'),
               icon: Icons.person_outline,
             ),
           ),
@@ -1295,12 +1298,12 @@ class _ExcavatorMaintenanceAddEditScreenState
             child: DropdownButtonFormField<String>(
               initialValue: _selectedShift,
 
-              decoration: _inputDecoration('Shift', Icons.schedule_outlined),
+              decoration: _inputDecoration(AppLocalization.t('Shift'), Icons.schedule_outlined),
 
               items: _shifts
                   .map(
                     (shift) =>
-                        DropdownMenuItem(value: shift, child: Text(shift)),
+                        DropdownMenuItem(value: shift, child: Text(AppLocalization.t(shift))),
                   )
                   .toList(),
 
@@ -1322,7 +1325,7 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildWorkingHourSection() {
     return _sectionCard(
-      title: 'Working Hours',
+      title: AppLocalization.t('Working Hours'),
       icon: Icons.access_time_outlined,
       child: Column(
         children: [
@@ -1331,7 +1334,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _startingHourController,
-                  label: 'Starting Hour',
+                  label: AppLocalization.t('Starting Hour'),
                   icon: Icons.play_arrow_outlined,
                 ),
               ),
@@ -1341,7 +1344,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _closingHourController,
-                  label: 'Closing Hour',
+                  label: AppLocalization.t('Closing Hour'),
                   icon: Icons.stop_outlined,
                 ),
               ),
@@ -1351,7 +1354,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _totalWorkingHourController,
-                  label: 'Total Working Hour',
+                  label: AppLocalization.t('Total Working Hour'),
                   icon: Icons.timer_outlined,
                   readOnly: true,
                 ),
@@ -1362,7 +1365,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _totalRunningHourController,
-                  label: 'Total Running Hour',
+                  label: AppLocalization.t('Total Running Hour'),
                   icon: Icons.speed_outlined,
                   readOnly: true,
                 ),
@@ -1377,7 +1380,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _bucketWorkingHourController,
-                  label: 'Bucket Working Hour',
+                  label: AppLocalization.t('Bucket Working Hour'),
                   icon: Icons.construction_outlined,
                 ),
               ),
@@ -1387,7 +1390,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _breakerWorkingHourController,
-                  label: 'Breaker Working Hour',
+                  label: AppLocalization.t('Breaker Working Hour'),
                   icon: Icons.handyman_outlined,
                 ),
               ),
@@ -1406,14 +1409,14 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildProductionSection() {
     return _sectionCard(
-      title: 'Production',
+      title: AppLocalization.t('Production'),
       icon: Icons.inventory_2_outlined,
       child: Row(
         children: [
           Expanded(
             child: _numberField(
               controller: _numberOfLoadsController,
-              label: 'Number of Loads',
+              label: AppLocalization.t('Number of Loads'),
               icon: Icons.local_shipping_outlined,
               required: false,
             ),
@@ -1424,7 +1427,7 @@ class _ExcavatorMaintenanceAddEditScreenState
           Expanded(
             child: _numberField(
               controller: _unitsController,
-              label: 'Units',
+              label: AppLocalization.t('Units'),
               icon: Icons.straighten_outlined,
               required: false,
             ),
@@ -1442,7 +1445,7 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildDieselSection() {
     return _sectionCard(
-      title: 'Diesel & Fuel',
+      title: AppLocalization.t('Diesel & Fuel'),
       icon: Icons.local_gas_station_outlined,
       child: Column(
         children: [
@@ -1451,7 +1454,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselFilledController,
-                  label: 'Diesel Filled (L)',
+                  label: AppLocalization.t('Diesel Filled (L)'),
                   icon: Icons.local_gas_station_outlined,
                   required: false,
                 ),
@@ -1462,7 +1465,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselRateController,
-                  label: 'Diesel Rate',
+                  label: AppLocalization.t('Diesel Rate'),
                   icon: Icons.currency_rupee,
                   required: false,
                 ),
@@ -1473,7 +1476,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselExpenseController,
-                  label: 'Diesel Expense',
+                  label: AppLocalization.t('Diesel Expense'),
                   icon: Icons.payments_outlined,
                   readOnly: true,
                   required: false,
@@ -1488,7 +1491,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselPerHourController,
-                  label: 'Diesel Consumption (L/KM)',
+                  label: AppLocalization.t('Diesel Consumption (L/KM)'),
                   icon: Icons.speed_outlined,
                   readOnly: true,
                   required: false,
@@ -1500,7 +1503,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               // Expanded(
               //   child: _numberField(
               //     controller: _dieselCostPerHourController,
-              //     label: 'Diesel Cost (₹/hr)',
+              //     label: AppLocalization.t('Diesel Cost (₹/hr)'),
               //     icon: Icons.currency_rupee,
               //     readOnly: true,
               //     required: false,
@@ -1521,7 +1524,7 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   Widget _buildMaintenanceSection() {
     return _sectionCard(
-      title: 'Maintenance',
+      title: AppLocalization.t('Maintenance'),
       icon: Icons.build_outlined,
       child: Column(
         children: [
@@ -1538,17 +1541,19 @@ class _ExcavatorMaintenanceAddEditScreenState
 
                 const SizedBox(width: 12),
 
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Teeth Set Changed',
+                        AppLocalization.t('Teeth Set Changed'),
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Mark if the excavator teeth set was changed',
+                        AppLocalization.t(
+                          'Mark if the excavator teeth set was changed',
+                        ),
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                     ],
@@ -1572,7 +1577,7 @@ class _ExcavatorMaintenanceAddEditScreenState
           TextFormField(
             controller: _remarksController,
             maxLines: 4,
-            decoration: _inputDecoration('Remarks', Icons.notes_outlined),
+            decoration: _inputDecoration(AppLocalization.t('Remarks'), Icons.notes_outlined),
           ),
         ],
       ),
@@ -1594,7 +1599,7 @@ class _ExcavatorMaintenanceAddEditScreenState
                   Navigator.of(context).pop();
                 },
           style: OutlinedButton.styleFrom(minimumSize: const Size(120, 48)),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
 
         const SizedBox(width: 14),
@@ -1615,10 +1620,10 @@ class _ExcavatorMaintenanceAddEditScreenState
 
           label: Text(
             _isSaving
-                ? 'Saving...'
+                ? AppLocalization.t('Saving...')
                 : widget.isEdit
                 ? 'Update Maintenance'
-                : 'Save Maintenance',
+                : AppLocalization.t('Save Maintenance'),
           ),
 
           style: ElevatedButton.styleFrom(

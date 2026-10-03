@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/inventory_provider.dart';
@@ -39,7 +40,7 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: const Text('Record Spare Usage'),
+          title: Text(AppLocalization.t('Record Spare Usage')),
           content: SizedBox(
             width: 520,
             child: Form(
@@ -49,7 +50,7 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                 children: [
                   DropdownButtonFormField<String>(
                     initialValue: item,
-                    decoration: const InputDecoration(labelText: 'Spare Item'),
+                    decoration: InputDecoration(labelText: AppLocalization.t('Spare Item')),
                     items: provider.items
                         .map(
                           (e) => DropdownMenuItem(
@@ -59,31 +60,33 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                         )
                         .toList(),
                     onChanged: (v) => setState(() => item = v),
-                    validator: (v) => v == null ? 'Select a spare item' : null,
+                    validator: (v) => v == null ? AppLocalization.t('Select a spare item') : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: qty,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity Used',
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Quantity Used'),
                     ),
                     validator: (v) => double.tryParse(v ?? '') == null
-                        ? 'Enter quantity'
+                        ? AppLocalization.t('Enter quantity')
                         : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: usedFor,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       labelText:
-                          'Used For (e.g. Excavator / Transport / Service)',
+                          AppLocalization.t('Used For (e.g. Excavator / Transport / Service)'),
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: remarks,
-                    decoration: const InputDecoration(labelText: 'Remarks'),
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Remarks'),
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Align(
@@ -109,13 +112,13 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             ElevatedButton(
               onPressed: () => formKey.currentState?.validate() == true
                   ? Navigator.pop(context, true)
                   : null,
-              child: const Text('Save'),
+              child: Text(AppLocalization.t('Save')),
             ),
           ],
         ),
@@ -132,9 +135,9 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
       );
       if (provider.error != null) throw Exception(provider.error);
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Spare usage recorded.')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalization.t('Spare usage recorded.'))),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -162,13 +165,13 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InventoryPageHeader(
-                    title: 'Spare Usage',
+                    title: AppLocalization.t('Spare Usage'),
                     subtitle:
-                        'Record spare parts consumed during maintenance and service.',
+                        AppLocalization.t('Record spare parts consumed during maintenance and service.'),
                     action: ElevatedButton.icon(
                       onPressed: () => _addUsage(provider),
                       icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Record Usage'),
+                      label: Text(AppLocalization.t('Record Usage')),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF00652C),
                         foregroundColor: Colors.white,
@@ -181,7 +184,7 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                     children: [
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Total Used Quantity',
+                          title: AppLocalization.t('Total Used Quantity'),
                           value: formatQty(provider.summary.usedQuantity),
                           icon: Icons.remove_shopping_cart_outlined,
                         ),
@@ -189,18 +192,18 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Remaining Stock',
+                          title: AppLocalization.t('Remaining Stock'),
                           value: formatQty(provider.summary.remainingQuantity),
                           icon: Icons.inventory_outlined,
                         ),
                       ),
                       const SizedBox(width: 16),
-                      const Expanded(child: SizedBox()),
+                      Expanded(child: SizedBox()),
                     ],
                   ),
                   const SizedBox(height: 24),
                   InventorySectionCard(
-                    title: 'Usage History',
+                    title: AppLocalization.t('Usage History'),
                     icon: Icons.history_outlined,
                     child: Column(
                       children: [
@@ -210,10 +213,10 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                               child: TextField(
                                 controller: _search,
                                 onChanged: (v) => provider.loadUsage(search: v),
-                                decoration: const InputDecoration(
+                                decoration: InputDecoration(
                                   prefixIcon: Icon(Icons.search),
                                   hintText:
-                                      'Search spare item, used for, remarks...',
+                                      AppLocalization.t('Search spare item, used for, remarks...'),
                                   border: OutlineInputBorder(),
                                 ),
                               ),
@@ -224,7 +227,7 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                                 _search.clear();
                                 provider.loadUsage();
                               },
-                              child: const Text('Clear'),
+                              child: Text(AppLocalization.t('Clear')),
                             ),
                           ],
                         ),
@@ -232,12 +235,22 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
-                            columns: const [
-                              DataColumn(label: Text('SPARE ITEM')),
-                              DataColumn(label: Text('USED QTY')),
-                              DataColumn(label: Text('DATE')),
-                              DataColumn(label: Text('USED FOR')),
-                              DataColumn(label: Text('REMARKS')),
+                            columns: [
+                              DataColumn(
+                                label: Text(AppLocalization.t('SPARE ITEM')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('USED QTY')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('DATE')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('USED FOR')),
+                              ),
+                              DataColumn(
+                                label: Text(AppLocalization.t('REMARKS')),
+                              ),
                             ],
                             rows: provider.usage
                                 .map(
@@ -257,9 +270,13 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                           ),
                         ),
                         if (provider.usage.isEmpty)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(24),
-                            child: Text('No spare usage records found.'),
+                            child: Text(
+                              AppLocalization.t(
+                                'No spare usage records found.',
+                              ),
+                            ),
                           ),
                       ],
                     ),

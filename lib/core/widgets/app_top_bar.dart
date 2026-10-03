@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../app/app_config.dart';
+import '../localization/app_localization.dart';
 
 class TopBar extends StatelessWidget {
   const TopBar({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild immediately when the selected app language changes.
+    context.watch<LanguageProvider>().languageCode;
     return Container(
       height: 64,
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -26,7 +30,7 @@ class TopBar extends StatelessWidget {
             height: 38,
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Global Search...',
+                hintText: AppLocalization.t('Global Search...'),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 filled: true,
                 fillColor: Colors.white,
@@ -56,8 +60,8 @@ class TopBar extends StatelessWidget {
             child: Icon(Icons.person, size: 18, color: Color(0xFF4E5867)),
           ),
           const SizedBox(width: 8),
-          const Text(
-            'Admin',
+          Text(
+            AppLocalization.t('Admin'),
             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
           ),
           const Icon(Icons.arrow_drop_down, size: 18),

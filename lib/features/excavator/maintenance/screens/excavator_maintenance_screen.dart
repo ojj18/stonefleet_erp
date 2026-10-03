@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -21,6 +22,8 @@ class ExcavatorMaintenanceScreen extends StatefulWidget {
 
 class _ExcavatorMaintenanceScreenState
     extends State<ExcavatorMaintenanceScreen> {
+  _ExcavatorMaintenanceScreenState();
+
   final TextEditingController _searchController = TextEditingController();
 
   int _currentPage = 1;
@@ -145,7 +148,7 @@ class _ExcavatorMaintenanceScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -201,8 +204,8 @@ class _ExcavatorMaintenanceScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Excavator Maintenance',
+              Text(
+                AppLocalization.t('Excavator Maintenance'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -212,8 +215,10 @@ class _ExcavatorMaintenanceScreenState
 
               const SizedBox(height: 6),
 
-              const Text(
-                'Track daily excavator operation, fuel usage and maintenance activities.',
+              Text(
+                AppLocalization.t(
+                  'Track daily excavator operation, fuel usage and maintenance activities.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -225,7 +230,7 @@ class _ExcavatorMaintenanceScreenState
         FilledButton.icon(
           onPressed: _openAddScreen,
           icon: const Icon(Icons.add, size: 20),
-          label: const Text('Add Maintenance'),
+          label: Text(AppLocalization.t('Add Maintenance')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -263,7 +268,7 @@ class _ExcavatorMaintenanceScreenState
           children: [
             Expanded(
               child: _summaryCard(
-                title: 'Total Records',
+                title: AppLocalization.t('Total Records'),
                 value: records.length.toString(),
                 icon: Icons.receipt_long_outlined,
               ),
@@ -273,7 +278,7 @@ class _ExcavatorMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Working Hours',
+                title: AppLocalization.t('Working Hours'),
                 value: _formatNumber(totalHours),
                 icon: Icons.timer_outlined,
                 suffix: ' hrs',
@@ -284,7 +289,7 @@ class _ExcavatorMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Diesel Used',
+                title: AppLocalization.t('Diesel Used'),
                 value: _formatNumber(totalDiesel),
                 icon: Icons.local_gas_station_outlined,
                 suffix: ' L',
@@ -295,7 +300,7 @@ class _ExcavatorMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Diesel Expense',
+                title: AppLocalization.t('Diesel Expense'),
                 value: _formatCurrency(totalExpense),
                 icon: Icons.currency_rupee,
               ),
@@ -385,7 +390,9 @@ class _ExcavatorMaintenanceScreenState
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search operator, excavator ID or remarks...',
+                hintText: AppLocalization.t(
+                  'Search operator, excavator ID or remarks...',
+                ),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -408,11 +415,11 @@ class _ExcavatorMaintenanceScreenState
           const SizedBox(width: 16),
 
           SizedBox(
-            width: 170,
+            width: 200,
             child: DropdownButtonFormField<String>(
               initialValue: _selectedShift,
               decoration: InputDecoration(
-                labelText: 'Shift',
+                labelText: AppLocalization.t('Shift'),
                 filled: true,
                 fillColor: const Color(0xFFF8F9FB),
                 border: OutlineInputBorder(
@@ -420,10 +427,19 @@ class _ExcavatorMaintenanceScreenState
                   borderSide: BorderSide.none,
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 'All', child: Text('All Shifts')),
-                DropdownMenuItem(value: 'Day', child: Text('Day')),
-                DropdownMenuItem(value: 'Night', child: Text('Night')),
+              items: [
+                DropdownMenuItem(
+                  value: 'All',
+                  child: Text(AppLocalization.t('All Shifts')),
+                ),
+                DropdownMenuItem(
+                  value: 'Day',
+                  child: Text(AppLocalization.t('Day')),
+                ),
+                DropdownMenuItem(
+                  value: 'Night',
+                  child: Text(AppLocalization.t('Night')),
+                ),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -438,7 +454,7 @@ class _ExcavatorMaintenanceScreenState
           const SizedBox(width: 12),
 
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: AppLocalization.t('Refresh'),
             onPressed: () {
               context.read<ExcavatorMaintenanceProvider>().loadMaintenance();
             },
@@ -507,9 +523,9 @@ class _ExcavatorMaintenanceScreenState
 
                 const Divider(height: 1),
 
-                ..._pageItems(records).map(
-                  (record) => _buildTableRow(record, provider.listRecords),
-                ),
+                ..._pageItems(
+                  records,
+                ).map((record) => _buildTableRow(record, provider.listRecords)),
                 _pagination(records.length),
               ],
             ),
@@ -529,25 +545,25 @@ class _ExcavatorMaintenanceScreenState
       color: const Color(0xFFF8F9FB),
       child: Row(
         children: [
-          _headerCell('DATE', width: 105),
+          _headerCell(AppLocalization.t('DATE'), width: 105),
 
-          _headerCell('EXCAVATOR', width: 120),
+          _headerCell(AppLocalization.t('EXCAVATOR'), width: 120),
 
-          _headerCell('OPERATOR', width: 150),
+          _headerCell(AppLocalization.t('OPERATOR'), width: 150),
 
-          _headerCell('SHIFT', width: 85),
+          _headerCell(AppLocalization.t('SHIFT'), width: 85),
 
-          _headerCell('HOURS', width: 90),
+          _headerCell(AppLocalization.t('HOURS'), width: 90),
 
-          _headerCell('LOADS', width: 80),
+          _headerCell(AppLocalization.t('LOADS'), width: 80),
 
-          _headerCell('DIESEL', width: 100),
+          _headerCell(AppLocalization.t('DIESEL'), width: 100),
 
-          _headerCell('EXPENSE', width: 110),
+          _headerCell(AppLocalization.t('EXPENSE'), width: 110),
 
-          const Expanded(
+          Expanded(
             child: Text(
-              'ACTION',
+              AppLocalization.t('ACTION'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
@@ -677,14 +693,14 @@ class _ExcavatorMaintenanceScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    tooltip: 'Edit',
+                    tooltip: AppLocalization.t('Edit'),
                     onPressed: () => _openEditScreen(record),
                     icon: const Icon(Icons.edit_outlined, size: 19),
                     color: const Color(0xFF00652C),
                   ),
                   if (context.watch<AuthProvider>().isAdmin)
                     IconButton(
-                      tooltip: 'Delete',
+                      tooltip: AppLocalization.t('Delete'),
                       onPressed: () => _confirmDelete(record),
                       icon: const Icon(Icons.delete_outline, size: 19),
                       color: const Color(0xFFBA1A1A),
@@ -807,7 +823,7 @@ class _ExcavatorMaintenanceScreenState
   //     context: context,
   //     builder: (dialogContext) {
   //       return AlertDialog(
-  //         title: const Text('Select Excavator'),
+  //         title: Text(AppLocalization.t('Select Excavator')),
   //         content: SizedBox(
   //           width: 400,
   //           child: Column(
@@ -825,8 +841,8 @@ class _ExcavatorMaintenanceScreenState
   //                 keyboardType: TextInputType.number,
   //                 autofocus: true,
   //                 decoration: InputDecoration(
-  //                   labelText: 'Excavator ID',
-  //                   hintText: 'Example: 1',
+  //                   labelText: AppLocalization.t('Excavator ID'),
+  //                   hintText: AppLocalization.t('Example: 1'),
   //                   prefixIcon: const Icon(
   //                     Icons.precision_manufacturing_outlined,
   //                   ),
@@ -843,7 +859,7 @@ class _ExcavatorMaintenanceScreenState
   //             onPressed: () {
   //               Navigator.pop(dialogContext);
   //             },
-  //             child: const Text('Cancel'),
+  //             child: Text(AppLocalization.t('Cancel')),
   //           ),
 
   //           FilledButton(
@@ -859,7 +875,7 @@ class _ExcavatorMaintenanceScreenState
   //             style: FilledButton.styleFrom(
   //               backgroundColor: const Color(0xFF00652C),
   //             ),
-  //             child: const Text('Continue'),
+  //             child: Text(AppLocalization.t('Continue')),
   //           ),
   //         ],
   //       );
@@ -897,16 +913,19 @@ class _ExcavatorMaintenanceScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Delete Maintenance Record?'),
-          content: const Text(
-            'This maintenance record will be permanently deleted. This action cannot be undone.',
+          title: Text(AppLocalization.t('Delete Maintenance Record?')),
+          content: Text(
+            AppLocalization.t(
+              'This maintenance record will be permanently deleted. This action cannot be undone.',
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
 
             FilledButton(
@@ -916,7 +935,7 @@ class _ExcavatorMaintenanceScreenState
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFBA1A1A),
               ),
-              child: const Text('Delete'),
+              child: Text(AppLocalization.t('Delete')),
             ),
           ],
         );
@@ -937,8 +956,8 @@ class _ExcavatorMaintenanceScreenState
       SnackBar(
         content: Text(
           success
-              ? 'Maintenance record deleted.'
-              : provider.error ?? 'Unable to delete record.',
+              ? AppLocalization.t('Maintenance record deleted.')
+              : AppLocalization.t(provider.error ?? 'Unable to delete record.'),
         ),
         backgroundColor: success
             ? const Color(0xFF00652C)
@@ -978,15 +997,19 @@ class _ExcavatorMaintenanceScreenState
 
           const SizedBox(height: 18),
 
-          const Text(
-            'No maintenance records found',
+          Text(
+            AppLocalization.t('No maintenance records found'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 7),
 
-          const Text(
-            'Add your first excavator maintenance record to get started.',
+          Text(
+            AppLocalization.t(
+              AppLocalization.t(
+                'Add your first excavator maintenance record to get started.',
+              ),
+            ),
             style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
           ),
 
@@ -995,7 +1018,7 @@ class _ExcavatorMaintenanceScreenState
           FilledButton.icon(
             onPressed: _openAddScreen,
             icon: const Icon(Icons.add),
-            label: const Text('Add Maintenance'),
+            label: Text(AppLocalization.t('Add Maintenance')),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF00652C),
             ),
@@ -1017,9 +1040,7 @@ class _ExcavatorMaintenanceScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Color(0xFF00652C)),
-      ),
+      child: Center(child: CircularProgressIndicator(color: Color(0xFF00652C))),
     );
   }
 
@@ -1042,8 +1063,8 @@ class _ExcavatorMaintenanceScreenState
 
           const SizedBox(height: 12),
 
-          const Text(
-            'Unable to load maintenance records',
+          Text(
+            AppLocalization.t('Unable to load maintenance records'),
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
 
@@ -1062,7 +1083,7 @@ class _ExcavatorMaintenanceScreenState
               context.read<ExcavatorMaintenanceProvider>().loadMaintenance();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),

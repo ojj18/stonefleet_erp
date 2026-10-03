@@ -4,6 +4,7 @@ import 'package:stonefleet_erp/app/app_config.dart';
 
 import '../providers/auth_provider.dart';
 import '../../dashboard/screen/dashboard_screen.dart';
+import '../../../core/localization/app_localization.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -120,8 +121,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
         const SizedBox(height: 6),
 
-        const Text(
-          'Management System',
+        Text(
+          AppLocalization.t('Management System'),
           style: TextStyle(
             fontSize: 14,
             color: secondaryTextColor,
@@ -153,8 +154,8 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Welcome back',
+            Text(
+              AppLocalization.t('Welcome back'),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -164,15 +165,15 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 6),
 
-            const Text(
-              'Sign in to continue to your dashboard',
+            Text(
+              AppLocalization.t('Sign in to continue to your dashboard'),
               style: TextStyle(fontSize: 13, color: secondaryTextColor),
             ),
 
             const SizedBox(height: 28),
 
-            const Text(
-              'Username',
+            Text(
+              AppLocalization.t('Username'),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -186,12 +187,12 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _usernameController,
               textInputAction: TextInputAction.next,
               decoration: _inputDecoration(
-                hintText: 'Enter username',
+                hintText: AppLocalization.t('Enter username'),
                 icon: Icons.person_outline_rounded,
               ),
               validator: (value) {
                 if (value == null || value.trim().isEmpty) {
-                  return 'Please enter username';
+                  return AppLocalization.t('Please enter username');
                 }
 
                 return null;
@@ -200,8 +201,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
             const SizedBox(height: 20),
 
-            const Text(
-              'Password',
+            Text(
+              AppLocalization.t('Password'),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -217,10 +218,10 @@ class _LoginScreenState extends State<LoginScreen> {
               textInputAction: TextInputAction.done,
               onFieldSubmitted: _handleSubmit,
               decoration: _inputDecoration(
-                hintText: 'Enter password',
+                hintText: AppLocalization.t('Enter password'),
                 icon: Icons.lock_outline_rounded,
                 suffixIcon: IconButton(
-                  tooltip: _obscurePassword ? 'Show password' : 'Hide password',
+                  tooltip: _obscurePassword ? AppLocalization.t('Show password') : AppLocalization.t('Hide password'),
                   icon: Icon(
                     _obscurePassword
                         ? Icons.visibility_outlined
@@ -237,7 +238,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter password';
+                  return AppLocalization.t('Please enter password');
                 }
 
                 return null;
@@ -307,8 +308,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       )
-                    : const Text(
-                        'SIGN IN',
+                    : Text(
+                        AppLocalization.t('SIGN IN'),
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
@@ -322,7 +323,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
             Center(
               child: Text(
-                'Secure access for authorized users',
+                AppLocalization.t('Secure access for authorized users'),
                 style: TextStyle(
                   fontSize: 11,
                   color: secondaryTextColor.withValues(alpha: 0.8),

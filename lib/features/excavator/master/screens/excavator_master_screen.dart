@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -17,6 +18,8 @@ class ExcavatorMasterScreen extends StatefulWidget {
 }
 
 class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
+  _ExcavatorMasterScreenState();
+
   final TextEditingController _searchController = TextEditingController();
 
   int _currentPage = 1;
@@ -91,12 +94,12 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Excavator Master',
+                AppLocalization.t('Excavator Master'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -105,7 +108,9 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
               ),
               SizedBox(height: 6),
               Text(
-                'Manage registered excavators across the fleet.',
+                AppLocalization.t(
+                  'Manage registered excavators across the fleet.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -114,13 +119,13 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
         // OutlinedButton.icon(
         //   onPressed: () {},
         //   icon: const Icon(Icons.download_outlined),
-        //   label: const Text('Export'),
+        //   label: Text(AppLocalization.t('Export')),
         // ),
         // const SizedBox(width: 12),
         FilledButton.icon(
           onPressed: _addExcavator,
           icon: const Icon(Icons.add),
-          label: const Text('Add Excavator'),
+          label: Text(AppLocalization.t('Add Excavator')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
           ),
@@ -149,8 +154,8 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
               controller: _searchController,
               onChanged: (_) => setState(() => _currentPage = 1),
               decoration: InputDecoration(
-                labelText: 'Search Machine',
-                hintText: 'Registration number...',
+                labelText: AppLocalization.t('Search Machine'),
+                hintText: AppLocalization.t('Registration number...'),
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -163,15 +168,24 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
             child: DropdownButtonFormField<String>(
               initialValue: _statusFilter,
               decoration: InputDecoration(
-                labelText: 'Status',
+                labelText: AppLocalization.t('Status'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 'All', child: Text('All Statuses')),
-                DropdownMenuItem(value: 'Active', child: Text('Active')),
-                DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+              items: [
+                DropdownMenuItem(
+                  value: 'All',
+                  child: Text(AppLocalization.t('All Statuses')),
+                ),
+                DropdownMenuItem(
+                  value: 'Active',
+                  child: Text(AppLocalization.t('Active')),
+                ),
+                DropdownMenuItem(
+                  value: 'Inactive',
+                  child: Text(AppLocalization.t('Inactive')),
+                ),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -218,7 +232,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
     return Consumer<ExcavatorProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: Color(0xFF00652C)),
           );
         }
@@ -253,14 +267,24 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                           headingRowColor: WidgetStateProperty.all(
                             const Color(0xFFF3F4F6),
                           ),
-                          columns: const [
-                            DataColumn(label: Text('REGISTRATION')),
-                            DataColumn(label: Text('MANUFACTURER')),
-                            DataColumn(label: Text('MODEL')),
-                            DataColumn(label: Text('YEAR')),
-                            DataColumn(label: Text('STATUS')),
-                            DataColumn(label: Text('COMPLIANCE')),
-                            DataColumn(label: Text('ACTIONS')),
+                          columns: [
+                            DataColumn(
+                              label: Text(AppLocalization.t('REGISTRATION')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('MANUFACTURER')),
+                            ),
+                            DataColumn(label: Text(AppLocalization.t('MODEL'))),
+                            DataColumn(label: Text(AppLocalization.t('YEAR'))),
+                            DataColumn(
+                              label: Text(AppLocalization.t('STATUS')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('COMPLIANCE')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('ACTIONS')),
+                            ),
                           ],
                           rows: _pageItems(excavators).map((excavator) {
                             return DataRow(
@@ -293,7 +317,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        tooltip: 'Edit',
+                                        tooltip: AppLocalization.t('Edit'),
                                         icon: const Icon(
                                           Icons.edit_outlined,
                                           size: 18,
@@ -304,7 +328,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                                       ),
                                       if (context.watch<AuthProvider>().isAdmin)
                                         IconButton(
-                                          tooltip: 'Delete',
+                                          tooltip: AppLocalization.t('Delete'),
                                           icon: const Icon(
                                             Icons.delete_outline,
                                             size: 18,
@@ -402,7 +426,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: Tooltip(
-        message: expiry ?? 'Not configured',
+        message: expiry ?? AppLocalization.t('Not configured'),
         child: Container(
           width: 9,
           height: 9,
@@ -468,7 +492,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFBECABC)),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -479,12 +503,12 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
             ),
             SizedBox(height: 12),
             Text(
-              'No excavators found',
+              AppLocalization.t('No excavators found'),
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
             SizedBox(height: 6),
             Text(
-              'Add an excavator to your fleet.',
+              AppLocalization.t('Add an excavator to your fleet.'),
               style: TextStyle(color: Color(0xFF4E5867)),
             ),
           ],
@@ -504,8 +528,8 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
         children: [
           const Icon(Icons.error_outline, size: 48, color: Color(0xFFBA1A1A)),
           const SizedBox(height: 12),
-          const Text(
-            'Unable to load excavators',
+          Text(
+            AppLocalization.t('Unable to load excavators'),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
@@ -515,7 +539,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
             onPressed: () {
               context.read<ExcavatorProvider>().loadExcavators();
             },
-            child: const Text('Retry'),
+            child: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),
@@ -563,16 +587,19 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Excavator?'),
-          content: const Text(
-            'Are you sure you want to delete this excavator?',
+          title: Text(AppLocalization.t('Delete Excavator?')),
+          content: Text(
+            AppLocalization.t(
+              'Are you sure you want to delete this excavator?',
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             FilledButton(
               style: FilledButton.styleFrom(
@@ -581,7 +608,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
               onPressed: () {
                 Navigator.pop(context, true);
               },
-              child: const Text('Delete'),
+              child: Text(AppLocalization.t('Delete')),
             ),
           ],
         );
@@ -598,7 +625,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Excavator deleted successfully'
+              ? AppLocalization.t('Excavator deleted successfully')
               : 'Failed to delete excavator',
         ),
       ),
@@ -640,7 +667,7 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },

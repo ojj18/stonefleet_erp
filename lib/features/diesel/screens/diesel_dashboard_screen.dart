@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/diesel_provider.dart';
@@ -22,7 +23,10 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
       return DateTimeRange(start: start, end: today);
     }
     if (value == 'This Month') {
-      return DateTimeRange(start: DateTime(today.year, today.month, 1), end: today);
+      return DateTimeRange(
+        start: DateTime(today.year, today.month, 1),
+        end: today,
+      );
     }
     return DateTimeRange(start: today, end: today);
   }
@@ -36,9 +40,9 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
   Future<void> _load() async {
     final range = _rangeFor(period);
     await context.read<DieselProvider>().loadDashboard(
-          fromDate: range.start,
-          toDate: range.end,
-        );
+      fromDate: range.start,
+      toDate: range.end,
+    );
   }
 
   @override
@@ -57,12 +61,15 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   DieselPageHeader(
-                    title: 'Diesel Management',
-                    subtitle: 'Track diesel stock, vehicle consumption and fuel expenses.',
+                    title: AppLocalization.t('Diesel Management'),
+                    subtitle:
+                        AppLocalization.t('Track diesel stock, vehicle consumption and fuel expenses.'),
                     action: DropdownButton<String>(
                       value: period,
                       items: const ['Today', 'This Week', 'This Month']
-                          .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                          .map(
+                            (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
+                          )
                           .toList(),
                       onChanged: (v) async {
                         if (v == null) return;
@@ -73,22 +80,48 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
                   ),
                   const SizedBox(height: 24),
                   if (provider.error != null)
-                    _ErrorBanner(message: provider.error!),
+                    _ErrorBanner(message: AppLocalization.t(provider.error!)),
                   LayoutBuilder(
                     builder: (_, c) {
-                      final cols = c.maxWidth >= 1100 ? 4 : c.maxWidth >= 700 ? 2 : 1;
+                      final cols = c.maxWidth >= 1100
+                          ? 4
+                          : c.maxWidth >= 700
+                          ? 2
+                          : 1;
                       final gap = 16.0;
                       final w = (c.maxWidth - gap * (cols - 1)) / cols;
                       final cards = [
-                        DieselKpiCard(title: 'Available Diesel', value: '${dieselQty(s.currentStock)} L', subtitle: 'Current stock', icon: Icons.local_gas_station_outlined),
-                        DieselKpiCard(title: 'Diesel Used', value: '${dieselQty(s.used)} L', subtitle: period, icon: Icons.outbound_outlined),
-                        DieselKpiCard(title: 'Diesel Received', value: '${dieselQty(s.received)} L', subtitle: period, icon: Icons.south_west_outlined),
-                        DieselKpiCard(title: 'Total Diesel Cost', value: dieselMoney(s.totalCost), subtitle: period, icon: Icons.currency_rupee_outlined),
+                        DieselKpiCard(
+                          title: AppLocalization.t('Available Diesel'),
+                          value: '${dieselQty(s.currentStock)} L',
+                          subtitle: AppLocalization.t('Current stock'),
+                          icon: Icons.local_gas_station_outlined,
+                        ),
+                        DieselKpiCard(
+                          title: AppLocalization.t('Diesel Used'),
+                          value: '${dieselQty(s.used)} L',
+                          subtitle: period,
+                          icon: Icons.outbound_outlined,
+                        ),
+                        DieselKpiCard(
+                          title: AppLocalization.t('Diesel Received'),
+                          value: '${dieselQty(s.received)} L',
+                          subtitle: period,
+                          icon: Icons.south_west_outlined,
+                        ),
+                        DieselKpiCard(
+                          title: AppLocalization.t('Total Diesel Cost'),
+                          value: dieselMoney(s.totalCost),
+                          subtitle: period,
+                          icon: Icons.currency_rupee_outlined,
+                        ),
                       ];
                       return Wrap(
                         spacing: gap,
                         runSpacing: gap,
-                        children: cards.map((x) => SizedBox(width: w, child: x)).toList(),
+                        children: cards
+                            .map((x) => SizedBox(width: w, child: x))
+                            .toList(),
                       );
                     },
                   ),
@@ -97,17 +130,44 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const DieselSectionTitle(title: 'Diesel Stock Summary', icon: Icons.storage_outlined),
+                        DieselSectionTitle(
+                          title: AppLocalization.t('Diesel Stock Summary'),
+                          icon: Icons.storage_outlined,
+                        ),
                         const SizedBox(height: 20),
                         Row(
                           children: [
-                            Expanded(child: _StockValue('Opening Stock', '${dieselQty(s.openingStock)} L')),
+                            Expanded(
+                              child: _StockValue(
+                                'Opening Stock',
+                                '${dieselQty(s.openingStock)} L',
+                              ),
+                            ),
                             const Icon(Icons.add, color: Color(0xFF68717D)),
-                            Expanded(child: _StockValue('Received', '+ ${dieselQty(s.received)} L')),
+                            Expanded(
+                              child: _StockValue(
+                                'Received',
+                                '+ ${dieselQty(s.received)} L',
+                              ),
+                            ),
                             const Icon(Icons.remove, color: Color(0xFF68717D)),
-                            Expanded(child: _StockValue('Used', '- ${dieselQty(s.used)} L')),
-                            const Icon(Icons.arrow_forward, color: Color(0xFF68717D)),
-                            Expanded(child: _StockValue('Current Stock', '${dieselQty(s.currentStock)} L', strong: true)),
+                            Expanded(
+                              child: _StockValue(
+                                'Used',
+                                '- ${dieselQty(s.used)} L',
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_forward,
+                              color: Color(0xFF68717D),
+                            ),
+                            Expanded(
+                              child: _StockValue(
+                                'Current Stock',
+                                '${dieselQty(s.currentStock)} L',
+                                strong: true,
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -118,31 +178,65 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const DieselSectionTitle(title: 'Vehicle-wise Diesel Consumption', icon: Icons.bar_chart_outlined),
+                        DieselSectionTitle(
+                          title: AppLocalization.t(
+                            'Vehicle-wise Diesel Consumption',
+                          ),
+                          icon: Icons.bar_chart_outlined,
+                        ),
                         const SizedBox(height: 18),
                         if (provider.consumption.isEmpty)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(20),
-                            child: Center(child: Text('No vehicle consumption recorded for this period.')),
+                            child: Center(
+                              child: Text(
+                                AppLocalization.t(
+                                  'No vehicle consumption recorded for this period.',
+                                ),
+                              ),
+                            ),
                           )
                         else
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('Vehicle')),
-                                DataColumn(label: Text('Type')),
-                                DataColumn(label: Text('Diesel Used')),
-                                DataColumn(label: Text('Total Cost')),
-                                DataColumn(label: Text('Fillings')),
+                              columns: [
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Vehicle')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Type')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Diesel Used')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Total Cost')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Fillings')),
+                                ),
                               ],
-                              rows: provider.consumption.take(10).map((r) => DataRow(cells: [
-                                DataCell(Text(r.vehicleRegistration)),
-                                DataCell(Text(r.vehicleType)),
-                                DataCell(Text('${dieselQty(r.quantityLitres)} L')),
-                                DataCell(Text(dieselMoney(r.totalCost))),
-                                DataCell(Text('${r.fillingCount}')),
-                              ])).toList(),
+                              rows: provider.consumption
+                                  .take(10)
+                                  .map(
+                                    (r) => DataRow(
+                                      cells: [
+                                        DataCell(Text(r.vehicleRegistration)),
+                                        DataCell(Text(AppLocalization.t(r.vehicleType))),
+                                        DataCell(
+                                          Text(
+                                            '${dieselQty(r.quantityLitres)} L',
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(dieselMoney(r.totalCost)),
+                                        ),
+                                        DataCell(Text('${r.fillingCount}')),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
                             ),
                           ),
                       ],
@@ -153,33 +247,71 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const DieselSectionTitle(title: 'Recent Diesel Filling', icon: Icons.receipt_long_outlined),
+                        DieselSectionTitle(
+                          title: AppLocalization.t('Recent Diesel Filling'),
+                          icon: Icons.receipt_long_outlined,
+                        ),
                         const SizedBox(height: 18),
                         if (provider.fillings.isEmpty)
-                          const Padding(
+                          Padding(
                             padding: EdgeInsets.all(20),
-                            child: Center(child: Text('No diesel filling recorded for this period.')),
+                            child: Center(
+                              child: Text(
+                                AppLocalization.t(
+                                  'No diesel filling recorded for this period.',
+                                ),
+                              ),
+                            ),
                           )
                         else
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('Date')),
-                                DataColumn(label: Text('Vehicle')),
-                                DataColumn(label: Text('Type')),
-                                DataColumn(label: Text('Diesel')),
-                                DataColumn(label: Text('Rate')),
-                                DataColumn(label: Text('Cost')),
+                              columns: [
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Date')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Vehicle')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Type')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Diesel')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Rate')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('Cost')),
+                                ),
                               ],
-                              rows: provider.fillings.take(10).map((r) => DataRow(cells: [
-                                DataCell(Text(dieselDisplayDate(r.fillingDate))),
-                                DataCell(Text(r.vehicleRegistration)),
-                                DataCell(Text(r.vehicleType)),
-                                DataCell(Text('${dieselQty(r.quantityLitres)} L')),
-                                DataCell(Text(dieselMoney(r.rate))),
-                                DataCell(Text(dieselMoney(r.totalCost))),
-                              ])).toList(),
+                              rows: provider.fillings
+                                  .take(10)
+                                  .map(
+                                    (r) => DataRow(
+                                      cells: [
+                                        DataCell(
+                                          Text(
+                                            dieselDisplayDate(r.fillingDate),
+                                          ),
+                                        ),
+                                        DataCell(Text(r.vehicleRegistration)),
+                                        DataCell(Text(AppLocalization.t(r.vehicleType))),
+                                        DataCell(
+                                          Text(
+                                            '${dieselQty(r.quantityLitres)} L',
+                                          ),
+                                        ),
+                                        DataCell(Text(dieselMoney(r.rate))),
+                                        DataCell(
+                                          Text(dieselMoney(r.totalCost)),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
                             ),
                           ),
                       ],
@@ -205,9 +337,18 @@ class _StockValue extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF68717D))),
+      Text(
+        title,
+        style: const TextStyle(fontSize: 12, color: Color(0xFF68717D)),
+      ),
       const SizedBox(height: 5),
-      Text(value, style: TextStyle(fontSize: strong ? 20 : 17, fontWeight: FontWeight.w700)),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: strong ? 20 : 17,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     ],
   );
 }

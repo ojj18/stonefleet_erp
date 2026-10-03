@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/app_config.dart';
@@ -96,16 +97,16 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             ),
           ),
           const SizedBox(width: 10),
-          const Column(
+          Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Admin',
+                AppLocalization.t('Admin'),
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
               Text(
-                'Administrator',
+                AppLocalization.t('Administrator'),
                 style: TextStyle(fontSize: 10, color: Color(0xFF68717D)),
               ),
             ],
@@ -148,12 +149,12 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Compliance',
+                AppLocalization.t('Compliance'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -162,7 +163,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
               ),
               SizedBox(height: 6),
               Text(
-                'Monitor insurance, FC, permit and tax expiry status across your fleet.',
+                AppLocalization.t(
+                  'Monitor insurance, FC, permit and tax expiry status across your fleet.',
+                ),
                 style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
               ),
             ],
@@ -173,7 +176,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
               ? null
               : () => provider.loadCompliance(),
           icon: const Icon(Icons.refresh_rounded, size: 18),
-          label: const Text('Refresh'),
+          label: Text(AppLocalization.t('Refresh')),
         ),
         const SizedBox(width: 10),
         FilledButton.icon(
@@ -181,7 +184,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
               ? null
               : () => _exportCompliance(),
           icon: const Icon(Icons.file_download_outlined, size: 18),
-          label: const Text('Export Compliance Report'),
+          label: Text(AppLocalization.t('Export Compliance Report')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
           ),
@@ -195,7 +198,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       children: [
         Expanded(
           child: _summaryCard(
-            'Total Assets',
+            AppLocalization.t('Total Assets'),
             provider.totalAssets,
             Icons.directions_car_outlined,
             const Color(0xFF20242A),
@@ -204,7 +207,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _summaryCard(
-            'Valid',
+            AppLocalization.t('Valid'),
             provider.validCount,
             Icons.check_circle_outline,
             const Color(0xFF2E7D32),
@@ -213,7 +216,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _summaryCard(
-            'Due Soon',
+            AppLocalization.t('Due Soon'),
             provider.dueSoonCount,
             Icons.schedule_outlined,
             const Color(0xFFF59E0B),
@@ -222,7 +225,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _summaryCard(
-            'Expired',
+            AppLocalization.t('Expired'),
             provider.expiredCount,
             Icons.error_outline,
             const Color(0xFFD32F2F),
@@ -231,7 +234,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         const SizedBox(width: 12),
         Expanded(
           child: _summaryCard(
-            'Not Configured',
+            AppLocalization.t('Not Configured'),
             provider.notConfiguredCount,
             Icons.remove_circle_outline,
             const Color(0xFF68717D),
@@ -295,8 +298,8 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Filters',
+          Text(
+            AppLocalization.t('Filters'),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -314,7 +317,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                     provider.setSearch(value);
                   },
                   decoration: InputDecoration(
-                    hintText: 'Search registration, manufacturer or model',
+                    hintText: AppLocalization.t(
+                      'Search registration, manufacturer or model',
+                    ),
                     prefixIcon: const Icon(Icons.search_rounded, size: 20),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
@@ -346,7 +351,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                   provider.clearFilters();
                   setState(() {});
                 },
-                child: const Text('Clear'),
+                child: Text(AppLocalization.t('Clear')),
               ),
               const SizedBox(width: 10),
               FilledButton(
@@ -354,7 +359,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                 style: FilledButton.styleFrom(
                   backgroundColor: const Color(0xFF00652C),
                 ),
-                child: const Text('Apply Filters'),
+                child: Text(AppLocalization.t('Apply Filters')),
               ),
             ],
           ),
@@ -366,19 +371,22 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   Widget _equipmentDropdown(ComplianceProvider provider) {
     return DropdownButtonFormField<ComplianceEquipmentFilter>(
       initialValue: provider.equipmentFilter,
-      decoration: const InputDecoration(labelText: 'Equipment Type'),
-      items: const [
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: AppLocalization.t('Equipment Type'),
+      ),
+      items: [
         DropdownMenuItem(
           value: ComplianceEquipmentFilter.all,
-          child: Text('All Equipment'),
+          child: Text(AppLocalization.t('All Equipment')),
         ),
         DropdownMenuItem(
           value: ComplianceEquipmentFilter.excavator,
-          child: Text('Excavator'),
+          child: Text(AppLocalization.t('Excavator')),
         ),
         DropdownMenuItem(
           value: ComplianceEquipmentFilter.transport,
-          child: Text('Transport'),
+          child: Text(AppLocalization.t('Transport')),
         ),
       ],
       onChanged: (value) {
@@ -392,22 +400,31 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   Widget _complianceDropdown(ComplianceProvider provider) {
     return DropdownButtonFormField<ComplianceTypeFilter>(
       initialValue: provider.complianceTypeFilter,
-      decoration: const InputDecoration(labelText: 'Compliance Type'),
-      items: const [
+      isExpanded: true,
+      decoration: InputDecoration(
+        labelText: AppLocalization.t('Compliance Type'),
+      ),
+      items: [
         DropdownMenuItem(
           value: ComplianceTypeFilter.all,
-          child: Text('All Compliance'),
+          child: Text(AppLocalization.t('All Compliance')),
         ),
         DropdownMenuItem(
           value: ComplianceTypeFilter.insurance,
-          child: Text('Insurance'),
+          child: Text(AppLocalization.t('Insurance')),
         ),
-        DropdownMenuItem(value: ComplianceTypeFilter.fc, child: Text('FC')),
+        DropdownMenuItem(
+          value: ComplianceTypeFilter.fc,
+          child: Text(AppLocalization.t('FC')),
+        ),
         DropdownMenuItem(
           value: ComplianceTypeFilter.permit,
-          child: Text('Permit'),
+          child: Text(AppLocalization.t('Permit')),
         ),
-        DropdownMenuItem(value: ComplianceTypeFilter.tax, child: Text('Tax')),
+        DropdownMenuItem(
+          value: ComplianceTypeFilter.tax,
+          child: Text(AppLocalization.t('Tax')),
+        ),
       ],
       onChanged: (value) {
         if (value != null) {
@@ -420,27 +437,28 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   Widget _statusDropdown(ComplianceProvider provider) {
     return DropdownButtonFormField<ComplianceStatusFilter>(
       initialValue: provider.statusFilter,
-      decoration: const InputDecoration(labelText: 'Status'),
-      items: const [
+      isExpanded: true,
+      decoration: InputDecoration(labelText: AppLocalization.t('Status')),
+      items: [
         DropdownMenuItem(
           value: ComplianceStatusFilter.all,
-          child: Text('All Status'),
+          child: Text(AppLocalization.t('All Status')),
         ),
         DropdownMenuItem(
           value: ComplianceStatusFilter.valid,
-          child: Text('Valid'),
+          child: Text(AppLocalization.t('Valid')),
         ),
         DropdownMenuItem(
           value: ComplianceStatusFilter.dueSoon,
-          child: Text('Due Soon'),
+          child: Text(AppLocalization.t('Due Soon')),
         ),
         DropdownMenuItem(
           value: ComplianceStatusFilter.expired,
-          child: Text('Expired'),
+          child: Text(AppLocalization.t('Expired')),
         ),
         DropdownMenuItem(
           value: ComplianceStatusFilter.notConfigured,
-          child: Text('Not Configured'),
+          child: Text(AppLocalization.t('Not Configured')),
         ),
       ],
       onChanged: (value) {
@@ -466,12 +484,12 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Compliance Overview',
+                        AppLocalization.t('Compliance Overview'),
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
@@ -480,7 +498,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Track expiry status for all registered assets.',
+                        AppLocalization.t(
+                          'Track expiry status for all registered assets.',
+                        ),
                         style: TextStyle(
                           fontSize: 12,
                           color: Color(0xFF68717D),
@@ -490,7 +510,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
                   ),
                 ),
                 Text(
-                  '${provider.data.length} Assets',
+                  '${provider.data.length} ${AppLocalization.t('Assets')}',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -502,7 +522,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
           ),
           const Divider(height: 1, color: Color(0xFFE1E5E9)),
           if (provider.isLoading)
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(vertical: 60),
               child: Center(
                 child: CircularProgressIndicator(color: Color(0xFF00652C)),
@@ -724,25 +744,25 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
     switch (status) {
       case ComplianceStatus.valid:
-        label = 'Valid';
+        label = AppLocalization.t('Valid');
         color = const Color(0xFF2E7D32);
         background = const Color(0xFFE8F5E9);
         break;
 
       case ComplianceStatus.dueSoon:
-        label = 'Due Soon';
+        label = AppLocalization.t('Due Soon');
         color = const Color(0xFFD97706);
         background = const Color(0xFFFFF7E6);
         break;
 
       case ComplianceStatus.expired:
-        label = 'Expired';
+        label = AppLocalization.t('Expired');
         color = const Color(0xFFD32F2F);
         background = const Color(0xFFFFEBEE);
         break;
 
       case ComplianceStatus.notConfigured:
-        label = 'Not Configured';
+        label = AppLocalization.t('Not Configured');
         color = const Color(0xFF68717D);
         background = const Color(0xFFF1F3F5);
         break;
@@ -787,32 +807,32 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
     switch (status) {
       case ComplianceStatus.valid:
-        label = 'Valid';
+        label = AppLocalization.t('Valid');
         color = const Color(0xFF2E7D32);
         background = const Color(0xFFE8F5E9);
         break;
 
       case ComplianceStatus.dueSoon:
-        label = 'Due Soon';
+        label = AppLocalization.t('Due Soon');
         color = const Color(0xFFD97706);
         background = const Color(0xFFFFF7E6);
         break;
 
       case ComplianceStatus.expired:
-        label = 'Expired';
+        label = AppLocalization.t('Expired');
         color = const Color(0xFFD32F2F);
         background = const Color(0xFFFFEBEE);
         break;
 
       case ComplianceStatus.notConfigured:
-        label = 'Not Configured';
+        label = AppLocalization.t('Not Configured');
         color = const Color(0xFF68717D);
         background = const Color(0xFFF1F3F5);
         break;
     }
 
     return SizedBox(
-      width: 130,
+      width: 200,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         decoration: BoxDecoration(
@@ -846,7 +866,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
     return SizedBox(
       width: 70,
       child: IconButton(
-        tooltip: 'View',
+        tooltip: AppLocalization.t('View'),
         onPressed: () {
           _showComplianceDetails(item);
         },
@@ -863,7 +883,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(vertical: 60),
       child: Center(
         child: Column(
@@ -871,7 +891,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             Icon(Icons.fact_check_outlined, size: 46, color: Color(0xFF9AA1A9)),
             SizedBox(height: 12),
             Text(
-              'No compliance records found',
+              AppLocalization.t('No compliance records found'),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -880,7 +900,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             ),
             SizedBox(height: 5),
             Text(
-              'Try changing your filters or add compliance information.',
+              AppLocalization.t(
+                'Try changing your filters or add compliance information.',
+              ),
               style: TextStyle(fontSize: 12, color: Color(0xFF68717D)),
             ),
           ],
@@ -897,13 +919,13 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
           children: [
             const Icon(Icons.error_outline, size: 42, color: Color(0xFFD32F2F)),
             const SizedBox(height: 10),
-            const Text(
-              'Unable to load compliance data',
+            Text(
+              AppLocalization.t('Unable to load compliance data'),
               style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 6),
             Text(
-              provider.error ?? 'Unknown error',
+              AppLocalization.t(provider.error ?? 'Unknown error'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 11, color: Color(0xFF68717D)),
             ),
@@ -911,7 +933,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
             OutlinedButton.icon(
               onPressed: provider.loadCompliance,
               icon: const Icon(Icons.refresh, size: 17),
-              label: const Text('Retry'),
+              label: Text(AppLocalization.t('Retry')),
             ),
           ],
         ),
@@ -924,7 +946,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('${item.equipmentLabel} Compliance'),
+          title: Text(
+            '${AppLocalization.t(item.equipmentLabel)} ${AppLocalization.t('Compliance')}',
+          ),
           content: SizedBox(
             width: 450,
             child: Column(
@@ -942,7 +966,7 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
               onPressed: () {
                 Navigator.pop(dialogContext);
               },
-              child: const Text('Close'),
+              child: Text(AppLocalization.t('Close')),
             ),
           ],
         );
@@ -979,27 +1003,30 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
         Expanded(
           child: _infoCard(
             icon: Icons.verified_user_outlined,
-            title: 'Mandatory RTO Compliance',
-            description:
-                'Keep insurance, FC, permit and tax information updated for every asset.',
+            title: AppLocalization.t('Mandatory RTO Compliance'),
+            description: AppLocalization.t(
+              'Keep insurance, FC, permit and tax information updated for every asset.',
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _infoCard(
             icon: Icons.notifications_active_outlined,
-            title: '30-Day Automated Warning',
-            description:
-                'Assets approaching expiry within 30 days are marked as Due Soon.',
+            title: AppLocalization.t('30-Day Automated Warning'),
+            description: AppLocalization.t(
+              'Assets approaching expiry within 30 days are marked as Due Soon.',
+            ),
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _infoCard(
             icon: Icons.folder_outlined,
-            title: 'Document Archival',
-            description:
-                'Maintain accurate compliance dates for operational and audit reference.',
+            title: AppLocalization.t('Document Archival'),
+            description: AppLocalization.t(
+              'Maintain accurate compliance dates for operational and audit reference.',
+            ),
           ),
         ),
       ],
@@ -1065,8 +1092,10 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
     if (provider.data.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No compliance data available to export.'),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('No compliance data available to export.'),
+          ),
         ),
       );
       return;
@@ -1095,7 +1124,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Compliance report exported successfully.\n$path'),
+          content: Text(
+            '${AppLocalization.t('Compliance report exported successfully.')}\n$path',
+          ),
           backgroundColor: const Color(0xFF00652C),
         ),
       );
@@ -1104,7 +1135,9 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Compliance export failed: $e'),
+          content: Text(
+            AppLocalization.t('Compliance export failed: ') + e.toString(),
+          ),
           backgroundColor: const Color(0xFFBA1A1A),
         ),
       );
@@ -1114,16 +1147,16 @@ class _ComplianceScreenState extends State<ComplianceScreen> {
   String _statusLabel(ComplianceStatus status) {
     switch (status) {
       case ComplianceStatus.valid:
-        return 'Valid';
+        return AppLocalization.t('Valid');
 
       case ComplianceStatus.dueSoon:
-        return 'Due Soon';
+        return AppLocalization.t('Due Soon');
 
       case ComplianceStatus.expired:
-        return 'Expired';
+        return AppLocalization.t('Expired');
 
       case ComplianceStatus.notConfigured:
-        return 'Not Configured';
+        return AppLocalization.t('Not Configured');
     }
   }
 }

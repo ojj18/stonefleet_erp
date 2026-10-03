@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -7,6 +8,7 @@ import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../../data/services/way2api_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
+import '../../../auth/providers/auth_provider.dart';
 import '../providers/transport_master_provider.dart';
 
 class TransportAddEditScreen extends StatefulWidget {
@@ -39,6 +41,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   final _colorController = TextEditingController();
   final _insuranceCompanyController = TextEditingController();
   final _emissionController = TextEditingController();
+  final _unitController = TextEditingController();
 
   // ============================================================
   // STATE
@@ -101,14 +104,15 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
         _yearController.text = vehicle.manufacturingYear?.toString() ?? '';
 
-          _ownerNameController.text = vehicle.ownerName ?? '';
-          _permanentAddressController.text = vehicle.permanentAddress ?? '';
-          _chasiNumberController.text = vehicle.vehicleChasiNumber ?? '';
-          _engineNumberController.text = vehicle.vehicleEngineNumber ?? '';
-          _colorController.text = vehicle.color ?? '';
-          _insuranceCompanyController.text = vehicle.insuranceCompany ?? '';
+        _ownerNameController.text = vehicle.ownerName ?? '';
+        _permanentAddressController.text = vehicle.permanentAddress ?? '';
+        _chasiNumberController.text = vehicle.vehicleChasiNumber ?? '';
+        _engineNumberController.text = vehicle.vehicleEngineNumber ?? '';
+        _colorController.text = vehicle.color ?? '';
+        _insuranceCompanyController.text = vehicle.insuranceCompany ?? '';
 
         _emissionController.text = vehicle.emissionStandard ?? '';
+        _unitController.text = vehicle.unit == 0 ? '' : vehicle.unit.toString();
 
         _insuranceExpiry = _parseDate(vehicle.insuranceExpiry);
 
@@ -150,6 +154,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
     _colorController.dispose();
     _insuranceCompanyController.dispose();
     _emissionController.dispose();
+    _unitController.dispose();
 
     super.dispose();
   }
@@ -266,7 +271,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -324,8 +329,8 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
             children: [
               Text(
                 widget.isEdit
-                    ? 'Edit Transport Vehicle'
-                    : 'Add Transport Vehicle',
+                    ? AppLocalization.t('Edit Transport Vehicle')
+                    : AppLocalization.t('Add Transport Vehicle'),
 
                 style: const TextStyle(
                   fontSize: 30,
@@ -338,8 +343,10 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
               Text(
                 widget.isEdit
-                    ? 'Update transport vehicle details.'
-                    : 'Register a new transport vehicle in the fleet.',
+                    ? AppLocalization.t('Update transport vehicle details.')
+                    : AppLocalization.t(
+                        'Register a new transport vehicle in the fleet.',
+                      ),
 
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
@@ -354,7 +361,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         //           Navigator.pop(context);
         //         },
         //   icon: const Icon(Icons.close, size: 18),
-        //   label: const Text('Cancel'),
+        //   label: Text(AppLocalization.t('Cancel')),
         // ),
       ],
     );
@@ -366,7 +373,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
   Widget _buildVehicleDetailsSection() {
     return _sectionCard(
-      title: 'Vehicle Details',
+      title: AppLocalization.t('Vehicle Details'),
       icon: Icons.local_shipping_outlined,
 
       child: Column(
@@ -395,7 +402,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
           const SizedBox(height: 20),
 
-          _buildEmissionField(),
+          Row(
+            children: [
+              Expanded(child: _buildEmissionField()),
+              const SizedBox(width: 20),
+              Expanded(child: _buildUnitField()),
+            ],
+          ),
 
           const SizedBox(height: 20),
 
@@ -464,12 +477,12 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       decoration:
           _inputDecoration(
-            label: 'Registration Number',
+            label: AppLocalization.t('Registration Number'),
             hint: 'TN 38 AB 1234',
             icon: Icons.badge_outlined,
           ).copyWith(
             suffixIcon: _registrationChecking
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.all(12),
 
                     child: SizedBox(
@@ -483,7 +496,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                     ),
                   )
                 : IconButton(
-                    tooltip: 'Check registration',
+                    tooltip: AppLocalization.t('Check registration'),
 
                     icon: Icon(
                       _registrationExists
@@ -505,11 +518,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter registration number';
+          return AppLocalization.t('Enter registration number');
         }
 
         if (_registrationExists) {
-          return 'Registration number already exists';
+          return AppLocalization.t('Registration number already exists');
         }
 
         return null;
@@ -536,7 +549,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 ),
               )
             : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
+        label: Text(
+          _rcVerifying
+              ? AppLocalization.t('Verifying RC...')
+              : AppLocalization.t('Verify RC Details'),
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFF00652C),
           side: const BorderSide(color: Color(0xFF00652C)),
@@ -580,7 +597,8 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
           _ownerNameController.text = rc.ownerName!.trim();
         }
 
-        if (rc.permanentAddress != null && rc.permanentAddress!.trim().isNotEmpty) {
+        if (rc.permanentAddress != null &&
+            rc.permanentAddress!.trim().isNotEmpty) {
           _permanentAddressController.text = rc.permanentAddress!.trim();
         }
 
@@ -634,11 +652,15 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         _registrationController.text = registration;
       });
 
-      _showSuccess('RC verified successfully. Details auto-filled.');
+      _showSuccess(
+        AppLocalization.t('RC verified successfully. Details auto-filled.'),
+      );
     } catch (e) {
       if (!mounted) return;
 
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
+      _showError(
+        AppLocalization.t('Unable to verify RC: ${_cleanWay2Error(e)}'),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -712,14 +734,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Manufacturer',
-        hint: 'Example: Tata',
+        label: AppLocalization.t('Manufacturer'),
+        hint: AppLocalization.t('Example: Tata'),
         icon: Icons.factory_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter manufacturer';
+          return AppLocalization.t('Enter manufacturer');
         }
 
         return null;
@@ -740,14 +762,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Vehicle Model',
-        hint: 'Example: Prima',
+        label: AppLocalization.t('Vehicle Model'),
+        hint: AppLocalization.t('Example: Prima'),
         icon: Icons.local_shipping_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter vehicle model';
+          return AppLocalization.t('Enter vehicle model');
         }
 
         return null;
@@ -768,24 +790,24 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       keyboardType: TextInputType.number,
 
       decoration: _inputDecoration(
-        label: 'Manufacturing Year',
+        label: AppLocalization.t('Manufacturing Year'),
         hint: '2024',
         icon: Icons.calendar_today_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter manufacturing year';
+          return AppLocalization.t('Enter manufacturing year');
         }
 
         final year = int.tryParse(value.trim());
 
         if (year == null) {
-          return 'Enter a valid year';
+          return AppLocalization.t('Enter a valid year');
         }
 
         if (year < 1900 || year > DateTime.now().year) {
-          return 'Enter a valid year';
+          return AppLocalization.t('Enter a valid year');
         }
 
         return null;
@@ -806,10 +828,32 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       textCapitalization: TextCapitalization.characters,
 
       decoration: _inputDecoration(
-        label: 'Emission Standard',
-        hint: 'Example: BS6',
+        label: AppLocalization.t('Emission Standard'),
+        hint: AppLocalization.t('Example: BS6'),
         icon: Icons.eco_outlined,
       ),
+    );
+  }
+
+  Widget _buildUnitField() {
+    final isAdmin = context.watch<AuthProvider>().isAdmin;
+    return TextFormField(
+      controller: _unitController,
+      enabled: !_saving && isAdmin,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Unit'),
+        hint: AppLocalization.t('Enter unit per trip'),
+        icon: Icons.scale_outlined,
+      ),
+      validator: (value) {
+        if (!isAdmin) return null;
+        final unit = double.tryParse((value ?? '').trim());
+        if (unit == null || unit <= 0) {
+          return AppLocalization.t('Enter a valid unit');
+        }
+        return null;
+      },
     );
   }
 
@@ -818,71 +862,71 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
   // ============================================================
 
   Widget _buildOwnerNameField() => TextFormField(
-        controller: _ownerNameController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Owner Name',
-          hint: 'Vehicle owner name',
-          icon: Icons.person_outline,
-        ),
-      );
+    controller: _ownerNameController,
+    enabled: !_saving,
+    textCapitalization: TextCapitalization.words,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Owner Name'),
+      hint: AppLocalization.t('Vehicle owner name'),
+      icon: Icons.person_outline,
+    ),
+  );
 
   Widget _buildPermanentAddressField() => TextFormField(
-        controller: _permanentAddressController,
-        enabled: !_saving,
-        maxLines: 2,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Permanent Address',
-          hint: 'Permanent address',
-          icon: Icons.home_outlined,
-        ),
-      );
+    controller: _permanentAddressController,
+    enabled: !_saving,
+    maxLines: 2,
+    textCapitalization: TextCapitalization.words,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Permanent Address'),
+      hint: AppLocalization.t('Permanent address'),
+      icon: Icons.home_outlined,
+    ),
+  );
 
   Widget _buildChasiNumberField() => TextFormField(
-        controller: _chasiNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Chasi Number',
-          hint: 'Chassis number',
-          icon: Icons.confirmation_number_outlined,
-        ),
-      );
+    controller: _chasiNumberController,
+    enabled: !_saving,
+    textCapitalization: TextCapitalization.characters,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Vehicle Chasi Number'),
+      hint: AppLocalization.t('Chassis number'),
+      icon: Icons.confirmation_number_outlined,
+    ),
+  );
 
   Widget _buildEngineNumberField() => TextFormField(
-        controller: _engineNumberController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.characters,
-        decoration: _inputDecoration(
-          label: 'Vehicle Engine Number',
-          hint: 'Engine number',
-          icon: Icons.settings_outlined,
-        ),
-      );
+    controller: _engineNumberController,
+    enabled: !_saving,
+    textCapitalization: TextCapitalization.characters,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Vehicle Engine Number'),
+      hint: AppLocalization.t('Engine number'),
+      icon: Icons.settings_outlined,
+    ),
+  );
 
   Widget _buildColorField() => TextFormField(
-        controller: _colorController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Color',
-          hint: 'Vehicle color',
-          icon: Icons.palette_outlined,
-        ),
-      );
+    controller: _colorController,
+    enabled: !_saving,
+    textCapitalization: TextCapitalization.words,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Color'),
+      hint: AppLocalization.t('Vehicle color'),
+      icon: Icons.palette_outlined,
+    ),
+  );
 
   Widget _buildInsuranceCompanyField() => TextFormField(
-        controller: _insuranceCompanyController,
-        enabled: !_saving,
-        textCapitalization: TextCapitalization.words,
-        decoration: _inputDecoration(
-          label: 'Insurance Company',
-          hint: 'Insurance company',
-          icon: Icons.shield_outlined,
-        ),
-      );
+    controller: _insuranceCompanyController,
+    enabled: !_saving,
+    textCapitalization: TextCapitalization.words,
+    decoration: _inputDecoration(
+      label: AppLocalization.t('Insurance Company'),
+      hint: AppLocalization.t('Insurance company'),
+      icon: Icons.shield_outlined,
+    ),
+  );
 
   // ============================================================
   // COMPLIANCE
@@ -890,7 +934,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
   Widget _buildComplianceSection() {
     return _sectionCard(
-      title: 'Compliance Documents',
+      title: AppLocalization.t('Compliance Documents'),
       icon: Icons.description_outlined,
 
       child: Column(
@@ -899,7 +943,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
             children: [
               Expanded(
                 child: _buildDateField(
-                  label: 'Insurance Expiry',
+                  label: AppLocalization.t('Insurance Expiry'),
                   value: _insuranceExpiry,
                   onChanged: (date) {
                     setState(() {
@@ -913,7 +957,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
               Expanded(
                 child: _buildDateField(
-                  label: 'FC Expiry',
+                  label: AppLocalization.t('FC Expiry'),
                   value: _fcExpiry,
                   onChanged: (date) {
                     setState(() {
@@ -931,7 +975,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
             children: [
               Expanded(
                 child: _buildDateField(
-                  label: 'Permit Expiry',
+                  label: AppLocalization.t('Permit Expiry'),
                   value: _permitExpiry,
                   onChanged: (date) {
                     setState(() {
@@ -945,7 +989,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
               Expanded(
                 child: _buildDateField(
-                  label: 'Tax Expiry',
+                  label: AppLocalization.t('Tax Expiry'),
                   value: _taxExpiry,
                   onChanged: (date) {
                     setState(() {
@@ -1013,7 +1057,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
             if (value != null)
               IconButton(
-                tooltip: 'Clear date',
+                tooltip: AppLocalization.t('Clear date'),
 
                 icon: const Icon(Icons.clear, size: 18),
 
@@ -1041,14 +1085,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
   Widget _buildStatusSection() {
     return _sectionCard(
-      title: 'Status',
+      title: AppLocalization.t('Status'),
       icon: Icons.toggle_on_outlined,
 
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
 
-        title: const Text(
-          'Active Vehicle',
+        title: Text(
+          AppLocalization.t('Active Vehicle'),
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
 
@@ -1089,7 +1133,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                   Navigator.pop(context);
                 },
 
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
 
         const SizedBox(width: 12),
@@ -1108,7 +1152,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 )
               : const Icon(Icons.save_outlined),
 
-          label: Text(widget.isEdit ? 'Update Vehicle' : 'Save Vehicle'),
+          label: Text(
+            widget.isEdit
+                ? AppLocalization.t('Update Vehicle')
+                : AppLocalization.t('Save Vehicle'),
+          ),
 
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1206,10 +1254,11 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
             ? null
             : _insuranceCompanyController.text.trim(),
 
-
         emissionStandard: _emissionController.text.trim().isEmpty
             ? null
             : _emissionController.text.trim(),
+
+        unit: double.tryParse(_unitController.text.trim()) ?? 0,
 
         insuranceExpiry: _formatDatabaseDate(_insuranceExpiry),
 
@@ -1239,13 +1288,17 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
       if (success) {
         _showSuccess(
           widget.isEdit
-              ? 'Transport vehicle updated successfully.'
-              : 'Transport vehicle added successfully.',
+              ? AppLocalization.t('Transport vehicle updated successfully.')
+              : AppLocalization.t('Transport vehicle added successfully.'),
         );
 
         Navigator.pop(context, true);
       } else {
-        _showError(provider.error ?? 'Unable to save transport vehicle.');
+        _showError(
+          AppLocalization.t(
+            provider.error ?? 'Unable to save transport vehicle.',
+          ),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -1363,20 +1416,18 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
 
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Row(
+          title: Row(
             children: [
               Icon(Icons.warning_amber_rounded, color: Color(0xFFBA1A1A)),
 
               SizedBox(width: 10),
 
-              Text('Vehicle Already Exists'),
+              Text(AppLocalization.t('Vehicle Already Exists')),
             ],
           ),
 
           content: Text(
-            'The registration number '
-            '$registration is already registered '
-            'in StoneFleet.',
+            '${AppLocalization.t('The registration number')} $registration ${AppLocalization.t('is already registered in StoneFleet.')}',
           ),
 
           actions: [
@@ -1389,7 +1440,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                 backgroundColor: const Color(0xFF00652C),
               ),
 
-              child: const Text('OK'),
+              child: Text(AppLocalization.t('OK')),
             ),
           ],
         );

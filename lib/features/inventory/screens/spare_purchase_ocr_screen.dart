@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_sidebar.dart';
@@ -46,8 +47,8 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
   Future<void> _selectBill() async {
     final file = await openFile(
       acceptedTypeGroups: [
-        const XTypeGroup(
-          label: 'Bills',
+        XTypeGroup(
+          label: AppLocalization.t('Bills'),
           extensions: ['jpg', 'jpeg', 'png', 'webp'],
         ),
       ],
@@ -64,14 +65,14 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
   Future<void> _extract() async {
     final file = _file;
     if (file == null) {
-      _show('Please upload a bill first.');
+      _show(AppLocalization.t('Please upload a bill first.'));
       return;
     }
 
     try {
       final result = await context.read<InventoryProvider>().extractBill(file);
       _applyOcr(result);
-      _show('Bill data extracted. Please review before saving.');
+      _show(AppLocalization.t('Bill data extracted. Please review before saving.'));
     } catch (e) {
       _show(e.toString());
     }
@@ -98,7 +99,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
 
   Future<void> _save() async {
     if (_items.isEmpty) {
-      _show('Add at least one purchase item.');
+      _show(AppLocalization.t('Add at least one purchase item.'));
       return;
     }
     final provider = context.read<InventoryProvider>();
@@ -119,7 +120,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
     try {
       await provider.savePurchase(input);
       if (provider.error != null) throw Exception(provider.error);
-      _show('Purchase saved successfully.');
+      _show(AppLocalization.t('Purchase saved successfully.'));
       if (mounted) handleMenuTap(12, context: context);
     } catch (e) {
       _show(e.toString());
@@ -147,13 +148,13 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InventoryPageHeader(
-                    title: 'Spare Purchase & OCR',
+                    title: AppLocalization.t('Spare Purchase & OCR'),
                     subtitle:
-                        'Upload a purchase bill, extract data and verify it before saving.',
+                        AppLocalization.t('Upload a purchase bill, extract data and verify it before saving.'),
                   ),
                   const SizedBox(height: 24),
                   InventorySectionCard(
-                    title: 'Upload Spare Purchase Bill',
+                    title: AppLocalization.t('Upload Spare Purchase Bill'),
                     icon: Icons.receipt_long_outlined,
                     child: Column(
                       children: [
@@ -183,8 +184,10 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                                   color: Color(0xFF00652C),
                                 ),
                                 const SizedBox(height: 10),
-                                const Text(
-                                  'Upload a photo of the purchase bill',
+                                Text(
+                                  AppLocalization.t(
+                                    'Upload a photo of the purchase bill',
+                                  ),
                                 ),
                               ],
                               const SizedBox(height: 18),
@@ -192,7 +195,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                                 onPressed: _selectBill,
                                 icon: const Icon(Icons.upload_file_outlined),
                                 label: Text(
-                                  _file == null ? 'Upload Bill' : 'Change Bill',
+                                  _file == null ? AppLocalization.t('Upload Bill') : AppLocalization.t('Change Bill'),
                                 ),
                               ),
                             ],
@@ -216,7 +219,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                             label: Text(
                               provider.isExtracting
                                   ? 'Extracting...'
-                                  : 'Extract Data',
+                                  : AppLocalization.t('Extract Data'),
                             ),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF00652C),
@@ -243,36 +246,36 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
 
   Widget _buildReviewCard() {
     return InventorySectionCard(
-      title: 'Review Purchase Details',
+      title: AppLocalization.t('Review Purchase Details'),
       icon: Icons.fact_check_outlined,
       child: Column(
         children: [
           Row(
             children: [
-              Expanded(child: _field('Bill Number', _billController)),
+              Expanded(child: _field(AppLocalization.t('Bill Number'), _billController)),
               const SizedBox(width: 16),
-              Expanded(child: _field('Supplier Name', _supplierController)),
+              Expanded(child: _field(AppLocalization.t('Supplier Name'), _supplierController)),
               const SizedBox(width: 16),
               Expanded(
-                child: _field('Purchase Date (YYYY-MM-DD)', _dateController),
+                child: _field(AppLocalization.t('Purchase Date (YYYY-MM-DD)'), _dateController),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(child: _field('Subtotal', _subtotalController)),
+              Expanded(child: _field(AppLocalization.t('Subtotal'), _subtotalController)),
               const SizedBox(width: 16),
-              Expanded(child: _field('GST Amount', _gstController)),
+              Expanded(child: _field(AppLocalization.t('GST Amount'), _gstController)),
               const SizedBox(width: 16),
-              Expanded(child: _field('Grand Total', _grandTotalController)),
+              Expanded(child: _field(AppLocalization.t('Grand Total'), _grandTotalController)),
             ],
           ),
           const SizedBox(height: 24),
           Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Purchase Items',
+              AppLocalization.t('Purchase Items'),
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
@@ -280,20 +283,24 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
           ),
           const SizedBox(height: 10),
           _items.isEmpty
-              ? const Padding(
+              ? Padding(
                   padding: EdgeInsets.all(20),
-                  child: Text('No items extracted. Add items after OCR.'),
+                  child: Text(
+                    AppLocalization.t(
+                      'No items extracted. Add items after OCR.',
+                    ),
+                  ),
                 )
               : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
-                    columns: const [
-                      DataColumn(label: Text('SPARE ITEM')),
-                      DataColumn(label: Text('QTY')),
-                      DataColumn(label: Text('UNIT PRICE')),
-                      DataColumn(label: Text('GST %')),
-                      DataColumn(label: Text('SUBTOTAL')),
-                      DataColumn(label: Text('TOTAL COST')),
+                    columns: [
+                      DataColumn(label: Text(AppLocalization.t('SPARE ITEM'))),
+                      DataColumn(label: Text(AppLocalization.t('QTY'))),
+                      DataColumn(label: Text(AppLocalization.t('UNIT PRICE'))),
+                      DataColumn(label: Text(AppLocalization.t('GST %'))),
+                      DataColumn(label: Text(AppLocalization.t('SUBTOTAL'))),
+                      DataColumn(label: Text(AppLocalization.t('TOTAL COST'))),
                     ],
                     rows: _items
                         .map(
@@ -362,13 +369,13 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
             children: [
               OutlinedButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
+                child: Text(AppLocalization.t('Cancel')),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
                 onPressed: _save,
                 icon: const Icon(Icons.save_outlined, size: 18),
-                label: const Text('Confirm & Save'),
+                label: Text(AppLocalization.t('Confirm & Save')),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF00652C),
                   foregroundColor: Colors.white,

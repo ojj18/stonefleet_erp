@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 
 import '../../../app/app_config.dart';
 import '../../../core/widgets/app_sidebar.dart';
@@ -15,6 +17,8 @@ class InventoryShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild immediately when the selected app language changes.
+    context.watch<LanguageProvider>().languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       body: Row(
@@ -46,7 +50,7 @@ class InventoryShell extends StatelessWidget {
                       ),
                       const Spacer(),
                       IconButton(
-                        tooltip: 'Service Notifications',
+                        tooltip: AppLocalization.t('Service Notifications'),
                         onPressed: () => handleMenuTap(12, context: context),
                         icon: const Icon(
                           Icons.notifications_outlined,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/quarry_blasting_purchase_model.dart';
@@ -168,8 +169,8 @@ class _QuarryBlastingNewPurchaseScreenState
       SnackBar(
         content: Text(
           widget.isEdit
-              ? 'Purchase updated successfully.'
-              : 'Purchase saved successfully.',
+              ? AppLocalization.t('Purchase updated successfully.')
+              : AppLocalization.t('Purchase saved successfully.'),
         ),
       ),
     );
@@ -198,14 +199,14 @@ class _QuarryBlastingNewPurchaseScreenState
                 children: [
                   QuarryPageHeader(
                     title: widget.isEdit
-                        ? 'Edit Blasting Material Purchase'
-                        : 'New Blasting Material Purchase',
+                        ? AppLocalization.t('Edit Blasting Material Purchase')
+                        : AppLocalization.t('New Blasting Material Purchase'),
                     subtitle:
-                        'Enter quantities and unit prices for the four fixed blasting items.',
+                        AppLocalization.t('Enter quantities and unit prices for the four fixed blasting items.'),
                   ),
                   const SizedBox(height: 24),
                   QuarryCard(
-                    title: 'Purchase Details',
+                    title: AppLocalization.t('Purchase Details'),
                     icon: Icons.receipt_long_outlined,
                     child: Row(
                       children: [
@@ -214,8 +215,8 @@ class _QuarryBlastingNewPurchaseScreenState
                           child: InkWell(
                             onTap: _pickDate,
                             child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Purchase Date',
+                              decoration: InputDecoration(
+                                labelText: AppLocalization.t('Purchase Date'),
                                 border: OutlineInputBorder(),
                                 suffixIcon: Icon(Icons.calendar_today_outlined),
                               ),
@@ -230,7 +231,7 @@ class _QuarryBlastingNewPurchaseScreenState
                   ),
                   const SizedBox(height: 18),
                   QuarryCard(
-                    title: 'Purchase Items',
+                    title: AppLocalization.t('Purchase Items'),
                     icon: Icons.inventory_2_outlined,
                     child: Column(
                       children: [
@@ -274,8 +275,8 @@ class _QuarryBlastingNewPurchaseScreenState
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Grand Total Cost',
+                        Text(
+                          AppLocalization.t('Grand Total Cost'),
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w700,
@@ -298,7 +299,7 @@ class _QuarryBlastingNewPurchaseScreenState
                     children: [
                       OutlinedButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text('Cancel'),
+                        child: Text(AppLocalization.t('Cancel')),
                       ),
                       const SizedBox(width: 12),
                       Consumer<QuarryBlastingProvider>(
@@ -315,7 +316,7 @@ class _QuarryBlastingNewPurchaseScreenState
                                 )
                               : const Icon(Icons.save_outlined, size: 18),
                           label: Text(
-                            widget.isEdit ? 'Update Purchase' : 'Save Purchase',
+                            widget.isEdit ? AppLocalization.t('Update Purchase') : AppLocalization.t('Save Purchase'),
                           ),
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF00652C),
@@ -369,8 +370,8 @@ class _QuarryBlastingNewPurchaseScreenState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  'TOTAL',
+                Text(
+                  AppLocalization.t('TOTAL'),
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -410,12 +411,12 @@ class _QuarryBlastingNewPurchaseScreenState
         if (value != null &&
             value.trim().isNotEmpty &&
             double.tryParse(value.trim()) == null) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
         if (value != null &&
             value.trim().isNotEmpty &&
             double.parse(value.trim()) < 0) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
         return null;
       },

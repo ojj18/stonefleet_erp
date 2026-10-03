@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -146,7 +147,7 @@ class _TransportMaintenanceScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -202,8 +203,8 @@ class _TransportMaintenanceScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Transport Maintenance',
+              Text(
+                AppLocalization.t('Transport Maintenance'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -213,8 +214,10 @@ class _TransportMaintenanceScreenState
 
               const SizedBox(height: 6),
 
-              const Text(
-                'Track daily transport vehicle operation, fuel usage and maintenance activities.',
+              Text(
+                AppLocalization.t(
+                  'Track daily transport vehicle operation, fuel usage and maintenance activities.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -226,7 +229,7 @@ class _TransportMaintenanceScreenState
         FilledButton.icon(
           onPressed: _openAddScreen,
           icon: const Icon(Icons.add, size: 20),
-          label: const Text('Add Maintenance'),
+          label: Text(AppLocalization.t('Add Maintenance')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -264,7 +267,7 @@ class _TransportMaintenanceScreenState
           children: [
             Expanded(
               child: _summaryCard(
-                title: 'Total Records',
+                title: AppLocalization.t('Total Records'),
                 value: records.length.toString(),
                 icon: Icons.receipt_long_outlined,
               ),
@@ -274,7 +277,7 @@ class _TransportMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Total KM',
+                title: AppLocalization.t('Total KM'),
                 value: _formatNumber(totalKm),
                 suffix: ' KM',
                 icon: Icons.speed_outlined,
@@ -285,7 +288,7 @@ class _TransportMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Diesel Used',
+                title: AppLocalization.t('Diesel Used'),
                 value: _formatNumber(totalDiesel),
                 suffix: ' L',
                 icon: Icons.local_gas_station_outlined,
@@ -296,7 +299,7 @@ class _TransportMaintenanceScreenState
 
             Expanded(
               child: _summaryCard(
-                title: 'Diesel Expense',
+                title: AppLocalization.t('Diesel Expense'),
                 value: _formatCurrency(totalExpense),
                 icon: Icons.currency_rupee,
               ),
@@ -386,8 +389,9 @@ class _TransportMaintenanceScreenState
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText:
-                    'Search driver, vehicle ID, loading or unloading site...',
+                hintText: AppLocalization.t(
+                  'Search driver, vehicle ID, loading or unloading site...',
+                ),
                 prefixIcon: const Icon(Icons.search, size: 20),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -410,7 +414,7 @@ class _TransportMaintenanceScreenState
           const SizedBox(width: 16),
 
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: AppLocalization.t('Refresh'),
             onPressed: () {
               context.read<TransportMaintenanceProvider>().loadMaintenance();
             },
@@ -499,23 +503,23 @@ class _TransportMaintenanceScreenState
       color: const Color(0xFFF8F9FB),
       child: Row(
         children: [
-          _headerCell('VEHICLE', width: 130),
+          _headerCell(AppLocalization.t('VEHICLE'), width: 130),
 
-          _headerCell('DRIVER', width: 150),
+          _headerCell(AppLocalization.t('DRIVER'), width: 150),
 
-          _headerCell('KM', width: 90),
+          _headerCell(AppLocalization.t('KM'), width: 90),
 
-          _headerCell('LOADS', width: 80),
+          _headerCell(AppLocalization.t('LOADS'), width: 80),
 
-          _headerCell('DIESEL', width: 100),
+          _headerCell(AppLocalization.t('DIESEL'), width: 100),
 
-          _headerCell('EXPENSE', width: 110),
+          _headerCell(AppLocalization.t('EXPENSE'), width: 110),
 
-          _headerCell('ROUTE', width: 190),
+          _headerCell(AppLocalization.t('ROUTE'), width: 190),
 
-          const Expanded(
+          Expanded(
             child: Text(
-              'ACTION',
+              AppLocalization.t('ACTION'),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 11,
@@ -638,14 +642,14 @@ class _TransportMaintenanceScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    tooltip: 'Edit',
+                    tooltip: AppLocalization.t('Edit'),
                     onPressed: () => _openEditScreen(record),
                     icon: const Icon(Icons.edit_outlined, size: 19),
                     color: const Color(0xFF00652C),
                   ),
                   if (context.watch<AuthProvider>().isAdmin)
                     IconButton(
-                      tooltip: 'Delete',
+                      tooltip: AppLocalization.t('Delete'),
                       onPressed: () => _confirmDelete(record),
                       icon: const Icon(Icons.delete_outline, size: 19),
                       color: const Color(0xFFBA1A1A),
@@ -810,16 +814,19 @@ class _TransportMaintenanceScreenState
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Delete Maintenance Record?'),
-          content: const Text(
-            'This maintenance record will be permanently deleted. This action cannot be undone.',
+          title: Text(AppLocalization.t('Delete Maintenance Record?')),
+          content: Text(
+            AppLocalization.t(
+              'This maintenance record will be permanently deleted. This action cannot be undone.',
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
 
             FilledButton(
@@ -829,7 +836,7 @@ class _TransportMaintenanceScreenState
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFBA1A1A),
               ),
-              child: const Text('Delete'),
+              child: Text(AppLocalization.t('Delete')),
             ),
           ],
         );
@@ -850,8 +857,8 @@ class _TransportMaintenanceScreenState
       SnackBar(
         content: Text(
           success
-              ? 'Maintenance record deleted.'
-              : provider.error ?? 'Unable to delete record.',
+              ? AppLocalization.t('Maintenance record deleted.')
+              : AppLocalization.t(provider.error ?? 'Unable to delete record.'),
         ),
         backgroundColor: success
             ? const Color(0xFF00652C)
@@ -891,15 +898,19 @@ class _TransportMaintenanceScreenState
 
           const SizedBox(height: 18),
 
-          const Text(
-            'No maintenance records found',
+          Text(
+            AppLocalization.t('No maintenance records found'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 7),
 
-          const Text(
-            'Add your first transport maintenance record to get started.',
+          Text(
+            AppLocalization.t(
+              AppLocalization.t(
+                'Add your first transport maintenance record to get started.',
+              ),
+            ),
             style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
           ),
 
@@ -908,7 +919,7 @@ class _TransportMaintenanceScreenState
           FilledButton.icon(
             onPressed: _openAddScreen,
             icon: const Icon(Icons.add),
-            label: const Text('Add Maintenance'),
+            label: Text(AppLocalization.t('Add Maintenance')),
             style: FilledButton.styleFrom(
               backgroundColor: const Color(0xFF00652C),
             ),
@@ -930,9 +941,7 @@ class _TransportMaintenanceScreenState
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Color(0xFF00652C)),
-      ),
+      child: Center(child: CircularProgressIndicator(color: Color(0xFF00652C))),
     );
   }
 
@@ -955,8 +964,8 @@ class _TransportMaintenanceScreenState
 
           const SizedBox(height: 12),
 
-          const Text(
-            'Unable to load maintenance records',
+          Text(
+            AppLocalization.t('Unable to load maintenance records'),
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
 
@@ -975,7 +984,7 @@ class _TransportMaintenanceScreenState
               context.read<TransportMaintenanceProvider>().loadMaintenance();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),

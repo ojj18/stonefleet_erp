@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/app_config.dart';
@@ -191,7 +192,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -247,8 +248,8 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Service Notifications',
+              Text(
+                AppLocalization.t('Service Notifications'),
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -257,7 +258,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
               ),
               const SizedBox(height: 5),
               Text(
-                'Monitor upcoming and overdue service requirements',
+                AppLocalization.t(
+                  'Monitor upcoming and overdue service requirements',
+                ),
                 style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
               ),
             ],
@@ -273,7 +276,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
         OutlinedButton.icon(
           onPressed: provider.isLoading ? null : provider.refresh,
           icon: const Icon(Icons.refresh_rounded, size: 17),
-          label: const Text('Refresh'),
+          label: Text(AppLocalization.t('Refresh')),
           style: OutlinedButton.styleFrom(
             foregroundColor: const Color(0xFF1B1D20),
             side: const BorderSide(color: Color(0xFFD9DDE2)),
@@ -313,7 +316,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
           ),
           const SizedBox(width: 7),
           Text(
-            '$count Requiring Attention',
+            '$count ${AppLocalization.t('Requiring Attention')}',
             style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -368,9 +371,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
       children: [
         Expanded(
           child: _buildSummaryCard(
-            title: 'OVERDUE',
+            title: AppLocalization.t('OVERDUE'),
             count: provider.overdueCount,
-            subtitle: 'Immediate attention required',
+            subtitle: AppLocalization.t('Immediate attention required'),
             icon: Icons.error_outline_rounded,
             iconColor: const Color(0xFFD93025),
             backgroundColor: const Color(0xFFFFF4F3),
@@ -379,9 +382,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
         const SizedBox(width: 14),
         Expanded(
           child: _buildSummaryCard(
-            title: 'DUE NOW',
+            title: AppLocalization.t('DUE NOW'),
             count: provider.dueCount,
-            subtitle: 'Service is due',
+            subtitle: AppLocalization.t('Service is due'),
             icon: Icons.access_alarm_rounded,
             iconColor: const Color(0xFFE67E22),
             backgroundColor: const Color(0xFFFFF7ED),
@@ -390,9 +393,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
         const SizedBox(width: 14),
         Expanded(
           child: _buildSummaryCard(
-            title: 'UPCOMING',
+            title: AppLocalization.t('UPCOMING'),
             count: provider.upcomingCount,
-            subtitle: 'Within warning threshold',
+            subtitle: AppLocalization.t('Within warning threshold'),
             icon: Icons.speed_rounded,
             iconColor: const Color(0xFF3159C9),
             backgroundColor: const Color(0xFFF1F4FF),
@@ -401,9 +404,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
         const SizedBox(width: 14),
         Expanded(
           child: _buildSummaryCard(
-            title: 'NOT RECORDED',
+            title: AppLocalization.t('NOT RECORDED'),
             count: provider.serviceNotRecordedCount,
-            subtitle: 'No service history',
+            subtitle: AppLocalization.t('No service history'),
             icon: Icons.help_outline_rounded,
             iconColor: const Color(0xFF60656B),
             backgroundColor: const Color(0xFFF1F2F3),
@@ -542,7 +545,9 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search registration, model or spare...',
+                  hintText: AppLocalization.t(
+                    'Search registration, model or spare...',
+                  ),
                   prefixIcon: const Icon(Icons.search_rounded, size: 18),
                   suffixIcon: _searchController.text.isNotEmpty
                       ? IconButton(
@@ -567,7 +572,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
           const SizedBox(width: 10),
 
           Text(
-            '${_filteredNotifications(provider).length} notifications',
+            '${_filteredNotifications(provider).length} ${AppLocalization.t('notifications')}',
             style: TextStyle(
               fontSize: 11,
               color: Colors.grey.shade600,
@@ -596,7 +601,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
               (item) => DropdownMenuItem<String>(
                 value: item,
                 child: Text(
-                  item,
+                  AppLocalization.t(item),
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 12),
                 ),
@@ -605,7 +610,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
             .toList(),
         onChanged: onChanged,
         decoration: InputDecoration(
-          labelText: prefix,
+          labelText: AppLocalization.t(prefix),
           labelStyle: const TextStyle(fontSize: 10),
           filled: true,
           fillColor: const Color(0xFFF6F7F8),
@@ -723,7 +728,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
   // ============================================================
 
   Widget _buildEquipmentInfo(ServiceNotificationModel item) {
-    final type = item.isExcavator ? 'EXCAVATOR' : 'TRANSPORT';
+    final type = item.isExcavator ? AppLocalization.t('EXCAVATOR') : AppLocalization.t('TRANSPORT');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -849,19 +854,19 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
   String _statusLabel(ServiceNotificationModel item) {
     switch (item.status) {
       case ServiceNotificationStatus.overdue:
-        return 'OVERDUE';
+        return AppLocalization.t('OVERDUE');
 
       case ServiceNotificationStatus.due:
-        return 'SERVICE DUE';
+        return AppLocalization.t('SERVICE DUE');
 
       case ServiceNotificationStatus.upcoming:
-        return 'UPCOMING';
+        return AppLocalization.t('UPCOMING');
 
       case ServiceNotificationStatus.serviceNotRecorded:
-        return 'SERVICE NOT RECORDED';
+        return AppLocalization.t('SERVICE NOT RECORDED');
 
       case ServiceNotificationStatus.normal:
-        return 'NORMAL';
+        return AppLocalization.t('NORMAL');
     }
   }
 
@@ -871,28 +876,28 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
         final amount = item.remaining?.abs() ?? 0;
 
         return '${_formatNumber(amount)} '
-            '${item.meterUnit} overdue';
+            '${item.meterUnit} ${AppLocalization.t('overdue')}';
 
       case ServiceNotificationStatus.due:
-        return 'Service is due now';
+        return AppLocalization.t('Service is due now');
 
       case ServiceNotificationStatus.upcoming:
         final amount = item.remaining ?? 0;
 
         return '${_formatNumber(amount)} '
-            '${item.meterUnit} remaining';
+            '${item.meterUnit} ${AppLocalization.t('remaining')}';
 
       case ServiceNotificationStatus.serviceNotRecorded:
         return item.currentMeter > 0
-            ? 'Current: ${_formatNumber(item.currentMeter)} '
+            ? '${AppLocalization.t('Current')}: ${_formatNumber(item.currentMeter)} '
                   '${item.meterUnit}'
-            : 'No service history';
+            : AppLocalization.t('No service history');
 
       case ServiceNotificationStatus.normal:
         final amount = item.remaining ?? 0;
 
         return '${_formatNumber(amount)} '
-            '${item.meterUnit} remaining';
+            '${item.meterUnit} ${AppLocalization.t('remaining')}';
     }
   }
 
@@ -967,13 +972,15 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
             ),
           ),
           const SizedBox(height: 15),
-          const Text(
-            'No service notifications',
+          Text(
+            AppLocalization.t('No service notifications'),
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
-            'All scheduled services are currently up to date.',
+            AppLocalization.t(
+              'All scheduled services are currently up to date.',
+            ),
             style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
           ),
         ],
@@ -999,7 +1006,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: const Color(0xFFE6E8EB)),
             ),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(18),
               child: Row(
                 children: [
@@ -1043,8 +1050,8 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
               color: Color(0xFFD93025),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'Unable to load service notifications',
+            Text(
+              AppLocalization.t('Unable to load service notifications'),
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 6),
@@ -1057,7 +1064,7 @@ class _ServiceNotificationScreenState extends State<ServiceNotificationScreen> {
             ElevatedButton.icon(
               onPressed: provider.refresh,
               icon: const Icon(Icons.refresh_rounded, size: 17),
-              label: const Text('Retry'),
+              label: Text(AppLocalization.t('Retry')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
                 foregroundColor: Colors.white,

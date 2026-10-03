@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 
 class RecordViewScreen extends StatelessWidget {
   final String title;
@@ -14,6 +16,8 @@ class RecordViewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild immediately when the selected app language changes.
+    context.watch<LanguageProvider>().languageCode;
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
@@ -22,7 +26,7 @@ class RecordViewScreen extends StatelessWidget {
         elevation: 0,
         title: Text(title),
         leading: IconButton(
-          tooltip: 'Back',
+          tooltip: AppLocalization.t('Back'),
           icon: const Icon(Icons.arrow_back_outlined),
           onPressed: () => Navigator.pop(context),
         ),
@@ -77,7 +81,7 @@ class RecordViewScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
-                    label: const Text('Close'),
+                    label: Text(AppLocalization.t('Close')),
                   ),
                 ),
               ],

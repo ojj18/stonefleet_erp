@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
@@ -59,7 +60,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Excel exported: $path')));
+        ).showSnackBar(SnackBar(content: Text(AppLocalization.t('Excel exported: ') + path)));
       }
     } catch (e) {
       if (mounted) {
@@ -124,9 +125,9 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   InventoryPageHeader(
-                    title: 'Inventory Reports',
+                    title: AppLocalization.t('Inventory Reports'),
                     subtitle:
-                        'Generate daily, weekly, monthly and yearly spare inventory reports.',
+                        AppLocalization.t('Generate daily, weekly, monthly and yearly spare inventory reports.'),
                     action: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -138,7 +139,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                             Icons.file_download_outlined,
                             size: 20,
                           ),
-                          label: const Text('Export Excel'),
+                          label: Text(AppLocalization.t('Export Excel')),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(145, 48),
                           ),
@@ -152,7 +153,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                             Icons.picture_as_pdf_outlined,
                             size: 20,
                           ),
-                          label: const Text('Export PDF'),
+                          label: Text(AppLocalization.t('Export PDF')),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(135, 48),
                           ),
@@ -163,7 +164,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                               ? null
                               : () => _printReport(provider),
                           icon: const Icon(Icons.print_outlined, size: 20),
-                          label: const Text('Print'),
+                          label: Text(AppLocalization.t('Print')),
                           style: OutlinedButton.styleFrom(
                             minimumSize: const Size(105, 48),
                           ),
@@ -176,7 +177,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                     children: [
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Purchase Records',
+                          title: AppLocalization.t('Purchase Records'),
                           value: '${provider.reportRows.length}',
                           icon: Icons.description_outlined,
                         ),
@@ -184,7 +185,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Purchased Qty',
+                          title: AppLocalization.t('Purchased Qty'),
                           value: formatQty(
                             provider.reportRows.fold<double>(
                               0,
@@ -200,7 +201,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Used Qty',
+                          title: AppLocalization.t('Used Qty'),
                           value: formatQty(
                             provider.reportRows.fold<double>(
                               0,
@@ -215,7 +216,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: InventoryKpiCard(
-                          title: 'Purchase Cost',
+                          title: AppLocalization.t('Purchase Cost'),
                           value: formatMoney(
                             provider.reportRows.fold<double>(
                               0,
@@ -232,7 +233,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                   ),
                   const SizedBox(height: 24),
                   InventorySectionCard(
-                    title: 'Report Filters',
+                    title: AppLocalization.t('Report Filters'),
                     icon: Icons.filter_alt_outlined,
                     child: Column(
                       children: [
@@ -241,24 +242,18 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                             Expanded(
                               child: DropdownButtonFormField<String>(
                                 initialValue: _period,
-                                decoration: const InputDecoration(
-                                  labelText: 'Report Period',
+                                decoration: InputDecoration(
+                                  labelText: AppLocalization.t('Report Period'),
                                   border: OutlineInputBorder(),
                                 ),
-                                items:
-                                    const [
-                                          'Daily',
-                                          'Weekly',
-                                          'Monthly',
-                                          'Yearly',
-                                        ]
-                                        .map(
-                                          (e) => DropdownMenuItem(
-                                            value: e,
-                                            child: Text(e),
-                                          ),
-                                        )
-                                        .toList(),
+                                items: ['Daily', 'Weekly', 'Monthly', 'Yearly']
+                                    .map(
+                                      (e) => DropdownMenuItem(
+                                        value: e,
+                                        child: Text(AppLocalization.t(e)),
+                                      ),
+                                    )
+                                    .toList(),
                                 onChanged: (v) =>
                                     setState(() => _period = v ?? 'Monthly'),
                               ),
@@ -267,14 +262,14 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                             Expanded(
                               child: DropdownButtonFormField<String>(
                                 initialValue: _item,
-                                decoration: const InputDecoration(
-                                  labelText: 'Spare Item',
+                                decoration: InputDecoration(
+                                  labelText: AppLocalization.t('Spare Item'),
                                   border: OutlineInputBorder(),
                                 ),
                                 items: [
-                                  const DropdownMenuItem<String>(
+                                  DropdownMenuItem<String>(
                                     value: null,
-                                    child: Text('All Items'),
+                                    child: Text(AppLocalization.t('All Items')),
                                   ),
                                   ...provider.items.map(
                                     (e) => DropdownMenuItem(
@@ -293,7 +288,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                                 icon: const Icon(Icons.calendar_today_outlined),
                                 label: Text(
                                   _from == null
-                                      ? 'From Date'
+                                      ? AppLocalization.t('From Date')
                                       : formatDate(_from!.toIso8601String()),
                                 ),
                                 style: OutlinedButton.styleFrom(
@@ -308,7 +303,7 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                                 icon: const Icon(Icons.calendar_today_outlined),
                                 label: Text(
                                   _to == null
-                                      ? 'To Date'
+                                      ? AppLocalization.t('To Date')
                                       : formatDate(_to!.toIso8601String()),
                                 ),
                                 style: OutlinedButton.styleFrom(
@@ -332,13 +327,13 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                                 });
                                 _generate();
                               },
-                              child: const Text('Clear'),
+                              child: Text(AppLocalization.t('Clear')),
                             ),
                             const SizedBox(width: 12),
                             ElevatedButton.icon(
                               onPressed: _generate,
                               icon: const Icon(Icons.search),
-                              label: const Text('Generate'),
+                              label: Text(AppLocalization.t('Generate')),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFF00652C),
                                 foregroundColor: Colors.white,
@@ -351,17 +346,27 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                   ),
                   const SizedBox(height: 20),
                   InventorySectionCard(
-                    title: 'Inventory Report',
+                    title: AppLocalization.t('Inventory Report'),
                     icon: Icons.assessment_outlined,
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('SPARE ITEM')),
-                          DataColumn(label: Text('PURCHASED QTY')),
-                          DataColumn(label: Text('USED QTY')),
-                          DataColumn(label: Text('REMAINING QTY')),
-                          DataColumn(label: Text('PURCHASE COST')),
+                        columns: [
+                          DataColumn(
+                            label: Text(AppLocalization.t('SPARE ITEM')),
+                          ),
+                          DataColumn(
+                            label: Text(AppLocalization.t('PURCHASED QTY')),
+                          ),
+                          DataColumn(
+                            label: Text(AppLocalization.t('USED QTY')),
+                          ),
+                          DataColumn(
+                            label: Text(AppLocalization.t('REMAINING QTY')),
+                          ),
+                          DataColumn(
+                            label: Text(AppLocalization.t('PURCHASE COST')),
+                          ),
                         ],
                         rows: provider.reportRows
                             .map(

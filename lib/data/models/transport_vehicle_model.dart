@@ -15,6 +15,7 @@ class TransportModel {
   final String? insuranceCompany;
 
   final String? emissionStandard;
+  final double unit;
 
   final String? insuranceExpiry;
   final String? fcExpiry;
@@ -39,6 +40,7 @@ class TransportModel {
     this.color,
     this.insuranceCompany,
     this.emissionStandard,
+    this.unit = 0,
     this.insuranceExpiry,
     this.fcExpiry,
     this.permitExpiry,
@@ -62,6 +64,7 @@ class TransportModel {
       color: map['color'] as String?,
       insuranceCompany: map['insurance_company'] as String?,
       emissionStandard: map['emission_standard'] as String?,
+      unit: (map['unit'] as num?)?.toDouble() ?? 0,
       insuranceExpiry: map['insurance_expiry'] as String?,
       fcExpiry: map['fc_expiry'] as String?,
       permitExpiry: map['permit_expiry'] as String?,
@@ -86,6 +89,7 @@ class TransportModel {
       'color': color,
       'insurance_company': insuranceCompany,
       'emission_standard': emissionStandard,
+      'unit': unit,
       'insurance_expiry': insuranceExpiry,
       'fc_expiry': fcExpiry,
       'permit_expiry': permitExpiry,
@@ -109,6 +113,7 @@ class TransportModel {
     String? color,
     String? insuranceCompany,
     String? emissionStandard,
+    double? unit,
     String? insuranceExpiry,
     String? fcExpiry,
     String? permitExpiry,
@@ -130,6 +135,7 @@ class TransportModel {
       color: color ?? this.color,
       insuranceCompany: insuranceCompany ?? this.insuranceCompany,
       emissionStandard: emissionStandard ?? this.emissionStandard,
+      unit: unit ?? this.unit,
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       fcExpiry: fcExpiry ?? this.fcExpiry,
       permitExpiry: permitExpiry ?? this.permitExpiry,

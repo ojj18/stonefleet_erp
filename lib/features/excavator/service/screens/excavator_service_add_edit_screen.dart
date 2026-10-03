@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -166,8 +167,8 @@ class _ExcavatorServiceAddEditScreenState
 
   Future<void> _extractSheetData() async {
     try {
-      const typeGroup = XTypeGroup(
-        label: 'Images',
+      var typeGroup = XTypeGroup(
+        label: AppLocalization.t('Images'),
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
 
@@ -207,7 +208,12 @@ class _ExcavatorServiceAddEditScreenState
       Navigator.of(context, rootNavigator: true).pop();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to extract service data: $e')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('Failed to extract service data: ') +
+                e.toString(),
+          ),
+        ),
       );
     }
   }
@@ -222,9 +228,9 @@ class _ExcavatorServiceAddEditScreenState
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Uploaded Sheet',
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+          title: Text(
+            AppLocalization.t('Uploaded Sheet'),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           content: SizedBox(
             width: 600,
@@ -243,14 +249,14 @@ class _ExcavatorServiceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context, true);
               },
               icon: const Icon(Icons.file_upload_outlined),
-              label: const Text('Use Image'),
+              label: Text(AppLocalization.t('Use Image')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
                 foregroundColor: Colors.white,
@@ -273,8 +279,8 @@ class _ExcavatorServiceAddEditScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return const AlertDialog(
-          title: Text('Extracting Data'),
+        return AlertDialog(
+          title: Text(AppLocalization.t('Extracting Data')),
           content: SizedBox(
             width: 300,
             child: Row(
@@ -284,8 +290,8 @@ class _ExcavatorServiceAddEditScreenState
                   height: 24,
                   child: CircularProgressIndicator(strokeWidth: 3),
                 ),
-                SizedBox(width: 20),
-                Text('Please wait...'),
+                const SizedBox(width: 20),
+                Text(AppLocalization.t('Please wait...')),
               ],
             ),
           ),
@@ -303,7 +309,7 @@ class _ExcavatorServiceAddEditScreenState
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Review Extracted Data'),
+          title: Text(AppLocalization.t('Review Extracted Data')),
           content: SizedBox(
             width: 600,
             child: SingleChildScrollView(
@@ -319,15 +325,18 @@ class _ExcavatorServiceAddEditScreenState
 
                   const SizedBox(height: 16),
 
-                  const Text(
-                    'Service Items',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  Text(
+                    AppLocalization.t('Service Items'),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
 
                   const SizedBox(height: 8),
 
                   if (result.serviceItems.isEmpty)
-                    const Text('No service items detected.')
+                    Text(AppLocalization.t('No service items detected.'))
                   else
                     ...result.serviceItems.map(
                       (item) => Card(
@@ -359,14 +368,14 @@ class _ExcavatorServiceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Change'),
+              child: Text(AppLocalization.t('Change')),
             ),
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(context);
                 _applyOcrResultToForm();
               },
-              child: const Text('Use These Values'),
+              child: Text(AppLocalization.t('Use These Values')),
             ),
           ],
         );
@@ -575,7 +584,7 @@ class _ExcavatorServiceAddEditScreenState
           IconButton(
             onPressed: _saving ? null : () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back),
-            tooltip: 'Back',
+            tooltip: AppLocalization.t('Back'),
           ),
           const SizedBox(width: 8),
           const Text(
@@ -594,7 +603,7 @@ class _ExcavatorServiceAddEditScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -650,8 +659,8 @@ class _ExcavatorServiceAddEditScreenState
           children: [
             Text(
               widget.isEdit
-                  ? 'Edit Excavator Service'
-                  : 'Add Excavator Service',
+                  ? AppLocalization.t('Edit Excavator Service')
+                  : AppLocalization.t('Add Excavator Service'),
               style: const TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.w700,
@@ -661,20 +670,21 @@ class _ExcavatorServiceAddEditScreenState
             const SizedBox(height: 6),
             Text(
               widget.isEdit
-                  ? 'Update service details and spare parts used.'
-                  : 'Record excavator service details and spare parts used.',
+                  ? AppLocalization.t(
+                      'Update service details and spare parts used.',
+                    )
+                  : AppLocalization.t(
+                      'Record excavator service details and spare parts used.',
+                    ),
               style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
             ),
           ],
         ),
-        Spacer(),
+        const Spacer(),
         ElevatedButton.icon(
           onPressed: _extractSheetData,
-
           icon: const Icon(Icons.upload_file_outlined),
-
-          label: Text('Upload Image'),
-
+          label: Text(AppLocalization.t('Upload Image')),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             foregroundColor: Colors.white,
@@ -694,7 +704,7 @@ class _ExcavatorServiceAddEditScreenState
 
   Widget _buildServiceDetails() {
     return _sectionCard(
-      title: 'Service Details',
+      title: AppLocalization.t('Service Details'),
       icon: Icons.build_outlined,
       child: Consumer<ExcavatorProvider>(
         builder: (context, provider, child) {
@@ -710,7 +720,7 @@ class _ExcavatorServiceAddEditScreenState
                     initialValue: _selectedExcavatorId,
                     isExpanded: true,
                     decoration: _inputDecoration(
-                      label: 'Excavator Registration',
+                      label: AppLocalization.t('Excavator Registration'),
                       icon: Icons.agriculture_outlined,
                     ),
                     items: excavators.map((excavator) {
@@ -731,7 +741,7 @@ class _ExcavatorServiceAddEditScreenState
                           },
                     validator: (value) {
                       if (value == null) {
-                        return 'Select excavator';
+                        return AppLocalization.t('Select excavator');
                       }
 
                       return null;
@@ -744,13 +754,13 @@ class _ExcavatorServiceAddEditScreenState
                     controller: _dateController,
                     readOnly: true,
                     decoration: _inputDecoration(
-                      label: 'Service Date',
+                      label: AppLocalization.t('Service Date'),
                       icon: Icons.calendar_today_outlined,
                     ),
                     onTap: _saving ? null : _selectDate,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Select service date';
+                        return AppLocalization.t('Select service date');
                       }
 
                       return null;
@@ -765,7 +775,7 @@ class _ExcavatorServiceAddEditScreenState
                       decimal: true,
                     ),
                     decoration: _inputDecoration(
-                      label: 'Current Hour Meter',
+                      label: AppLocalization.t('Current Hour Meter'),
                       hint: 'e.g. 1258.5',
                       icon: Icons.speed_outlined,
                     ),
@@ -773,11 +783,11 @@ class _ExcavatorServiceAddEditScreenState
                       final number = double.tryParse(value?.trim() ?? '');
 
                       if (number == null) {
-                        return 'Enter hour meter';
+                        return AppLocalization.t('Enter hour meter');
                       }
 
                       if (number < 0) {
-                        return 'Invalid hour meter';
+                        return AppLocalization.t('Invalid hour meter');
                       }
 
                       return null;
@@ -812,22 +822,25 @@ class _ExcavatorServiceAddEditScreenState
 
   Widget _buildServiceItems() {
     return _sectionCard(
-      title: 'Service Items',
+      title: AppLocalization.t('Service Items'),
       icon: Icons.inventory_2_outlined,
       child: Column(
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Spare parts used during this service',
-                  style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
+                  AppLocalization.t('Spare parts used during this service'),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF68717D),
+                  ),
                 ),
               ),
               OutlinedButton.icon(
                 onPressed: _saving ? null : _addItem,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Spare'),
+                label: Text(AppLocalization.t('Add Spare')),
               ),
             ],
           ),
@@ -855,17 +868,21 @@ class _ExcavatorServiceAddEditScreenState
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE1E5E9)),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          Icon(Icons.inventory_2_outlined, size: 32, color: Color(0xFF68717D)),
-          SizedBox(height: 8),
-          Text(
-            'No spare parts added',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          const Icon(
+            Icons.inventory_2_outlined,
+            size: 32,
+            color: Color(0xFF68717D),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
-            'Click "Add Spare" to add a service item.',
+            AppLocalization.t('No spare parts added'),
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            AppLocalization.t('Click "Add Spare" to add a service item.'),
             style: TextStyle(fontSize: 12, color: Color(0xFF68717D)),
           ),
         ],
@@ -957,7 +974,7 @@ class _ExcavatorServiceAddEditScreenState
       initialValue: selectedValue,
       isExpanded: true,
       decoration: _inputDecoration(
-        label: 'Spare Part',
+        label: AppLocalization.t('Spare Part'),
         icon: Icons.settings_outlined,
       ),
       items: _spares.map((spare) {
@@ -982,7 +999,7 @@ class _ExcavatorServiceAddEditScreenState
             },
       validator: (value) {
         if (value == null) {
-          return 'Select spare';
+          return AppLocalization.t('Select spare');
         }
 
         return null;
@@ -994,7 +1011,7 @@ class _ExcavatorServiceAddEditScreenState
     return TextFormField(
       controller: item.quantityController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: _inputDecoration(label: 'Quantity'),
+      decoration: _inputDecoration(label: AppLocalization.t('Quantity')),
       onChanged: (_) {
         setState(() {});
       },
@@ -1002,7 +1019,7 @@ class _ExcavatorServiceAddEditScreenState
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number <= 0) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
 
         return null;
@@ -1014,7 +1031,10 @@ class _ExcavatorServiceAddEditScreenState
     return TextFormField(
       controller: item.costController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: _inputDecoration(label: 'Cost / Unit', prefix: '₹ '),
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Cost / Unit'),
+        prefix: '₹ ',
+      ),
       onChanged: (_) {
         setState(() {});
       },
@@ -1022,7 +1042,7 @@ class _ExcavatorServiceAddEditScreenState
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number < 0) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
 
         return null;
@@ -1033,14 +1053,17 @@ class _ExcavatorServiceAddEditScreenState
   Widget _buildItemRemarkField(_ServiceItemDraft item) {
     return TextFormField(
       controller: item.remarkController,
-      decoration: _inputDecoration(label: 'Item Remark', hint: 'Optional'),
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Item Remark'),
+        hint: AppLocalization.t('Optional'),
+      ),
       maxLines: 1,
     );
   }
 
   Widget _removeButton(int index) {
     return IconButton(
-      tooltip: 'Remove',
+      tooltip: AppLocalization.t('Remove'),
       onPressed: _saving
           ? null
           : () {
@@ -1055,17 +1078,15 @@ class _ExcavatorServiceAddEditScreenState
 
   Widget _itemTotal(_ServiceItemDraft item) {
     final quantity = double.tryParse(item.quantityController.text) ?? 0;
-
     final cost = double.tryParse(item.costController.text) ?? 0;
-
     final total = quantity * cost;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const Text(
-          'TOTAL',
-          style: TextStyle(
+        Text(
+          AppLocalization.t('TOTAL'),
+          style: const TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             color: Color(0xFF68717D),
@@ -1096,10 +1117,10 @@ class _ExcavatorServiceAddEditScreenState
         children: [
           const Icon(Icons.receipt_long_outlined, color: Color(0xFF00652C)),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Text(
-              'Total Service Cost',
-              style: TextStyle(
+              AppLocalization.t('Total Service Cost'),
+              style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF174D2B),
               ),
@@ -1124,14 +1145,14 @@ class _ExcavatorServiceAddEditScreenState
 
   Widget _buildRemarks() {
     return _sectionCard(
-      title: 'Remarks',
+      title: AppLocalization.t('Remarks'),
       icon: Icons.notes_outlined,
       child: TextFormField(
         controller: _remarksController,
         maxLines: 4,
         decoration: _inputDecoration(
-          label: 'Service Remarks',
-          hint: 'Enter any additional service notes...',
+          label: AppLocalization.t('Service Remarks'),
+          hint: AppLocalization.t('Enter any additional service notes...'),
         ),
       ),
     );
@@ -1150,7 +1171,7 @@ class _ExcavatorServiceAddEditScreenState
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
         const SizedBox(width: 12),
         FilledButton.icon(
@@ -1167,10 +1188,10 @@ class _ExcavatorServiceAddEditScreenState
               : const Icon(Icons.save_outlined),
           label: Text(
             _saving
-                ? 'Saving...'
+                ? AppLocalization.t('Saving...')
                 : widget.isEdit
-                ? 'Update Service'
-                : 'Save Service',
+                ? AppLocalization.t('Update Service')
+                : AppLocalization.t('Save Service'),
           ),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1187,7 +1208,11 @@ class _ExcavatorServiceAddEditScreenState
 
   void _addItem() {
     if (_spares.isEmpty) {
-      _showError('No active spare parts found. Please add spares first.');
+      _showError(
+        AppLocalization.t(
+          'No active spare parts found. Please add spares first.',
+        ),
+      );
       return;
     }
 
@@ -1282,13 +1307,17 @@ class _ExcavatorServiceAddEditScreenState
         );
 
         if (serviceId == null) {
-          throw Exception(provider.error ?? 'Unable to save service.');
+          throw Exception(
+            AppLocalization.t(provider.error ?? 'Unable to save service.'),
+          );
         }
       } else {
         final success = await provider.updateService(service);
 
         if (!success) {
-          throw Exception(provider.error ?? 'Unable to update service.');
+          throw Exception(
+            AppLocalization.t(provider.error ?? 'Unable to update service.'),
+          );
         }
 
         // Replace existing items with the edited list.
@@ -1307,7 +1336,9 @@ class _ExcavatorServiceAddEditScreenState
 
             if (!deleted) {
               throw Exception(
-                provider.error ?? 'Unable to update service items.',
+                AppLocalization.t(
+                  provider.error ?? 'Unable to update service items.',
+                ),
               );
             }
           }
@@ -1320,7 +1351,11 @@ class _ExcavatorServiceAddEditScreenState
           final added = await provider.addItem(item);
 
           if (!added) {
-            throw Exception(provider.error ?? 'Unable to save service item.');
+            throw Exception(
+              AppLocalization.t(
+                provider.error ?? 'Unable to save service item.',
+              ),
+            );
           }
         }
       }
@@ -1331,8 +1366,8 @@ class _ExcavatorServiceAddEditScreenState
         SnackBar(
           content: Text(
             widget.isEdit
-                ? 'Service updated successfully.'
-                : 'Service added successfully.',
+                ? AppLocalization.t('Service updated successfully.')
+                : AppLocalization.t('Service added successfully.'),
           ),
           backgroundColor: const Color(0xFF00652C),
         ),

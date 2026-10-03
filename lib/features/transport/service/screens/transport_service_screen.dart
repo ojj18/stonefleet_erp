@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -145,7 +146,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -197,12 +198,12 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Transport Service',
+                AppLocalization.t('Transport Service'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -213,7 +214,9 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
               SizedBox(height: 6),
 
               Text(
-                'Track transport vehicle servicing, spare parts and service history.',
+                AppLocalization.t(
+                  'Track transport vehicle servicing, spare parts and service history.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -225,7 +228,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
         FilledButton.icon(
           onPressed: _openAddScreen,
           icon: const Icon(Icons.add, size: 20),
-          label: const Text('Add Service'),
+          label: Text(AppLocalization.t('Add Service')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
@@ -260,7 +263,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
           children: [
             Expanded(
               child: _summaryCard(
-                title: 'Total Services',
+                title: AppLocalization.t('Total Services'),
                 value: services.length.toString(),
                 icon: Icons.build_outlined,
               ),
@@ -270,7 +273,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
             Expanded(
               child: _summaryCard(
-                title: 'This Month',
+                title: AppLocalization.t('This Month'),
                 value: thisMonth.toString(),
                 icon: Icons.calendar_month_outlined,
               ),
@@ -280,7 +283,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
             Expanded(
               child: _summaryCard(
-                title: 'Active Vehicles',
+                title: AppLocalization.t('Active Vehicles'),
                 value: context
                     .watch<TransportProvider>()
                     .vehicles
@@ -365,7 +368,9 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search registration number, date or remarks...',
+                hintText: AppLocalization.t(
+                  'Search registration number, date or remarks...',
+                ),
                 prefixIcon: const Icon(Icons.search),
                 suffixIcon: _searchQuery.isEmpty
                     ? null
@@ -394,7 +399,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
               context.read<TransportServiceProvider>().loadServices();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Refresh'),
+            label: Text(AppLocalization.t('Refresh')),
             style: OutlinedButton.styleFrom(minimumSize: const Size(110, 52)),
           ),
         ],
@@ -480,20 +485,29 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
   // ============================================================
 
   Widget _buildTableHeader() {
-    return const Padding(
+    return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          Expanded(flex: 3, child: Text('REGISTRATION', style: _headerStyle)),
+          Expanded(
+            flex: 3,
+            child: Text(AppLocalization.t('REGISTRATION'), style: _headerStyle),
+          ),
 
-          Expanded(flex: 2, child: Text('SERVICE DATE', style: _headerStyle)),
+          Expanded(
+            flex: 2,
+            child: Text(AppLocalization.t('SERVICE DATE'), style: _headerStyle),
+          ),
 
-          Expanded(flex: 2, child: Text('CURRENT KM', style: _headerStyle)),
+          Expanded(
+            flex: 2,
+            child: Text(AppLocalization.t('CURRENT KM'), style: _headerStyle),
+          ),
 
           Expanded(
             flex: 1,
             child: Text(
-              'ITEMS',
+              AppLocalization.t('ITEMS'),
               style: _headerStyle,
               textAlign: TextAlign.center,
             ),
@@ -502,7 +516,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
           Expanded(
             flex: 2,
             child: Text(
-              'TOTAL COST',
+              AppLocalization.t('TOTAL COST'),
               style: _headerStyle,
               textAlign: TextAlign.right,
             ),
@@ -511,7 +525,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
           SizedBox(
             width: 100,
             child: Text(
-              'ACTION',
+              AppLocalization.t('ACTION'),
               style: _headerStyle,
               textAlign: TextAlign.center,
             ),
@@ -565,7 +579,8 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
                   Expanded(
                     child: Text(
-                      vehicle?.registrationNumber ?? 'Unknown Vehicle',
+                      vehicle?.registrationNumber ??
+                          AppLocalization.t('Unknown Vehicle'),
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
@@ -593,7 +608,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                 future: _getItemSummary(service.id),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Center(
+                    return Center(
                       child: SizedBox(
                         width: 15,
                         height: 15,
@@ -624,7 +639,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                 future: _getItemSummary(service.id),
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
-                    return const Align(
+                    return Align(
                       alignment: Alignment.centerRight,
                       child: SizedBox(
                         width: 15,
@@ -657,7 +672,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   IconButton(
-                    tooltip: 'Edit',
+                    tooltip: AppLocalization.t('Edit'),
                     onPressed: service.id == null
                         ? null
                         : () => _openEditScreen(service),
@@ -665,7 +680,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                   ),
                   if (context.watch<AuthProvider>().isAdmin)
                     IconButton(
-                      tooltip: 'Delete',
+                      tooltip: AppLocalization.t('Delete'),
                       onPressed: service.id == null
                           ? null
                           : () => _confirmDelete(service),
@@ -774,16 +789,14 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Delete Service?'),
+          title: Text(AppLocalization.t('Delete Service?')),
           content: Text(
-            'Are you sure you want to delete '
-            'the service record'
-            '${registration == null ? '' : ' for $registration'}?',
+            '${AppLocalization.t('Are you sure you want to delete the service record')}${registration == null ? '' : ' for $registration'}?',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
 
             FilledButton(
@@ -791,7 +804,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFFBA1A1A),
               ),
-              child: const Text('Delete'),
+              child: Text(AppLocalization.t('Delete')),
             ),
           ],
         );
@@ -815,7 +828,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
       SnackBar(
         content: Text(
           success
-              ? 'Service deleted successfully.'
+              ? AppLocalization.t('Service deleted successfully.')
               : context.read<TransportServiceProvider>().error ??
                     'Unable to delete service.',
         ),
@@ -895,7 +908,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
           Text(
             _searchQuery.isEmpty
-                ? 'No service records found'
+                ? AppLocalization.t('No service records found')
                 : 'No matching service records',
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
@@ -904,7 +917,9 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
           Text(
             _searchQuery.isEmpty
-                ? 'Add your first transport service record to get started.'
+                ? AppLocalization.t(
+                    'Add your first transport service record to get started.',
+                  )
                 : 'Try a different registration number or search term.',
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 13, color: Color(0xFF68717D)),
@@ -916,7 +931,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
             FilledButton.icon(
               onPressed: _openAddScreen,
               icon: const Icon(Icons.add),
-              label: const Text('Add Service'),
+              label: Text(AppLocalization.t('Add Service')),
               style: FilledButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
               ),
@@ -939,9 +954,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Color(0xFF00652C)),
-      ),
+      child: Center(child: CircularProgressIndicator(color: Color(0xFF00652C))),
     );
   }
 
@@ -964,8 +977,8 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
           const SizedBox(height: 12),
 
-          const Text(
-            'Unable to load service records',
+          Text(
+            AppLocalization.t('Unable to load service records'),
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
 
@@ -984,7 +997,7 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
               context.read<TransportServiceProvider>().loadServices();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),

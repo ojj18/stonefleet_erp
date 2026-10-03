@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/widgets/app_sidebar.dart';
@@ -37,13 +38,13 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     InventoryPageHeader(
-                      title: 'Spare Inventory',
+                      title: AppLocalization.t('Spare Inventory'),
                       subtitle:
-                          'Manage spare purchases, stock usage and inventory reports.',
+                          AppLocalization.t('Manage spare purchases, stock usage and inventory reports.'),
                       action: ElevatedButton.icon(
                         onPressed: () => handleMenuTap(12, context: context),
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('Upload Bill'),
+                        label: Text(AppLocalization.t('Upload Bill')),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF00652C),
                           foregroundColor: Colors.white,
@@ -59,7 +60,7 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                       children: [
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Total Spare Items',
+                            title: AppLocalization.t('Total Spare Items'),
                             value: '${provider.summary.totalItems}',
                             icon: Icons.inventory_2_outlined,
                           ),
@@ -67,7 +68,7 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Purchased Quantity',
+                            title: AppLocalization.t('Purchased Quantity'),
                             value: formatQty(
                               provider.summary.purchasedQuantity,
                             ),
@@ -77,7 +78,7 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Used Quantity',
+                            title: AppLocalization.t('Used Quantity'),
                             value: formatQty(provider.summary.usedQuantity),
                             icon: Icons.remove_shopping_cart_outlined,
                           ),
@@ -89,7 +90,7 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                       children: [
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Remaining Stock',
+                            title: AppLocalization.t('Remaining Stock'),
                             value: formatQty(
                               provider.summary.remainingQuantity,
                             ),
@@ -99,22 +100,22 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Total Purchase Cost',
+                            title: AppLocalization.t('Total Purchase Cost'),
                             value: formatMoney(provider.summary.purchaseCost),
                             icon: Icons.currency_rupee_outlined,
                           ),
                         ),
                         const SizedBox(width: 16),
-                        const Expanded(child: SizedBox()),
+                        Expanded(child: SizedBox()),
                       ],
                     ),
                     const SizedBox(height: 24),
                     InventorySectionCard(
-                      title: 'Recent Purchases',
+                      title: AppLocalization.t('Recent Purchases'),
                       icon: Icons.receipt_long_outlined,
                       child: provider.purchases.isEmpty
-                          ? const _EmptyText(
-                              text: 'No spare purchases recorded yet.',
+                          ? _EmptyText(
+                              text: AppLocalization.t('No spare purchases recorded yet.'),
                             )
                           : _PurchasePreview(
                               rows: provider.purchases.take(5).toList(),
@@ -122,11 +123,11 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                     ),
                     const SizedBox(height: 24),
                     InventorySectionCard(
-                      title: 'Recent Spare Usage',
+                      title: AppLocalization.t('Recent Spare Usage'),
                       icon: Icons.build_circle_outlined,
                       child: provider.usage.isEmpty
-                          ? const _EmptyText(
-                              text: 'No spare usage recorded yet.',
+                          ? _EmptyText(
+                              text: AppLocalization.t('No spare usage recorded yet.'),
                             )
                           : _UsagePreview(
                               rows: provider.usage.take(5).toList(),
@@ -169,13 +170,13 @@ class _PurchasePreview extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: DataTable(
-      columns: const [
-        DataColumn(label: Text('DATE')),
-        DataColumn(label: Text('BILL NUMBER')),
-        DataColumn(label: Text('SUPPLIER')),
-        DataColumn(label: Text('SPARE ITEM')),
-        DataColumn(label: Text('QTY')),
-        DataColumn(label: Text('TOTAL COST')),
+      columns: [
+        DataColumn(label: Text(AppLocalization.t('DATE'))),
+        DataColumn(label: Text(AppLocalization.t('BILL NUMBER'))),
+        DataColumn(label: Text(AppLocalization.t('SUPPLIER'))),
+        DataColumn(label: Text(AppLocalization.t('SPARE ITEM'))),
+        DataColumn(label: Text(AppLocalization.t('QTY'))),
+        DataColumn(label: Text(AppLocalization.t('TOTAL COST'))),
       ],
       rows: rows
           .map(
@@ -202,11 +203,11 @@ class _UsagePreview extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: DataTable(
-      columns: const [
-        DataColumn(label: Text('DATE')),
-        DataColumn(label: Text('SPARE ITEM')),
-        DataColumn(label: Text('USED QTY')),
-        DataColumn(label: Text('USED FOR')),
+      columns: [
+        DataColumn(label: Text(AppLocalization.t('DATE'))),
+        DataColumn(label: Text(AppLocalization.t('SPARE ITEM'))),
+        DataColumn(label: Text(AppLocalization.t('USED QTY'))),
+        DataColumn(label: Text(AppLocalization.t('USED FOR'))),
       ],
       rows: rows
           .map(

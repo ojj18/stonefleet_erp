@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -281,7 +282,7 @@ class _ExcavatorMasterAddEditScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -337,7 +338,9 @@ class _ExcavatorMasterAddEditScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                widget.isEdit ? 'Edit Excavator' : 'Add Excavator',
+                widget.isEdit
+                    ? AppLocalization.t('Edit Excavator')
+                    : AppLocalization.t('Add Excavator'),
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -349,8 +352,10 @@ class _ExcavatorMasterAddEditScreenState
 
               Text(
                 widget.isEdit
-                    ? 'Update registered excavator details.'
-                    : 'Register a new excavator in the fleet.',
+                    ? AppLocalization.t('Update registered excavator details.')
+                    : AppLocalization.t(
+                        'Register a new excavator in the fleet.',
+                      ),
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -364,7 +369,7 @@ class _ExcavatorMasterAddEditScreenState
                   Navigator.pop(context);
                 },
           icon: const Icon(Icons.close, size: 18),
-          label: const Text('Cancel'),
+          label: Text(AppLocalization.t('Cancel')),
         ),
       ],
     );
@@ -376,7 +381,7 @@ class _ExcavatorMasterAddEditScreenState
 
   Widget _buildMachineDetails() {
     return _sectionCard(
-      title: 'Machine Details',
+      title: AppLocalization.t('Machine Details'),
       icon: Icons.precision_manufacturing_outlined,
       child: Column(
         children: [
@@ -459,12 +464,12 @@ class _ExcavatorMasterAddEditScreenState
 
       decoration:
           _inputDecoration(
-            label: 'Registration Number',
+            label: AppLocalization.t('Registration Number'),
             hint: 'TN 38 AB 1234',
             icon: Icons.badge_outlined,
           ).copyWith(
             suffixIcon: _registrationChecking
-                ? const Padding(
+                ? Padding(
                     padding: EdgeInsets.all(12),
                     child: SizedBox(
                       width: 18,
@@ -478,7 +483,7 @@ class _ExcavatorMasterAddEditScreenState
                 : widget.isEdit
                 ? const Icon(Icons.lock_outline, size: 20)
                 : IconButton(
-                    tooltip: 'Check registration',
+                    tooltip: AppLocalization.t('Check registration'),
                     icon: Icon(
                       _registrationExists
                           ? Icons.error_outline
@@ -510,11 +515,11 @@ class _ExcavatorMasterAddEditScreenState
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter registration number';
+          return AppLocalization.t('Enter registration number');
         }
 
         if (_registrationExists) {
-          return 'Registration number already exists';
+          return AppLocalization.t('Registration number already exists');
         }
 
         return null;
@@ -541,7 +546,11 @@ class _ExcavatorMasterAddEditScreenState
                 ),
               )
             : const Icon(Icons.verified_outlined, size: 18),
-        label: Text(_rcVerifying ? 'Verifying RC...' : 'Verify RC Details'),
+        label: Text(
+          _rcVerifying
+              ? AppLocalization.t('Verifying RC...')
+              : AppLocalization.t('Verify RC Details'),
+        ),
         style: OutlinedButton.styleFrom(
           foregroundColor: const Color(0xFF00652C),
           side: const BorderSide(color: Color(0xFF00652C)),
@@ -640,10 +649,14 @@ class _ExcavatorMasterAddEditScreenState
         _registrationController.text = registration;
       });
 
-      _showSuccess('RC verified successfully. Details auto-filled.');
+      _showSuccess(
+        AppLocalization.t('RC verified successfully. Details auto-filled.'),
+      );
     } catch (e) {
       if (!mounted) return;
-      _showError('Unable to verify RC: ${_cleanWay2Error(e)}');
+      _showError(
+        AppLocalization.t('Unable to verify RC: ${_cleanWay2Error(e)}'),
+      );
     } finally {
       if (mounted) {
         setState(() {
@@ -770,14 +783,14 @@ class _ExcavatorMasterAddEditScreenState
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Manufacturer',
-        hint: 'Example: Tata Hitachi',
+        label: AppLocalization.t('Manufacturer'),
+        hint: AppLocalization.t('Example: Tata Hitachi'),
         icon: Icons.factory_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter manufacturer';
+          return AppLocalization.t('Enter manufacturer');
         }
 
         return null;
@@ -798,14 +811,14 @@ class _ExcavatorMasterAddEditScreenState
       textCapitalization: TextCapitalization.words,
 
       decoration: _inputDecoration(
-        label: 'Excavator Model',
-        hint: 'Example: EX 210',
+        label: AppLocalization.t('Excavator Model'),
+        hint: AppLocalization.t('Example: EX 210'),
         icon: Icons.construction_outlined,
       ),
 
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter excavator model';
+          return AppLocalization.t('Enter excavator model');
         }
 
         return null;
@@ -831,7 +844,7 @@ class _ExcavatorMasterAddEditScreenState
       ],
 
       decoration: _inputDecoration(
-        label: 'Manufacturing Year',
+        label: AppLocalization.t('Manufacturing Year'),
         hint: '2024',
         icon: Icons.calendar_today_outlined,
       ),
@@ -844,13 +857,13 @@ class _ExcavatorMasterAddEditScreenState
         final year = int.tryParse(value.trim());
 
         if (year == null) {
-          return 'Enter a valid year';
+          return AppLocalization.t('Enter a valid year');
         }
 
         final currentYear = DateTime.now().year;
 
         if (year < 1950 || year > currentYear) {
-          return 'Enter a valid year';
+          return AppLocalization.t('Enter a valid year');
         }
 
         return null;
@@ -868,8 +881,8 @@ class _ExcavatorMasterAddEditScreenState
       enabled: !_saving,
       textCapitalization: TextCapitalization.words,
       decoration: _inputDecoration(
-        label: 'Owner Name',
-        hint: 'Vehicle owner name',
+        label: AppLocalization.t('Owner Name'),
+        hint: AppLocalization.t('Vehicle owner name'),
         icon: Icons.person_outline,
       ),
     );
@@ -881,8 +894,8 @@ class _ExcavatorMasterAddEditScreenState
       enabled: !_saving,
       textCapitalization: TextCapitalization.words,
       decoration: _inputDecoration(
-        label: 'Color',
-        hint: 'Example: Yellow',
+        label: AppLocalization.t('Color'),
+        hint: AppLocalization.t('Example: Yellow'),
         icon: Icons.palette_outlined,
       ),
     );
@@ -895,8 +908,8 @@ class _ExcavatorMasterAddEditScreenState
       maxLines: 2,
       textCapitalization: TextCapitalization.sentences,
       decoration: _inputDecoration(
-        label: 'Permanent Address',
-        hint: 'Owner permanent address',
+        label: AppLocalization.t('Permanent Address'),
+        hint: AppLocalization.t('Owner permanent address'),
         icon: Icons.home_outlined,
       ),
     );
@@ -908,8 +921,8 @@ class _ExcavatorMasterAddEditScreenState
       enabled: !_saving,
       textCapitalization: TextCapitalization.characters,
       decoration: _inputDecoration(
-        label: 'Vehicle Chasi Number',
-        hint: 'Chassis number',
+        label: AppLocalization.t('Vehicle Chasi Number'),
+        hint: AppLocalization.t('Chassis number'),
         icon: Icons.numbers_outlined,
       ),
     );
@@ -921,8 +934,8 @@ class _ExcavatorMasterAddEditScreenState
       enabled: !_saving,
       textCapitalization: TextCapitalization.characters,
       decoration: _inputDecoration(
-        label: 'Vehicle Engine Number',
-        hint: 'Engine number',
+        label: AppLocalization.t('Vehicle Engine Number'),
+        hint: AppLocalization.t('Engine number'),
         icon: Icons.settings_outlined,
       ),
     );
@@ -934,8 +947,8 @@ class _ExcavatorMasterAddEditScreenState
       enabled: !_saving,
       textCapitalization: TextCapitalization.words,
       decoration: _inputDecoration(
-        label: 'Insurance Company',
-        hint: 'Example: ICICI Lombard',
+        label: AppLocalization.t('Insurance Company'),
+        hint: AppLocalization.t('Example: ICICI Lombard'),
         icon: Icons.business_outlined,
       ),
     );
@@ -943,7 +956,7 @@ class _ExcavatorMasterAddEditScreenState
 
   Widget _buildComplianceSection() {
     return _sectionCard(
-      title: 'Vehicle Compliance',
+      title: AppLocalization.t('Vehicle Compliance'),
       icon: Icons.verified_user_outlined,
       child: Column(
         children: [
@@ -955,7 +968,7 @@ class _ExcavatorMasterAddEditScreenState
             children: [
               Expanded(
                 child: _dateField(
-                  label: 'Insurance Expiry',
+                  label: AppLocalization.t('Insurance Expiry'),
                   value: _insuranceExpiry,
                   icon: Icons.shield_outlined,
                   onChanged: (value) {
@@ -970,7 +983,7 @@ class _ExcavatorMasterAddEditScreenState
 
               Expanded(
                 child: _dateField(
-                  label: 'FC Expiry',
+                  label: AppLocalization.t('FC Expiry'),
                   value: _fcExpiry,
                   icon: Icons.fact_check_outlined,
                   onChanged: (value) {
@@ -989,7 +1002,7 @@ class _ExcavatorMasterAddEditScreenState
             children: [
               Expanded(
                 child: _dateField(
-                  label: 'Permit Expiry',
+                  label: AppLocalization.t('Permit Expiry'),
                   value: _permitExpiry,
                   icon: Icons.assignment_outlined,
                   onChanged: (value) {
@@ -1004,7 +1017,7 @@ class _ExcavatorMasterAddEditScreenState
 
               Expanded(
                 child: _dateField(
-                  label: 'Tax Expiry',
+                  label: AppLocalization.t('Tax Expiry'),
                   value: _taxExpiry,
                   icon: Icons.receipt_long_outlined,
                   onChanged: (value) {
@@ -1046,7 +1059,7 @@ class _ExcavatorMasterAddEditScreenState
 
                 lastDate: DateTime(2100),
 
-                helpText: 'Select $label',
+                helpText: '${AppLocalization.t('Select')} $label',
               );
 
               if (selected != null) {
@@ -1074,7 +1087,7 @@ class _ExcavatorMasterAddEditScreenState
 
             if (value != null)
               IconButton(
-                tooltip: 'Clear date',
+                tooltip: AppLocalization.t('Clear date'),
 
                 icon: const Icon(Icons.clear, size: 18),
 
@@ -1102,13 +1115,13 @@ class _ExcavatorMasterAddEditScreenState
 
   Widget _buildStatusSection() {
     return _sectionCard(
-      title: 'Status',
+      title: AppLocalization.t('Status'),
       icon: Icons.toggle_on_outlined,
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
 
-        title: const Text(
-          'Active Excavator',
+        title: Text(
+          AppLocalization.t('Active Excavator'),
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
 
@@ -1147,7 +1160,7 @@ class _ExcavatorMasterAddEditScreenState
               : () {
                   Navigator.pop(context);
                 },
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
 
         const SizedBox(width: 12),
@@ -1166,7 +1179,11 @@ class _ExcavatorMasterAddEditScreenState
                 )
               : const Icon(Icons.save_outlined),
 
-          label: Text(widget.isEdit ? 'Update Excavator' : 'Save Excavator'),
+          label: Text(
+            widget.isEdit
+                ? AppLocalization.t('Update Excavator')
+                : AppLocalization.t('Save Excavator'),
+          ),
 
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -1288,13 +1305,15 @@ class _ExcavatorMasterAddEditScreenState
       if (success) {
         _showSuccess(
           widget.isEdit
-              ? 'Excavator updated successfully.'
-              : 'Excavator added successfully.',
+              ? AppLocalization.t('Excavator updated successfully.')
+              : AppLocalization.t('Excavator added successfully.'),
         );
 
         Navigator.pop(context, true);
       } else {
-        _showError(provider.error ?? 'Unable to save excavator.');
+        _showError(
+          AppLocalization.t(provider.error ?? 'Unable to save excavator.'),
+        );
       }
     } catch (e) {
       if (!mounted) return;
@@ -1341,7 +1360,7 @@ class _ExcavatorMasterAddEditScreenState
             borderRadius: BorderRadius.circular(14),
           ),
 
-          title: const Row(
+          title: Row(
             children: [
               Icon(
                 Icons.warning_amber_rounded,
@@ -1351,14 +1370,14 @@ class _ExcavatorMasterAddEditScreenState
 
               SizedBox(width: 10),
 
-              Expanded(child: Text('Vehicle Already Exists')),
+              Expanded(
+                child: Text(AppLocalization.t('Vehicle Already Exists')),
+              ),
             ],
           ),
 
           content: Text(
-            'The registration number '
-            '$registration is already registered '
-            'in StoneFleet.',
+            '${AppLocalization.t('The registration number')} $registration ${AppLocalization.t('is already registered in StoneFleet.')}',
           ),
 
           actions: [
@@ -1371,7 +1390,7 @@ class _ExcavatorMasterAddEditScreenState
                 Navigator.pop(dialogContext);
               },
 
-              child: const Text('OK'),
+              child: Text(AppLocalization.t('OK')),
             ),
           ],
         );

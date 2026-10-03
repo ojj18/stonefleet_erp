@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -331,7 +332,7 @@ class _TransportMaintenanceAddEditScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -388,8 +389,8 @@ class _TransportMaintenanceAddEditScreenState
             children: [
               Text(
                 widget.isEdit
-                    ? 'Edit Transport Maintenance'
-                    : 'Add Transport Maintenance',
+                    ? AppLocalization.t('Edit Transport Maintenance')
+                    : AppLocalization.t('Add Transport Maintenance'),
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -401,8 +402,10 @@ class _TransportMaintenanceAddEditScreenState
 
               Text(
                 widget.isEdit
-                    ? 'Update transport maintenance record.'
-                    : 'Record daily transport vehicle operation and maintenance details.',
+                    ? AppLocalization.t('Update transport maintenance record.')
+                    : AppLocalization.t(
+                        'Record daily transport vehicle operation and maintenance details.',
+                      ),
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -412,7 +415,7 @@ class _TransportMaintenanceAddEditScreenState
         ElevatedButton.icon(
           onPressed: _extractSheetData,
           icon: const Icon(Icons.upload_file_outlined),
-          label: const Text('Upload Image'),
+          label: Text(AppLocalization.t('Upload Image')),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             foregroundColor: Colors.white,
@@ -434,7 +437,7 @@ class _TransportMaintenanceAddEditScreenState
 
   Widget _buildDriverSection() {
     return _sectionCard(
-      title: 'Vehicle & Driver',
+      title: AppLocalization.t('Vehicle & Driver'),
       icon: Icons.local_shipping_outlined,
       child: Row(
         children: [
@@ -445,8 +448,8 @@ class _TransportMaintenanceAddEditScreenState
           Expanded(
             child: _buildTextField(
               controller: _driverController,
-              label: 'Driver Name',
-              hint: 'Enter driver name',
+              label: AppLocalization.t('Driver Name'),
+              hint: AppLocalization.t('Enter driver name'),
               icon: Icons.person_outline,
             ),
           ),
@@ -466,8 +469,8 @@ class _TransportMaintenanceAddEditScreenState
       initialValue: _selectedVehicle,
 
       decoration: _inputDecoration(
-        label: 'Vehicle',
-        hint: 'Select vehicle',
+        label: AppLocalization.t('Vehicle'),
+        hint: AppLocalization.t('Select vehicle'),
         icon: Icons.local_shipping_outlined,
       ),
 
@@ -491,7 +494,7 @@ class _TransportMaintenanceAddEditScreenState
 
       validator: (value) {
         if (value == null || value.id == null) {
-          return 'Select vehicle';
+          return AppLocalization.t('Select vehicle');
         }
 
         return null;
@@ -517,7 +520,7 @@ class _TransportMaintenanceAddEditScreenState
 
   Widget _buildKilometerSection() {
     return _sectionCard(
-      title: 'Kilometer Reading',
+      title: AppLocalization.t('Kilometer Reading'),
       icon: Icons.speed_outlined,
       child: Column(
         children: [
@@ -526,7 +529,7 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildNumberField(
                   controller: _startingKmController,
-                  label: 'Starting KM',
+                  label: AppLocalization.t('Starting KM'),
                   hint: '12540.0',
                   icon: Icons.play_circle_outline,
                 ),
@@ -537,7 +540,7 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildNumberField(
                   controller: _closingKmController,
-                  label: 'Closing KM',
+                  label: AppLocalization.t('Closing KM'),
                   hint: '12680.0',
                   icon: Icons.stop_circle_outlined,
                 ),
@@ -547,7 +550,7 @@ class _TransportMaintenanceAddEditScreenState
 
               Expanded(
                 child: _buildCalculatedField(
-                  label: 'Total KM',
+                  label: AppLocalization.t('Total KM'),
                   value: _formatNumber(_totalKm),
                   icon: Icons.route_outlined,
                 ),
@@ -565,7 +568,7 @@ class _TransportMaintenanceAddEditScreenState
 
   Widget _buildTripSection() {
     return _sectionCard(
-      title: 'Trip & Load Details',
+      title: AppLocalization.t('Trip & Load Details'),
       icon: Icons.alt_route_outlined,
       child: Column(
         children: [
@@ -574,7 +577,7 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildNumberField(
                   controller: _numberOfLoadsController,
-                  label: 'Number of Loads',
+                  label: AppLocalization.t('Number of Loads'),
                   hint: '0',
                   icon: Icons.inventory_2_outlined,
                   decimal: false,
@@ -583,9 +586,9 @@ class _TransportMaintenanceAddEditScreenState
 
               const SizedBox(width: 20),
 
-              const Expanded(child: SizedBox()),
+              Expanded(child: SizedBox()),
 
-              const Expanded(child: SizedBox()),
+              Expanded(child: SizedBox()),
             ],
           ),
 
@@ -596,8 +599,8 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildTextField(
                   controller: _loadingSiteController,
-                  label: 'Loading Site',
-                  hint: 'Enter loading location',
+                  label: AppLocalization.t('Loading Site'),
+                  hint: AppLocalization.t('Enter loading location'),
                   icon: Icons.upload_outlined,
                 ),
               ),
@@ -607,8 +610,8 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildTextField(
                   controller: _unloadingSiteController,
-                  label: 'Unloading Site',
-                  hint: 'Enter unloading location',
+                  label: AppLocalization.t('Unloading Site'),
+                  hint: AppLocalization.t('Enter unloading location'),
                   icon: Icons.download_outlined,
                 ),
               ),
@@ -625,7 +628,7 @@ class _TransportMaintenanceAddEditScreenState
 
   Widget _buildDieselSection() {
     return _sectionCard(
-      title: 'Diesel & Fuel',
+      title: AppLocalization.t('Diesel & Fuel'),
       icon: Icons.local_gas_station_outlined,
       child: Column(
         children: [
@@ -634,7 +637,7 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildNumberField(
                   controller: _dieselFilledController,
-                  label: 'Diesel Filled',
+                  label: AppLocalization.t('Diesel Filled'),
                   hint: '0.00',
                   icon: Icons.water_drop_outlined,
                 ),
@@ -645,7 +648,7 @@ class _TransportMaintenanceAddEditScreenState
               Expanded(
                 child: _buildNumberField(
                   controller: _dieselRateController,
-                  label: 'Diesel Rate',
+                  label: AppLocalization.t('Diesel Rate'),
                   hint: '0.00',
                   icon: Icons.currency_rupee,
                 ),
@@ -659,7 +662,7 @@ class _TransportMaintenanceAddEditScreenState
             children: [
               Expanded(
                 child: _buildCalculatedField(
-                  label: 'Diesel Consumption',
+                  label: AppLocalization.t('Diesel Consumption'),
                   value: '${_dieselConsumptionPerKm.toStringAsFixed(2)} L/KM',
                   icon: Icons.speed_outlined,
                 ),
@@ -668,7 +671,7 @@ class _TransportMaintenanceAddEditScreenState
               const SizedBox(width: 20),
               Expanded(
                 child: _buildCalculatedField(
-                  label: 'Diesel Expense',
+                  label: AppLocalization.t('Diesel Expense'),
                   value: _formatCurrency(_dieselExpense),
                   icon: Icons.receipt_long_outlined,
                 ),
@@ -686,15 +689,15 @@ class _TransportMaintenanceAddEditScreenState
 
   Widget _buildRemarksSection() {
     return _sectionCard(
-      title: 'Remarks',
+      title: AppLocalization.t('Remarks'),
       icon: Icons.notes_outlined,
       child: TextFormField(
         controller: _remarksController,
         maxLines: 4,
         textCapitalization: TextCapitalization.sentences,
         decoration: _inputDecoration(
-          label: 'Remarks',
-          hint: 'Enter additional notes or observations',
+          label: AppLocalization.t('Remarks'),
+          hint: AppLocalization.t('Enter additional notes or observations'),
           icon: Icons.notes_outlined,
         ),
       ),
@@ -718,7 +721,7 @@ class _TransportMaintenanceAddEditScreenState
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 15),
           ),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
 
         const SizedBox(width: 12),
@@ -736,7 +739,9 @@ class _TransportMaintenanceAddEditScreenState
                 )
               : const Icon(Icons.save_outlined),
           label: Text(
-            widget.isEdit ? 'Update Maintenance' : 'Save Maintenance',
+            widget.isEdit
+                ? AppLocalization.t('Update Maintenance')
+                : AppLocalization.t('Save Maintenance'),
           ),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -851,8 +856,12 @@ class _TransportMaintenanceAddEditScreenState
         SnackBar(
           content: Text(
             widget.isEdit
-                ? 'Transport maintenance updated successfully.'
-                : 'Transport maintenance added successfully.',
+                ? AppLocalization.t(
+                    'Transport maintenance updated successfully.',
+                  )
+                : AppLocalization.t(
+                    'Transport maintenance added successfully.',
+                  ),
           ),
           backgroundColor: const Color(0xFF00652C),
         ),
@@ -860,7 +869,11 @@ class _TransportMaintenanceAddEditScreenState
 
       Navigator.pop(context, true);
     } else {
-      _showError(provider.error ?? 'Unable to save maintenance record.');
+      _showError(
+        AppLocalization.t(
+          provider.error ?? 'Unable to save maintenance record.',
+        ),
+      );
     }
   }
 
@@ -898,7 +911,7 @@ class _TransportMaintenanceAddEditScreenState
       decoration: _inputDecoration(label: label, hint: hint, icon: icon),
       validator: (value) {
         if (value == null || value.trim().isEmpty) {
-          return 'Enter $label';
+          return '${AppLocalization.t('Enter')} $label';
         }
 
         final parsed = decimal
@@ -906,7 +919,7 @@ class _TransportMaintenanceAddEditScreenState
             : int.tryParse(value.trim());
 
         if (parsed == null) {
-          return 'Enter a valid value';
+          return AppLocalization.t('Enter a valid value');
         }
 
         return null;
@@ -1075,8 +1088,8 @@ class _TransportMaintenanceAddEditScreenState
 
   Future<void> _extractSheetData() async {
     try {
-      const typeGroup = XTypeGroup(
-        label: 'Images',
+      var typeGroup = XTypeGroup(
+        label: AppLocalization.t('Images'),
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
 
@@ -1129,8 +1142,8 @@ class _TransportMaintenanceAddEditScreenState
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Uploaded Sheet',
+          title: Text(
+            AppLocalization.t('Uploaded Sheet'),
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           content: SizedBox(
@@ -1145,14 +1158,14 @@ class _TransportMaintenanceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context, true);
               },
               icon: const Icon(Icons.file_upload_outlined),
-              label: const Text('Use Image'),
+              label: Text(AppLocalization.t('Use Image')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
                 foregroundColor: Colors.white,
@@ -1175,8 +1188,8 @@ class _TransportMaintenanceAddEditScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return const AlertDialog(
-          title: Text('Extracting Data'),
+        return AlertDialog(
+          title: Text(AppLocalization.t('Extracting Data')),
           content: SizedBox(
             width: 300,
             child: Row(
@@ -1187,7 +1200,7 @@ class _TransportMaintenanceAddEditScreenState
                   child: CircularProgressIndicator(strokeWidth: 3),
                 ),
                 SizedBox(width: 20),
-                Text('Please wait...'),
+                Text(AppLocalization.t('Please wait...')),
               ],
             ),
           ),
@@ -1208,8 +1221,8 @@ class _TransportMaintenanceAddEditScreenState
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Review Extracted Data',
+          title: Text(
+            AppLocalization.t('Review Extracted Data'),
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           content: SizedBox(
@@ -1237,7 +1250,7 @@ class _TransportMaintenanceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Change'),
+              child: Text(AppLocalization.t('Change')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1249,7 +1262,7 @@ class _TransportMaintenanceAddEditScreenState
                 foregroundColor: Colors.white,
                 minimumSize: const Size(180, 48),
               ),
-              child: const Text('Use These Values'),
+              child: Text(AppLocalization.t('Use These Values')),
             ),
           ],
         );

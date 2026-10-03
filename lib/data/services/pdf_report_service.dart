@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 
 class PdfReportService {
   static const _green = PdfColor.fromInt(0xFF00652C);
@@ -56,7 +57,7 @@ class PdfReportService {
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(28),
-        header: (_) => _header(title: 'Compliance Report'),
+        header: (_) => _header(title: AppLocalization.t('Compliance Report')),
         footer: (context) => _footer(context),
         build: (_) => [
           _complianceSummary(records),
@@ -106,7 +107,7 @@ class PdfReportService {
         pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(28),
         header: (_) => _header(
-          title: 'Inventory Report',
+          title: AppLocalization.t('Inventory Report'),
           filter: filter,
           fromDate: fromDate,
           toDate: toDate,
@@ -155,7 +156,7 @@ class PdfReportService {
         pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(24),
         header: (_) => _header(
-          title: 'Quarry Blasting Purchase Report',
+          title: AppLocalization.t('Quarry Blasting Purchase Report'),
           filter: 'Period: $period',
           fromDate: fromDate,
           toDate: toDate,
@@ -416,7 +417,7 @@ class PdfReportService {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text(
-                  'StoneFleet ERP',
+                  AppLocalization.t('StoneFleet ERP'),
                   style: pw.TextStyle(
                     fontSize: 18,
                     fontWeight: pw.FontWeight.bold,
@@ -449,7 +450,7 @@ class PdfReportService {
                   style: const pw.TextStyle(fontSize: 9, color: _muted),
                 ),
               pw.Text(
-                'Generated: ${_formatDateTime(DateTime.now())}',
+                '${AppLocalization.t('Generated: ')}${_formatDateTime(DateTime.now())}',
                 style: const pw.TextStyle(fontSize: 8, color: _muted),
               ),
             ],
@@ -469,11 +470,11 @@ class PdfReportService {
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(
-            'StoneFleet ERP',
+            AppLocalization.t('StoneFleet ERP'),
             style: pw.TextStyle(fontSize: 8, color: _muted),
           ),
           pw.Text(
-            'Page ${context.pageNumber} of ${context.pagesCount}',
+            '${AppLocalization.t('Page ')}${context.pageNumber} ${AppLocalization.t('of')} ${context.pagesCount}',
             style: const pw.TextStyle(fontSize: 8, color: _muted),
           ),
         ],

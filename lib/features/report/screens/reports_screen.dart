@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:printing/printing.dart';
 
@@ -132,7 +133,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           const Spacer(),
 
           IconButton(
-            tooltip: 'Service Notifications',
+            tooltip: AppLocalization.t('Service Notifications'),
             onPressed: () {
               handleMenuTap(7, context: context);
             },
@@ -151,12 +152,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Reports',
+                AppLocalization.t('Reports'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -167,7 +168,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
               SizedBox(height: 6),
 
               Text(
-                'View maintenance and service reports for excavators and transport vehicles.',
+                AppLocalization.t(
+                  'View maintenance and service reports for excavators and transport vehicles.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -179,21 +182,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
         OutlinedButton.icon(
           onPressed: _exportExcel,
           icon: const Icon(Icons.file_download_outlined, size: 20),
-          label: const Text('Export Excel'),
+          label: Text(AppLocalization.t('Export Excel')),
           style: OutlinedButton.styleFrom(minimumSize: const Size(145, 52)),
         ),
         const SizedBox(width: 10),
         OutlinedButton.icon(
           onPressed: _exportPdf,
           icon: const Icon(Icons.picture_as_pdf_outlined, size: 20),
-          label: const Text('Export PDF'),
+          label: Text(AppLocalization.t('Export PDF')),
           style: OutlinedButton.styleFrom(minimumSize: const Size(135, 52)),
         ),
         const SizedBox(width: 10),
         FilledButton.icon(
           onPressed: _printReport,
           icon: const Icon(Icons.print_outlined, size: 20),
-          label: const Text('Print'),
+          label: Text(AppLocalization.t('Print')),
           style: FilledButton.styleFrom(
             minimumSize: const Size(105, 52),
             backgroundColor: const Color(0xFF00652C),
@@ -224,7 +227,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           children: [
             Expanded(
               child: _summaryCard(
-                title: 'Total Records',
+                title: AppLocalization.t('Total Records'),
                 value: total.toString(),
                 icon: Icons.description_outlined,
               ),
@@ -234,7 +237,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
             Expanded(
               child: _summaryCard(
-                title: 'Maintenance',
+                title: AppLocalization.t('Maintenance'),
                 value: maintenance.toString(),
                 icon: Icons.build_outlined,
               ),
@@ -244,7 +247,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
             Expanded(
               child: _summaryCard(
-                title: 'Service',
+                title: AppLocalization.t('Service'),
                 value: service.toString(),
                 icon: Icons.engineering_outlined,
               ),
@@ -326,16 +329,16 @@ class _ReportsScreenState extends State<ReportsScreen> {
                 children: [
                   Expanded(
                     child: _buildDropdown<ReportType>(
-                      label: 'Report Type',
+                      label: AppLocalization.t('Report Type'),
                       value: provider.reportType,
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: ReportType.maintenance,
-                          child: Text('Maintenance'),
+                          child: Text(AppLocalization.t('Maintenance')),
                         ),
                         DropdownMenuItem(
                           value: ReportType.service,
-                          child: Text('Service'),
+                          child: Text(AppLocalization.t('Service')),
                         ),
                       ],
                       onChanged: (value) {
@@ -351,20 +354,20 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                   Expanded(
                     child: _buildDropdown<EquipmentType>(
-                      label: 'Equipment',
+                      label: AppLocalization.t('Equipment'),
                       value: provider.equipmentType,
-                      items: const [
+                      items: [
                         DropdownMenuItem(
                           value: EquipmentType.all,
-                          child: Text('All Equipment'),
+                          child: Text(AppLocalization.t('All Equipment')),
                         ),
                         DropdownMenuItem(
                           value: EquipmentType.excavator,
-                          child: Text('Excavator'),
+                          child: Text(AppLocalization.t('Excavator')),
                         ),
                         DropdownMenuItem(
                           value: EquipmentType.transport,
-                          child: Text('Transport'),
+                          child: Text(AppLocalization.t('Transport')),
                         ),
                       ],
                       onChanged: (value) {
@@ -378,7 +381,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildDateField(
-                      label: 'From Date',
+                      label: AppLocalization.t('From Date'),
                       date: provider.fromDate,
                       onTap: () => _selectFromDate(provider),
                     ),
@@ -388,7 +391,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
                   Expanded(
                     child: _buildDateField(
-                      label: 'To Date',
+                      label: AppLocalization.t('To Date'),
                       date: provider.toDate,
                       onTap: () => _selectToDate(provider),
                     ),
@@ -404,8 +407,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     child: TextField(
                       controller: _searchController,
                       decoration: InputDecoration(
-                        hintText:
-                            'Search registration number, date, remarks...',
+                        hintText: AppLocalization.t(
+                          'Search registration number, date, remarks...',
+                        ),
                         prefixIcon: const Icon(Icons.search),
                         suffixIcon: _searchQuery.isEmpty
                             ? null
@@ -446,7 +450,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(100, 52),
                     ),
-                    child: const Text('Clear'),
+                    child: Text(AppLocalization.t('Clear')),
                   ),
 
                   const SizedBox(width: 12),
@@ -459,7 +463,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                             provider.generateReport();
                           },
                     icon: const Icon(Icons.search),
-                    label: const Text('Generate'),
+                    label: Text(AppLocalization.t('Generate')),
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF00652C),
                       minimumSize: const Size(130, 52),
@@ -590,9 +594,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
               const Divider(height: 1),
 
-              ..._pageItems(provider.reportData).map(
-                (record) => _buildReportRow(record, provider.reportType),
-              ),
+              ..._pageItems(
+                provider.reportData,
+              ).map((record) => _buildReportRow(record, provider.reportType)),
               _pagination(provider.reportData.length),
             ],
           ),
@@ -606,30 +610,35 @@ class _ReportsScreenState extends State<ReportsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             flex: 2,
-            child: Text('EQUIPMENT', style: _headerStyle),
+            child: Text(AppLocalization.t('EQUIPMENT'), style: _headerStyle),
           ),
 
-          const Expanded(
+          Expanded(
             flex: 2,
-            child: Text('REGISTRATION', style: _headerStyle),
+            child: Text(AppLocalization.t('REGISTRATION'), style: _headerStyle),
           ),
 
-          const Expanded(flex: 2, child: Text('DATE', style: _headerStyle)),
+          Expanded(
+            flex: 2,
+            child: Text(AppLocalization.t('DATE'), style: _headerStyle),
+          ),
 
           Expanded(
             flex: 2,
             child: Text(
-              type == ReportType.service ? 'METER' : 'DETAILS',
+              type == ReportType.service
+                  ? AppLocalization.t('METER')
+                  : AppLocalization.t('DETAILS'),
               style: _headerStyle,
             ),
           ),
 
-          const Expanded(
+          Expanded(
             flex: 2,
             child: Text(
-              'COST',
+              AppLocalization.t('COST'),
               style: _headerStyle,
               textAlign: TextAlign.right,
             ),
@@ -764,7 +773,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     if (provider.reportData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No report data available to export.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('No report data available to export.'),
+          ),
+        ),
       );
       return;
     }
@@ -786,7 +799,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Excel exported successfully.\n$path'),
+          content: Text(
+            '${AppLocalization.t('Excel exported successfully.')}\\n$path',
+          ),
           backgroundColor: const Color(0xFF00652C),
         ),
       );
@@ -795,7 +810,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Excel export failed: $e'),
+          content: Text(
+            AppLocalization.t('Excel export failed: ') + e.toString(),
+          ),
           backgroundColor: const Color(0xFFBA1A1A),
         ),
       );
@@ -825,7 +842,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     if (provider.reportData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No report data available to export.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('No report data available to export.'),
+          ),
+        ),
       );
       return;
     }
@@ -840,7 +861,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('PDF export failed: $e'),
+          content: Text(
+            AppLocalization.t('PDF export failed: ') + e.toString(),
+          ),
           backgroundColor: const Color(0xFFBA1A1A),
         ),
       );
@@ -852,7 +875,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
     if (provider.reportData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No report data available to print.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('No report data available to print.'),
+          ),
+        ),
       );
       return;
     }
@@ -867,7 +894,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Print failed: $e'),
+          content: Text(AppLocalization.t('Print failed: ') + e.toString()),
           backgroundColor: const Color(0xFFBA1A1A),
         ),
       );
@@ -905,15 +932,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
           const SizedBox(height: 18),
 
-          const Text(
-            'No report records found',
+          Text(
+            AppLocalization.t('No report records found'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
 
           const SizedBox(height: 7),
 
-          const Text(
-            'Try changing the report type, equipment or date filters.',
+          Text(
+            AppLocalization.t(
+              'Try changing the report type, equipment or date filters.',
+            ),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
           ),
@@ -934,9 +963,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
       ),
-      child: const Center(
-        child: CircularProgressIndicator(color: Color(0xFF00652C)),
-      ),
+      child: Center(child: CircularProgressIndicator(color: Color(0xFF00652C))),
     );
   }
 
@@ -959,8 +986,8 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
           const SizedBox(height: 12),
 
-          const Text(
-            'Unable to load report',
+          Text(
+            AppLocalization.t('Unable to load report'),
             style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
           ),
 
@@ -979,7 +1006,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               context.read<ReportProvider>().generateReport();
             },
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),
@@ -1000,7 +1027,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final loads = record['number_of_loads'];
 
     if (loads != null) {
-      return 'Loads: $loads';
+      return AppLocalization.t('Loads: $loads');
     }
 
     return '-';

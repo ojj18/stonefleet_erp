@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/diesel_models.dart';
@@ -63,9 +64,9 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
       }
     }
     if (vehicle == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Select a vehicle.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalization.t('Select a vehicle.'))),
+      );
       return;
     }
 
@@ -91,13 +92,17 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
       _shift.clear();
       _remarks.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Diesel filling saved successfully.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('Diesel filling saved successfully.'),
+          ),
+        ),
       );
       await p.loadDashboard();
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(p.error!)));
+      ).showSnackBar(SnackBar(content: Text(AppLocalization.t(p.error!))));
     }
   }
 
@@ -115,9 +120,9 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             DieselPageHeader(
-              title: 'Diesel Filling',
+              title: AppLocalization.t('Diesel Filling'),
               subtitle:
-                  'Record diesel filled from the diesel lorry into a vehicle.',
+                  AppLocalization.t('Record diesel filled from the diesel lorry into a vehicle.'),
             ),
             const SizedBox(height: 24),
             DieselCard(
@@ -126,8 +131,8 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DieselSectionTitle(
-                      title: 'Filling Details',
+                    DieselSectionTitle(
+                      title: AppLocalization.t('Filling Details'),
                       icon: Icons.local_gas_station_outlined,
                     ),
                     const SizedBox(height: 20),
@@ -142,7 +147,7 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
                             SizedBox(
                               width: w,
                               child: _dropdown(
-                                label: 'Vehicle Type',
+                                label: AppLocalization.t('Vehicle Type'),
                                 value: vehicleType,
                                 items: const ['Excavator', 'Transport'],
                                 onChanged: (v) {
@@ -255,13 +260,13 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(context).pop(),
-                          child: const Text('Cancel'),
+                          child: Text(AppLocalization.t('Cancel')),
                         ),
                         const SizedBox(width: 12),
                         FilledButton.icon(
                           onPressed: p.isLoading ? null : _save,
                           icon: const Icon(Icons.save_outlined),
-                          label: const Text('Save Filling'),
+                          label: Text(AppLocalization.t('Save Filling')),
                           style: FilledButton.styleFrom(
                             backgroundColor: const Color(0xFF00652C),
                           ),
@@ -277,29 +282,33 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const DieselSectionTitle(
-                    title: 'Recent Filling History',
+                  DieselSectionTitle(
+                    title: AppLocalization.t('Recent Filling History'),
                     icon: Icons.history_outlined,
                   ),
                   const SizedBox(height: 16),
                   if (p.fillings.isEmpty)
-                    const Center(
+                    Center(
                       child: Padding(
                         padding: EdgeInsets.all(20),
-                        child: Text('No diesel filling records yet.'),
+                        child: Text(
+                          AppLocalization.t('No diesel filling records yet.'),
+                        ),
                       ),
                     )
                   else
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('Date')),
-                          DataColumn(label: Text('Vehicle')),
-                          DataColumn(label: Text('Type')),
-                          DataColumn(label: Text('Quantity')),
-                          DataColumn(label: Text('Rate')),
-                          DataColumn(label: Text('Cost')),
+                        columns: [
+                          DataColumn(label: Text(AppLocalization.t('Date'))),
+                          DataColumn(label: Text(AppLocalization.t('Vehicle'))),
+                          DataColumn(label: Text(AppLocalization.t('Type'))),
+                          DataColumn(
+                            label: Text(AppLocalization.t('Quantity')),
+                          ),
+                          DataColumn(label: Text(AppLocalization.t('Rate'))),
+                          DataColumn(label: Text(AppLocalization.t('Cost'))),
                         ],
                         rows: p.fillings
                             .take(15)
@@ -310,7 +319,7 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
                                     Text(dieselDisplayDate(r.fillingDate)),
                                   ),
                                   DataCell(Text(r.vehicleRegistration)),
-                                  DataCell(Text(r.vehicleType)),
+                                  DataCell(Text(AppLocalization.t(r.vehicleType))),
                                   DataCell(
                                     Text('${dieselQty(r.quantityLitres)} L'),
                                   ),
@@ -337,8 +346,8 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
       if (d != null) setState(() => date = d);
     },
     child: InputDecorator(
-      decoration: const InputDecoration(
-        labelText: 'Date',
+      decoration: InputDecoration(
+        labelText: AppLocalization.t('Date'),
         prefixIcon: Icon(Icons.calendar_today_outlined),
       ),
       child: Text(dieselDisplayDate(dieselDate(date))),
@@ -349,8 +358,8 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
     final options = p.vehicles.where((v) => v.type == vehicleType).toList();
     return DropdownButtonFormField<int>(
       initialValue: options.any((v) => v.id == vehicleId) ? vehicleId : null,
-      decoration: const InputDecoration(
-        labelText: 'Vehicle',
+      decoration: InputDecoration(
+        labelText: AppLocalization.t('Vehicle'),
         prefixIcon: Icon(Icons.directions_car_outlined),
       ),
       items: options
@@ -362,7 +371,7 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
           )
           .toList(),
       onChanged: (v) => setState(() => vehicleId = v),
-      validator: (v) => v == null ? 'Select vehicle' : null,
+      validator: (v) => v == null ? AppLocalization.t('Select vehicle') : null,
     );
   }
 

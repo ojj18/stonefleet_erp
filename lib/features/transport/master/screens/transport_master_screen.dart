@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -18,6 +19,8 @@ class TransportMasterScreen extends StatefulWidget {
 }
 
 class _TransportMasterScreenState extends State<TransportMasterScreen> {
+  _TransportMasterScreenState();
+
   final TextEditingController _searchController = TextEditingController();
 
   int _currentPage = 1;
@@ -116,12 +119,12 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
   Widget _buildHeader() {
     return Row(
       children: [
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Transport Master',
+                AppLocalization.t('Transport Master'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -132,7 +135,9 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
               SizedBox(height: 6),
 
               Text(
-                'Manage registered transport vehicles across the fleet.',
+                AppLocalization.t(
+                  'Manage registered transport vehicles across the fleet.',
+                ),
                 style: TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -142,7 +147,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
         FilledButton.icon(
           onPressed: _addVehicle,
           icon: const Icon(Icons.add),
-          label: const Text('Add Vehicle'),
+          label: Text(AppLocalization.t('Add Vehicle')),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
           ),
@@ -176,8 +181,8 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                 setState(() {});
               },
               decoration: InputDecoration(
-                labelText: 'Search Vehicle',
-                hintText: 'Registration number...',
+                labelText: AppLocalization.t('Search Vehicle'),
+                hintText: AppLocalization.t('Registration number...'),
                 prefixIcon: const Icon(Icons.search),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
@@ -195,15 +200,24 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
             child: DropdownButtonFormField<String>(
               initialValue: _statusFilter,
               decoration: InputDecoration(
-                labelText: 'Status',
+                labelText: AppLocalization.t('Status'),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              items: const [
-                DropdownMenuItem(value: 'All', child: Text('All Statuses')),
-                DropdownMenuItem(value: 'Active', child: Text('Active')),
-                DropdownMenuItem(value: 'Inactive', child: Text('Inactive')),
+              items: [
+                DropdownMenuItem(
+                  value: 'All',
+                  child: Text(AppLocalization.t('All Statuses')),
+                ),
+                DropdownMenuItem(
+                  value: 'Active',
+                  child: Text(AppLocalization.t('Active')),
+                ),
+                DropdownMenuItem(
+                  value: 'Inactive',
+                  child: Text(AppLocalization.t('Inactive')),
+                ),
               ],
               onChanged: (value) {
                 if (value == null) return;
@@ -254,7 +268,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
         // --------------------------------------------------------
 
         if (provider.isLoading) {
-          return const Center(
+          return Center(
             child: CircularProgressIndicator(color: Color(0xFF00652C)),
           );
         }
@@ -307,14 +321,25 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                             const Color(0xFFF3F4F6),
                           ),
 
-                          columns: const [
-                            DataColumn(label: Text('REGISTRATION')),
-                            DataColumn(label: Text('MANUFACTURER')),
-                            DataColumn(label: Text('MODEL')),
-                            DataColumn(label: Text('YEAR')),
-                            DataColumn(label: Text('STATUS')),
-                            DataColumn(label: Text('COMPLIANCE')),
-                            DataColumn(label: Text('ACTIONS')),
+                          columns: [
+                            DataColumn(
+                              label: Text(AppLocalization.t('REGISTRATION')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('MANUFACTURER')),
+                            ),
+                            DataColumn(label: Text(AppLocalization.t('MODEL'))),
+                            DataColumn(label: Text(AppLocalization.t('UNIT'))),
+                            DataColumn(label: Text(AppLocalization.t('YEAR'))),
+                            DataColumn(
+                              label: Text(AppLocalization.t('STATUS')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('COMPLIANCE')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('ACTIONS')),
+                            ),
                           ],
 
                           rows: _pageItems(vehicles).map((vehicle) {
@@ -343,6 +368,11 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                                 DataCell(Text(vehicle.modelName ?? '-')),
 
                                 // =================================
+                                // UNIT
+                                // =================================
+                                DataCell(Text(vehicle.unit == 0 ? '-' : _formatUnit(vehicle.unit))),
+
+                                // =================================
                                 // YEAR
                                 // =================================
                                 DataCell(
@@ -367,7 +397,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                        tooltip: 'Edit',
+                                        tooltip: AppLocalization.t('Edit'),
                                         icon: const Icon(
                                           Icons.edit_outlined,
                                           size: 18,
@@ -378,7 +408,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                                       ),
                                       if (context.watch<AuthProvider>().isAdmin)
                                         IconButton(
-                                          tooltip: 'Delete',
+                                          tooltip: AppLocalization.t('Delete'),
                                           icon: const Icon(
                                             Icons.delete_outline,
                                             size: 18,
@@ -411,6 +441,8 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
       },
     );
   }
+
+  String _formatUnit(double value) => value == value.roundToDouble() ? value.toInt().toString() : value.toStringAsFixed(2);
 
   // ============================================================
   // FILTER
@@ -479,7 +511,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
     return Padding(
       padding: const EdgeInsets.only(right: 6),
       child: Tooltip(
-        message: expiry ?? 'Not configured',
+        message: expiry ?? AppLocalization.t('Not configured'),
         child: Container(
           width: 9,
           height: 9,
@@ -549,7 +581,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFBECABC)),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -562,14 +594,14 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
             SizedBox(height: 12),
 
             Text(
-              'No transport vehicles found',
+              AppLocalization.t('No transport vehicles found'),
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
             ),
 
             SizedBox(height: 6),
 
             Text(
-              'Add a vehicle to your fleet.',
+              AppLocalization.t('Add a vehicle to your fleet.'),
               style: TextStyle(color: Color(0xFF4E5867)),
             ),
           ],
@@ -591,8 +623,8 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
 
           const SizedBox(height: 12),
 
-          const Text(
-            'Unable to load transport vehicles',
+          Text(
+            AppLocalization.t('Unable to load transport vehicles'),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
 
@@ -606,7 +638,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
             onPressed: () {
               context.read<TransportProvider>().loadVehicles();
             },
-            child: const Text('Retry'),
+            child: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),
@@ -652,16 +684,19 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Delete Vehicle?'),
-          content: const Text(
-            'Are you sure you want to delete this transport vehicle?',
+          title: Text(AppLocalization.t('Delete Vehicle?')),
+          content: Text(
+            AppLocalization.t(
+              'Are you sure you want to delete this transport vehicle?',
+            ),
           ),
+
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
 
             FilledButton(
@@ -671,7 +706,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
               onPressed: () {
                 Navigator.pop(context, true);
               },
-              child: const Text('Delete'),
+              child: Text(AppLocalization.t('Delete')),
             ),
           ],
         );
@@ -689,7 +724,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          success ? 'Vehicle deleted successfully' : 'Failed to delete vehicle',
+          success ? AppLocalization.t('Vehicle deleted successfully') : AppLocalization.t('Failed to delete vehicle'),
         ),
       ),
     );
@@ -727,7 +762,7 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },

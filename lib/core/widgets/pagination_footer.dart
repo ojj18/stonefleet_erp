@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../localization/app_localization.dart';
 
 class PaginationFooter extends StatelessWidget {
   final int currentPage;
@@ -20,6 +22,8 @@ class PaginationFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Rebuild immediately when the selected app language changes.
+    context.watch<LanguageProvider>().languageCode;
     final safePage = currentPage.clamp(1, pageCount).toInt();
     final start = totalItems == 0 ? 0 : ((safePage - 1) * rowsPerPage) + 1;
     final end = totalItems == 0
@@ -54,8 +58,8 @@ class PaginationFooter extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: Color(0xFF68717D)),
           ),
           const Spacer(),
-          const Text(
-            'Rows per page',
+          Text(
+            AppLocalization.t('Rows per page'),
             style: TextStyle(fontSize: 12, color: Color(0xFF68717D)),
           ),
           const SizedBox(width: 8),
@@ -76,13 +80,13 @@ class PaginationFooter extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           IconButton(
-            tooltip: 'Previous',
+            tooltip: AppLocalization.t('Previous'),
             onPressed: safePage > 1 ? () => onPageChanged(safePage - 1) : null,
             icon: const Icon(Icons.chevron_left, size: 20),
           ),
           ..._buildPageButtons(pages, safePage, pageCount),
           IconButton(
-            tooltip: 'Next',
+            tooltip: AppLocalization.t('Next'),
             onPressed: safePage < pageCount
                 ? () => onPageChanged(safePage + 1)
                 : null,
@@ -99,7 +103,7 @@ class PaginationFooter extends StatelessWidget {
     for (final page in pages) {
       if (previous != null && page - previous > 1) {
         widgets.add(
-          const Padding(
+          Padding(
             padding: EdgeInsets.symmetric(horizontal: 4),
             child: Text('…', style: TextStyle(color: Color(0xFF68717D))),
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 
 import '../../../data/models/app_user_model.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -36,7 +37,7 @@ class AuthProvider extends ChangeNotifier {
       _currentUser = user;
       return true;
     } catch (e) {
-      _error = 'Login failed. Please try again.';
+      _error = AppLocalization.t('Login failed. Please try again.');
       return false;
     } finally {
       _isLoading = false;

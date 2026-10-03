@@ -4,6 +4,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'app/app_config.dart';
 import 'core/database/database_helper.dart';
+import 'core/localization/app_localization.dart';
 
 import 'data/services/vehicle_api_service.dart';
 
@@ -38,6 +39,7 @@ import 'features/transport/service/providers/transport_service_provider.dart';
 import 'features/service_notification/providers/service_notification_provider.dart';
 import 'features/inventory/providers/inventory_provider.dart';
 import 'features/quarry_blasting/providers/quarry_blasting_provider.dart';
+import 'features/quarry_boulders/providers/quarry_boulder_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -179,40 +181,47 @@ class StoneFleetApp extends StatelessWidget {
         // QUARRY BLASTING PURCHASES
         // --------------------------------------------------------
         ChangeNotifierProvider(create: (_) => QuarryBlastingProvider()),
+        ChangeNotifierProvider(create: (_) => QuarryBoulderProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
 
       // ==========================================================
       // MATERIAL APP
       // ==========================================================
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
+      child: Consumer<LanguageProvider>(
+        builder: (context, language, _) => MaterialApp(
+          key: ValueKey(language.languageCode),
+          debugShowCheckedModeBanner: false,
 
-        title: AppConfig.appName,
+          title: AppConfig.appName,
 
-        theme: ThemeData(
-          useMaterial3: true,
+          theme: ThemeData(
+            useMaterial3: true,
 
-          colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00652C)),
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: const Color(0xFF00652C),
+            ),
 
-          scaffoldBackgroundColor: const Color(0xFFF8F9FB),
+            scaffoldBackgroundColor: const Color(0xFFF8F9FB),
 
-          fontFamily: 'Inter',
+            fontFamily: 'Inter',
 
-          inputDecorationTheme: const InputDecorationTheme(
-            filled: true,
+            inputDecorationTheme: const InputDecorationTheme(
+              filled: true,
 
-            fillColor: Colors.white,
+              fillColor: Colors.white,
 
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
             ),
           ),
-        ),
 
-        // --------------------------------------------------------
-        // INITIAL SCREEN
-        // --------------------------------------------------------
-        home: const SplashScreen(),
+          // --------------------------------------------------------
+          // INITIAL SCREEN
+          // --------------------------------------------------------
+          home: const SplashScreen(),
+        ),
       ),
     );
   }

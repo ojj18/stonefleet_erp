@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/inventory_provider.dart';
@@ -41,16 +42,16 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     InventoryPageHeader(
-                      title: 'Spare Stock',
+                      title: AppLocalization.t('Spare Stock'),
                       subtitle:
-                          'Track purchased, used and remaining quantities for each spare.',
+                          AppLocalization.t('Track purchased, used and remaining quantities for each spare.'),
                     ),
                     const SizedBox(height: 24),
                     Row(
                       children: [
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Total Items',
+                            title: AppLocalization.t('Total Items'),
                             value: '${provider.summary.totalItems}',
                             icon: Icons.inventory_2_outlined,
                           ),
@@ -58,7 +59,7 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Purchased Qty',
+                            title: AppLocalization.t('Purchased Qty'),
                             value: formatQty(
                               provider.summary.purchasedQuantity,
                             ),
@@ -68,7 +69,7 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Used Qty',
+                            title: AppLocalization.t('Used Qty'),
                             value: formatQty(provider.summary.usedQuantity),
                             icon: Icons.remove_shopping_cart_outlined,
                           ),
@@ -76,7 +77,7 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: InventoryKpiCard(
-                            title: 'Remaining',
+                            title: AppLocalization.t('Remaining'),
                             value: formatQty(
                               provider.summary.remainingQuantity,
                             ),
@@ -87,7 +88,7 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                     ),
                     const SizedBox(height: 24),
                     InventorySectionCard(
-                      title: 'Current Stock',
+                      title: AppLocalization.t('Current Stock'),
                       icon: Icons.inventory_2_outlined,
                       child: Column(
                         children: [
@@ -98,9 +99,9 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                                   controller: _search,
                                   onChanged: (v) =>
                                       provider.loadStock(search: v),
-                                  decoration: const InputDecoration(
+                                  decoration: InputDecoration(
                                     prefixIcon: Icon(Icons.search),
-                                    hintText: 'Search spare item...',
+                                    hintText: AppLocalization.t('Search spare item...'),
                                     border: OutlineInputBorder(),
                                   ),
                                 ),
@@ -111,7 +112,7 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                                   _search.clear();
                                   provider.loadStock();
                                 },
-                                child: const Text('Clear'),
+                                child: Text(AppLocalization.t('Clear')),
                               ),
                             ],
                           ),
@@ -119,14 +120,30 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                              columns: const [
-                                DataColumn(label: Text('SPARE ITEM')),
-                                DataColumn(label: Text('UNIT')),
-                                DataColumn(label: Text('PURCHASED')),
-                                DataColumn(label: Text('USED')),
-                                DataColumn(label: Text('REMAINING')),
-                                DataColumn(label: Text('LAST PURCHASE')),
-                                DataColumn(label: Text('STATUS')),
+                              columns: [
+                                DataColumn(
+                                  label: Text(AppLocalization.t('SPARE ITEM')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('UNIT')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('PURCHASED')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('USED')),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('REMAINING')),
+                                ),
+                                DataColumn(
+                                  label: Text(
+                                    AppLocalization.t('LAST PURCHASE'),
+                                  ),
+                                ),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('STATUS')),
+                                ),
                               ],
                               rows: provider.stock.map((row) {
                                 final status = row.remaining <= 0
@@ -170,9 +187,13 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                             ),
                           ),
                           if (provider.stock.isEmpty)
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.all(24),
-                              child: Text('No inventory stock records found.'),
+                              child: Text(
+                                AppLocalization.t(
+                                  'No inventory stock records found.',
+                                ),
+                              ),
                             ),
                         ],
                       ),

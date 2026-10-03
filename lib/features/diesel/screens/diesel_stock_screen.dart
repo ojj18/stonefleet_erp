@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/diesel_provider.dart';
@@ -39,9 +40,17 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
   Future<void> _addReceipt() async {
     final qty = double.tryParse(_qty.text.trim());
     final rate = double.tryParse(_rate.text.trim());
-    if (qty == null || qty <= 0 || rate == null || rate < 0 || _source.text.trim().isEmpty) {
+    if (qty == null ||
+        qty <= 0 ||
+        rate == null ||
+        rate < 0 ||
+        _source.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid source, quantity and rate.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('Enter a valid source, quantity and rate.'),
+          ),
+        ),
       );
       return;
     }
@@ -65,10 +74,16 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
       _bill.clear();
       _remarks.clear();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Diesel receipt added and stock updated.')),
+        SnackBar(
+          content: Text(
+            AppLocalization.t('Diesel receipt added and stock updated.'),
+          ),
+        ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(p.error!)));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(AppLocalization.t(p.error!))));
     }
   }
 
@@ -83,8 +98,8 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               DieselPageHeader(
-                title: 'Diesel Stock',
-                subtitle: 'Track diesel received, used and current balance.',
+                title: AppLocalization.t('Diesel Stock'),
+                subtitle: AppLocalization.t('Track diesel received, used and current balance.'),
               ),
               const SizedBox(height: 24),
               LayoutBuilder(
@@ -95,10 +110,42 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                     spacing: 16,
                     runSpacing: 16,
                     children: [
-                      SizedBox(width: w, child: DieselKpiCard(title: 'Opening Stock', value: '${dieselQty(s.openingStock)} L', subtitle: 'Selected period', icon: Icons.inventory_2_outlined)),
-                      SizedBox(width: w, child: DieselKpiCard(title: 'Diesel Received', value: '${dieselQty(s.received)} L', subtitle: 'Selected period', icon: Icons.south_west_outlined)),
-                      SizedBox(width: w, child: DieselKpiCard(title: 'Diesel Used', value: '${dieselQty(s.used)} L', subtitle: 'Selected period', icon: Icons.outbound_outlined)),
-                      SizedBox(width: w, child: DieselKpiCard(title: 'Current Stock', value: '${dieselQty(s.currentStock)} L', subtitle: 'Live balance', icon: Icons.local_gas_station_outlined)),
+                      SizedBox(
+                        width: w,
+                        child: DieselKpiCard(
+                          title: AppLocalization.t('Opening Stock'),
+                          value: '${dieselQty(s.openingStock)} L',
+                          subtitle: AppLocalization.t('Selected period'),
+                          icon: Icons.inventory_2_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: w,
+                        child: DieselKpiCard(
+                          title: AppLocalization.t('Diesel Received'),
+                          value: '${dieselQty(s.received)} L',
+                          subtitle: AppLocalization.t('Selected period'),
+                          icon: Icons.south_west_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: w,
+                        child: DieselKpiCard(
+                          title: AppLocalization.t('Diesel Used'),
+                          value: '${dieselQty(s.used)} L',
+                          subtitle: AppLocalization.t('Selected period'),
+                          icon: Icons.outbound_outlined,
+                        ),
+                      ),
+                      SizedBox(
+                        width: w,
+                        child: DieselKpiCard(
+                          title: AppLocalization.t('Current Stock'),
+                          value: '${dieselQty(s.currentStock)} L',
+                          subtitle: AppLocalization.t('Live balance'),
+                          icon: Icons.local_gas_station_outlined,
+                        ),
+                      ),
                     ],
                   );
                 },
@@ -108,7 +155,10 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DieselSectionTitle(title: 'Add Diesel Receipt', icon: Icons.add_circle_outline),
+                    DieselSectionTitle(
+                      title: AppLocalization.t('Add Diesel Receipt'),
+                      icon: Icons.add_circle_outline,
+                    ),
                     const SizedBox(height: 18),
                     LayoutBuilder(
                       builder: (_, c) {
@@ -118,12 +168,38 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                           runSpacing: 16,
                           children: [
                             SizedBox(width: w, child: _dateField()),
-                            SizedBox(width: w, child: _text(_source, 'Diesel Lorry / Source')),
-                            SizedBox(width: w, child: _text(_qty, 'Quantity (Litres)', decimal: true)),
-                            SizedBox(width: w, child: _text(_rate, 'Diesel Rate', decimal: true)),
-                            SizedBox(width: w, child: _text(_supplier, 'Supplier (Optional)')),
-                            SizedBox(width: w, child: _text(_bill, 'Bill Number (Optional)')),
-                            SizedBox(width: c.maxWidth, child: _text(_remarks, 'Remarks (Optional)', maxLines: 2)),
+                            SizedBox(
+                              width: w,
+                              child: _text(_source, 'Diesel Lorry / Source'),
+                            ),
+                            SizedBox(
+                              width: w,
+                              child: _text(
+                                _qty,
+                                'Quantity (Litres)',
+                                decimal: true,
+                              ),
+                            ),
+                            SizedBox(
+                              width: w,
+                              child: _text(_rate, 'Diesel Rate', decimal: true),
+                            ),
+                            SizedBox(
+                              width: w,
+                              child: _text(_supplier, 'Supplier (Optional)'),
+                            ),
+                            SizedBox(
+                              width: w,
+                              child: _text(_bill, 'Bill Number (Optional)'),
+                            ),
+                            SizedBox(
+                              width: c.maxWidth,
+                              child: _text(
+                                _remarks,
+                                'Remarks (Optional)',
+                                maxLines: 2,
+                              ),
+                            ),
                           ],
                         );
                       },
@@ -135,8 +211,10 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                         FilledButton.icon(
                           onPressed: p.isLoading ? null : _addReceipt,
                           icon: const Icon(Icons.add),
-                          label: const Text('Add Receipt'),
-                          style: FilledButton.styleFrom(backgroundColor: const Color(0xFF00652C)),
+                          label: Text(AppLocalization.t('Add Receipt')),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: const Color(0xFF00652C),
+                          ),
                         ),
                       ],
                     ),
@@ -148,30 +226,76 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const DieselSectionTitle(title: 'Stock Movement', icon: Icons.swap_vert_outlined),
+                    DieselSectionTitle(
+                      title: AppLocalization.t('Stock Movement'),
+                      icon: Icons.swap_vert_outlined,
+                    ),
                     const SizedBox(height: 16),
                     if (p.movements.isEmpty)
-                      const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No stock movements recorded yet.')))
+                      Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Text(
+                            AppLocalization.t(
+                              'No stock movements recorded yet.',
+                            ),
+                          ),
+                        ),
+                      )
                     else
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('Date')),
-                            DataColumn(label: Text('Transaction')),
-                            DataColumn(label: Text('Quantity')),
-                            DataColumn(label: Text('Previous Stock')),
-                            DataColumn(label: Text('Current Stock')),
-                            DataColumn(label: Text('Remarks')),
+                          columns: [
+                            DataColumn(label: Text(AppLocalization.t('Date'))),
+                            DataColumn(
+                              label: Text(AppLocalization.t('Transaction')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('Quantity')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('Previous Stock')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('Current Stock')),
+                            ),
+                            DataColumn(
+                              label: Text(AppLocalization.t('Remarks')),
+                            ),
                           ],
-                          rows: p.movements.map((m) => DataRow(cells: [
-                            DataCell(Text(dieselDisplayDate(m.transactionDate))),
-                            DataCell(Text(m.transactionType == 'RECEIPT' ? 'Diesel Received' : 'Diesel Filled')),
-                            DataCell(Text('${m.transactionType == 'FILLING' ? '-' : '+'}${dieselQty(m.quantity)} L')),
-                            DataCell(Text('${dieselQty(m.previousStock)} L')),
-                            DataCell(Text('${dieselQty(m.currentStock)} L')),
-                            DataCell(Text(m.remarks ?? '-')),
-                          ])).toList(),
+                          rows: p.movements
+                              .map(
+                                (m) => DataRow(
+                                  cells: [
+                                    DataCell(
+                                      Text(
+                                        dieselDisplayDate(m.transactionDate),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        m.transactionType == 'RECEIPT'
+                                            ? 'Diesel Received'
+                                            : 'Diesel Filled',
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text(
+                                        '${m.transactionType == 'FILLING' ? '-' : '+'}${dieselQty(m.quantity)} L',
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Text('${dieselQty(m.previousStock)} L'),
+                                    ),
+                                    DataCell(
+                                      Text('${dieselQty(m.currentStock)} L'),
+                                    ),
+                                    DataCell(Text(m.remarks ?? '-')),
+                                  ],
+                                ),
+                              )
+                              .toList(),
                         ),
                       ),
                   ],
@@ -190,16 +314,25 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
       if (d != null) setState(() => date = d);
     },
     child: InputDecorator(
-      decoration: const InputDecoration(labelText: 'Receipt Date', prefixIcon: Icon(Icons.calendar_today_outlined)),
+      decoration: InputDecoration(
+        labelText: AppLocalization.t('Receipt Date'),
+        prefixIcon: Icon(Icons.calendar_today_outlined),
+      ),
       child: Text(dieselDisplayDate(dieselDate(date))),
     ),
   );
 
-  Widget _text(TextEditingController c, String label, {bool decimal = false, int maxLines = 1}) =>
-      TextFormField(
-        controller: c,
-        maxLines: maxLines,
-        keyboardType: decimal ? const TextInputType.numberWithOptions(decimal: true) : TextInputType.text,
-        decoration: InputDecoration(labelText: label),
-      );
+  Widget _text(
+    TextEditingController c,
+    String label, {
+    bool decimal = false,
+    int maxLines = 1,
+  }) => TextFormField(
+    controller: c,
+    maxLines: maxLines,
+    keyboardType: decimal
+        ? const TextInputType.numberWithOptions(decimal: true)
+        : TextInputType.text,
+    decoration: InputDecoration(labelText: label),
+  );
 }

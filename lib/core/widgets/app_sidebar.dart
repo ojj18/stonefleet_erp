@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:stonefleet_erp/features/transport/maintenance/screens/transport_maintenance_screen.dart';
 import 'package:stonefleet_erp/features/transport/master/screens/transport_master_screen.dart';
@@ -19,8 +20,8 @@ import '../../features/inventory/screens/spare_usage_screen.dart';
 import '../../features/quarry_blasting/screens/quarry_blasting_dashboard_screen.dart';
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_history_screen.dart';
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_reports_screen.dart';
+import '../../features/quarry_boulders/screens/quarry_boulders_dashboard_screen.dart';
 import '../../features/report/screens/reports_screen.dart';
-import '../../features/service_notification/screens/service_notification_screen.dart';
 
 class AppSidebar extends StatelessWidget {
   final int selectedIndex;
@@ -47,51 +48,51 @@ class AppSidebar extends StatelessWidget {
                 children: [
                   _menuItem(
                     icon: Icons.dashboard_outlined,
-                    title: 'Dashboard',
+                    title: AppLocalization.t('Dashboard'),
                     index: 0,
                   ),
 
                   _menuItem(
                     icon: Icons.agriculture_outlined,
-                    title: 'Excavators',
+                    title: AppLocalization.t('Excavators'),
                     index: 1,
                   ),
 
                   _menuItem(
                     icon: Icons.build_outlined,
-                    title: 'Excavator Maintenance',
+                    title: AppLocalization.t('Excavator Maintenance'),
                     index: 2,
                   ),
 
                   _menuItem(
                     icon: Icons.handyman_outlined,
-                    title: 'Excavator Service',
+                    title: AppLocalization.t('Excavator Service'),
                     index: 3,
                   ),
 
                   _menuItem(
                     icon: Icons.local_shipping_outlined,
-                    title: 'Transport',
+                    title: AppLocalization.t('Transport'),
                     index: 4,
                   ),
 
                   _menuItem(
                     icon: Icons.build_outlined,
-                    title: 'Transport Maintenance',
+                    title: AppLocalization.t('Transport Maintenance'),
                     index: 5,
                   ),
 
                   _menuItem(
                     icon: Icons.handyman_outlined,
-                    title: 'Transport Service',
+                    title: AppLocalization.t('Transport Service'),
                     index: 6,
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Operations & Audit',
+                        AppLocalization.t('Operations & Audit'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -101,28 +102,28 @@ class AppSidebar extends StatelessWidget {
                       ),
                     ),
                   ),
-                  _menuItem(
-                    icon: Icons.notifications_active_outlined,
-                    title: 'Service Notifications',
-                    index: 7,
-                  ),
 
+                  // _menuItem(
+                  //   icon: Icons.notifications_active_outlined,
+                  //   title: AppLocalization.t('Service Notifications'),
+                  //   index: 7,
+                  // ),
                   _menuItem(
                     icon: Icons.assessment_outlined,
-                    title: 'Reports',
+                    title: AppLocalization.t('Reports'),
                     index: 8,
                   ),
                   _menuItem(
                     icon: Icons.verified_outlined,
-                    title: 'Compliance',
+                    title: AppLocalization.t('Compliance'),
                     index: 9,
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Inventory',
+                        AppLocalization.t('Inventory'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -134,39 +135,39 @@ class AppSidebar extends StatelessWidget {
                   ),
                   _menuItem(
                     icon: Icons.dashboard_outlined,
-                    title: 'Inventory Dashboard',
+                    title: AppLocalization.t('Inventory Dashboard'),
                     index: 10,
                   ),
 
                   _menuItem(
                     icon: Icons.inventory_2_outlined,
-                    title: 'Spare Stock',
+                    title: AppLocalization.t('Spare Stock'),
                     index: 11,
                   ),
 
                   _menuItem(
                     icon: Icons.receipt_long_outlined,
-                    title: 'Spare Purchase & OCR',
+                    title: AppLocalization.t('Spare Purchase & OCR'),
                     index: 12,
                   ),
 
                   _menuItem(
                     icon: Icons.build_circle_outlined,
-                    title: 'Spare Usage',
+                    title: AppLocalization.t('Spare Usage'),
                     index: 13,
                   ),
 
                   _menuItem(
                     icon: Icons.assessment_outlined,
-                    title: 'Inventory Reports',
+                    title: AppLocalization.t('Inventory Reports'),
                     index: 14,
                   ),
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Quarry Blasting',
+                        AppLocalization.t('Quarry Blasting'),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
@@ -178,18 +179,38 @@ class AppSidebar extends StatelessWidget {
                   ),
                   _menuItem(
                     icon: Icons.dashboard_outlined,
-                    title: 'Blasting Dashboard',
+                    title: AppLocalization.t('Blasting Dashboard'),
                     index: 15,
                   ),
                   _menuItem(
                     icon: Icons.receipt_long_outlined,
-                    title: 'Purchase History',
+                    title: AppLocalization.t('Purchase History'),
                     index: 16,
                   ),
                   _menuItem(
                     icon: Icons.assessment_outlined,
-                    title: 'Blasting Reports',
+                    title: AppLocalization.t('Blasting Reports'),
                     index: 17,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppLocalization.t('Quarry Operations'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.local_shipping_outlined,
+                    title: AppLocalization.t('Quarry Boulders'),
+                    index: 18,
                   ),
                 ],
               ),
@@ -286,7 +307,9 @@ class AppSidebar extends StatelessWidget {
                     const SizedBox(height: 2),
 
                     Text(
-                      isAdmin ? 'Administrator' : 'User',
+                      isAdmin
+                          ? AppLocalization.t('Administrator')
+                          : AppLocalization.t('User'),
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFF68717D),
@@ -296,6 +319,32 @@ class AppSidebar extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+
+          const SizedBox(height: 12),
+
+          DropdownButtonFormField<String>(
+            initialValue: context.watch<LanguageProvider>().languageCode,
+            decoration: InputDecoration(
+              labelText: AppLocalization.t('Language'),
+              prefixIcon: const Icon(Icons.language_outlined, size: 18),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            items: [
+              DropdownMenuItem(
+                value: 'en',
+                child: Text(AppLocalization.t('English')),
+              ),
+              DropdownMenuItem(value: 'ta', child: Text('தமிழ்')),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                context.read<LanguageProvider>().setLanguage(value);
+              }
+            },
           ),
 
           const SizedBox(height: 12),
@@ -313,8 +362,8 @@ class AppSidebar extends StatelessWidget {
                 );
               },
               icon: const Icon(Icons.logout_rounded, size: 17),
-              label: const Text(
-                'Logout',
+              label: Text(
+                AppLocalization.t('Logout'),
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
               style: OutlinedButton.styleFrom(
@@ -389,13 +438,13 @@ void handleMenuTap(int index, {required BuildContext? context}) {
       );
       break;
 
-    case 7:
-      // Service Notifications
-      Navigator.pushReplacement(
-        context!,
-        MaterialPageRoute(builder: (_) => const ServiceNotificationScreen()),
-      );
-      break;
+    // case 7:
+    //   // Service Notifications
+    //   Navigator.pushReplacement(
+    //     context!,
+    //     MaterialPageRoute(builder: (_) => const ServiceNotificationScreen()),
+    //   );
+    //   break;
 
     case 8:
       Navigator.pushReplacement(
@@ -444,19 +493,33 @@ void handleMenuTap(int index, {required BuildContext? context}) {
     case 15:
       Navigator.pushReplacement(
         context!,
-        MaterialPageRoute(builder: (_) => const QuarryBlastingDashboardScreen()),
+        MaterialPageRoute(
+          builder: (_) => const QuarryBlastingDashboardScreen(),
+        ),
       );
       break;
     case 16:
       Navigator.pushReplacement(
         context!,
-        MaterialPageRoute(builder: (_) => const QuarryBlastingPurchaseHistoryScreen()),
+        MaterialPageRoute(
+          builder: (_) => const QuarryBlastingPurchaseHistoryScreen(),
+        ),
       );
       break;
     case 17:
       Navigator.pushReplacement(
         context!,
-        MaterialPageRoute(builder: (_) => const QuarryBlastingPurchaseReportsScreen()),
+        MaterialPageRoute(
+          builder: (_) => const QuarryBlastingPurchaseReportsScreen(),
+        ),
+      );
+      break;
+    case 18:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(
+          builder: (_) => const QuarryBouldersDashboardScreen(),
+        ),
       );
       break;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../app/app_config.dart';
@@ -29,12 +30,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Consumer<DashboardProvider>(
       builder: (context, provider, _) {
         if (provider.isLoading && provider.dashboard == null) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         }
 
         if (provider.error != null && provider.dashboard == null) {
           return _ErrorView(
-            message: provider.error!,
+            message: AppLocalization.t(provider.error!),
             onRetry: provider.loadDashboard,
           );
         }
@@ -109,7 +110,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Consumer<ServiceNotificationProvider>(
       builder: (context, notificationProvider, _) {
         return _DashboardCard(
-          title: 'Service Notifications',
+          title: AppLocalization.t('Service Notifications'),
           icon: Icons.notifications_active_outlined,
           child: Column(
             children: [
@@ -117,7 +118,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(
                     child: _NotificationSummaryItem(
-                      title: 'Overdue',
+                      title: AppLocalization.t('Overdue'),
                       count: notificationProvider.overdueCount,
                       icon: Icons.error_outline_rounded,
                       color: const Color(0xFFD93025),
@@ -129,7 +130,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Expanded(
                     child: _NotificationSummaryItem(
-                      title: 'Due',
+                      title: AppLocalization.t('Due'),
                       count: notificationProvider.dueCount,
                       icon: Icons.access_alarm_rounded,
                       color: const Color(0xFFE67E22),
@@ -141,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Expanded(
                     child: _NotificationSummaryItem(
-                      title: 'Upcoming',
+                      title: AppLocalization.t('Upcoming'),
                       count: notificationProvider.upcomingCount,
                       icon: Icons.schedule_rounded,
                       color: const Color(0xFF3159C9),
@@ -153,7 +154,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                   Expanded(
                     child: _NotificationSummaryItem(
-                      title: 'Not Recorded',
+                      title: AppLocalization.t('Not Recorded'),
                       count: notificationProvider.serviceNotRecordedCount,
                       icon: Icons.help_outline_rounded,
                       color: const Color(0xFF64686D),
@@ -167,7 +168,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
-                    child: const Text('View All'),
+                    child: Text(AppLocalization.t('View All')),
                   ),
                 ],
               ),
@@ -206,7 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -260,13 +261,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '${AppConfig.appName} Dashboard',
+              Text(
+                '${AppConfig.appName} ${AppLocalization.t('Dashboard')}',
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 6),
               Text(
-                'Overview of your fleet operations',
+                AppLocalization.t('Overview of your fleet operations'),
                 style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
               ),
             ],
@@ -303,39 +304,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         final cards = [
           _KpiCard(
-            title: 'Total Excavators',
+            title: AppLocalization.t('Total Excavators'),
             value: '${dashboard.totalExcavators}',
-            subtitle: '${dashboard.workingExcavators} working',
+            subtitle:
+                '${dashboard.workingExcavators} ${AppLocalization.t('working')}',
             icon: Icons.construction_outlined,
           ),
           _KpiCard(
-            title: 'Transport Vehicles',
+            title: AppLocalization.t('Transport Vehicles'),
             value: '${dashboard.totalTransportVehicles}',
-            subtitle: '${dashboard.workingTransportVehicles} working',
+            subtitle:
+                '${dashboard.workingTransportVehicles} ${AppLocalization.t('working')}',
             icon: Icons.local_shipping_outlined,
           ),
           _KpiCard(
-            title: 'Working Hours',
+            title: AppLocalization.t('Working Hours'),
             value: dashboard.totalWorkingHours.toStringAsFixed(1),
-            subtitle: 'Today',
+            subtitle: AppLocalization.t('Today'),
             icon: Icons.access_time_outlined,
           ),
           _KpiCard(
-            title: 'Transport KM',
+            title: AppLocalization.t('Transport KM'),
             value: dashboard.totalTransportKm.toStringAsFixed(1),
-            subtitle: 'Today',
+            subtitle: AppLocalization.t('Today'),
             icon: Icons.route_outlined,
           ),
           _KpiCard(
-            title: 'Diesel Used',
+            title: AppLocalization.t('Diesel Used'),
             value: '${dashboard.totalDieselUsed.toStringAsFixed(1)} L',
-            subtitle: 'Today',
+            subtitle: AppLocalization.t('Today'),
             icon: Icons.local_gas_station_outlined,
           ),
           _KpiCard(
-            title: 'Diesel Expense',
+            title: AppLocalization.t('Diesel Expense'),
             value: '₹${dashboard.totalDieselExpense.toStringAsFixed(0)}',
-            subtitle: 'Today',
+            subtitle: AppLocalization.t('Today'),
             icon: Icons.currency_rupee_outlined,
           ),
         ];
@@ -357,11 +360,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildExcavatorSection(DashboardModel dashboard) {
     return _DashboardCard(
-      title: "Today's Excavator Operations",
+      title: AppLocalization.t("Today's Excavator Operations"),
       icon: Icons.construction_outlined,
       child: dashboard.excavatorOperations.isEmpty
-          ? const _EmptyState(
-              message: 'No excavator operations recorded today.',
+          ? _EmptyState(
+              message: AppLocalization.t(
+                'No excavator operations recorded today.',
+              ),
             )
           : _ExcavatorTable(operations: dashboard.excavatorOperations),
     );
@@ -373,10 +378,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildServiceOverview(DashboardModel dashboard) {
     return _DashboardCard(
-      title: 'Service Overview',
+      title: AppLocalization.t('Service Overview'),
       icon: Icons.build_outlined,
       child: dashboard.serviceOverview.isEmpty
-          ? const _EmptyState(message: 'No service records available.')
+          ? _EmptyState(
+              message: AppLocalization.t('No service records available.'),
+            )
           : Wrap(
               spacing: 12,
               runSpacing: 12,
@@ -396,11 +403,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildTransportSection(DashboardModel dashboard) {
     return _DashboardCard(
-      title: "Today's Transport Operations",
+      title: AppLocalization.t("Today's Transport Operations"),
       icon: Icons.local_shipping_outlined,
       child: dashboard.transportOperations.isEmpty
-          ? const _EmptyState(
-              message: 'No transport operations recorded today.',
+          ? _EmptyState(
+              message: AppLocalization.t(
+                'No transport operations recorded today.',
+              ),
             )
           : _TransportTable(operations: dashboard.transportOperations),
     );
@@ -412,10 +421,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildRecentServices(DashboardModel dashboard) {
     return _DashboardCard(
-      title: 'Recent Service Activity',
+      title: AppLocalization.t('Recent Service Activity'),
       icon: Icons.history_outlined,
       child: dashboard.recentServices.isEmpty
-          ? const _EmptyState(message: 'No recent service activity.')
+          ? _EmptyState(
+              message: AppLocalization.t('No recent service activity.'),
+            )
           : _RecentServiceTable(services: dashboard.recentServices),
     );
   }
@@ -587,15 +598,15 @@ class _ExcavatorTable extends StatelessWidget {
         headingRowHeight: 44,
         dataRowMinHeight: 48,
         dataRowMaxHeight: 58,
-        columns: const [
-          DataColumn(label: Text('Vehicle')),
-          DataColumn(label: Text('Operator')),
-          DataColumn(label: Text('Shift')),
-          DataColumn(label: Text('Opening')),
-          DataColumn(label: Text('Closing')),
-          DataColumn(label: Text('Hours')),
-          DataColumn(label: Text('Tonnage')),
-          DataColumn(label: Text('Diesel')),
+        columns: [
+          DataColumn(label: Text(AppLocalization.t('Vehicle'))),
+          DataColumn(label: Text(AppLocalization.t('Operator'))),
+          DataColumn(label: Text(AppLocalization.t('Shift'))),
+          DataColumn(label: Text(AppLocalization.t('Opening'))),
+          DataColumn(label: Text(AppLocalization.t('Closing'))),
+          DataColumn(label: Text(AppLocalization.t('Hours'))),
+          DataColumn(label: Text(AppLocalization.t('Tonnage'))),
+          DataColumn(label: Text(AppLocalization.t('Diesel'))),
         ],
         rows: operations.map((item) {
           return DataRow(
@@ -607,7 +618,7 @@ class _ExcavatorTable extends StatelessWidget {
                 ),
               ),
               DataCell(Text(item.operatorName)),
-              DataCell(Text(item.shift)),
+              DataCell(Text(AppLocalization.t(item.shift))),
               DataCell(Text(item.openingHours.toStringAsFixed(1))),
               DataCell(Text(item.closingHours.toStringAsFixed(1))),
               DataCell(Text(item.totalHours.toStringAsFixed(1))),
@@ -638,16 +649,16 @@ class _TransportTable extends StatelessWidget {
         headingRowHeight: 44,
         dataRowMinHeight: 48,
         dataRowMaxHeight: 58,
-        columns: const [
-          DataColumn(label: Text('Vehicle')),
-          DataColumn(label: Text('Driver')),
-          DataColumn(label: Text('Start KM')),
-          DataColumn(label: Text('Closing KM')),
-          DataColumn(label: Text('Total KM')),
-          DataColumn(label: Text('Loads')),
-          DataColumn(label: Text('Loading Site')),
-          DataColumn(label: Text('Unloading Site')),
-          DataColumn(label: Text('Diesel')),
+        columns: [
+          DataColumn(label: Text(AppLocalization.t('Vehicle'))),
+          DataColumn(label: Text(AppLocalization.t('Driver'))),
+          DataColumn(label: Text(AppLocalization.t('Start KM'))),
+          DataColumn(label: Text(AppLocalization.t('Closing KM'))),
+          DataColumn(label: Text(AppLocalization.t('Total KM'))),
+          DataColumn(label: Text(AppLocalization.t('Loads'))),
+          DataColumn(label: Text(AppLocalization.t('Loading Site'))),
+          DataColumn(label: Text(AppLocalization.t('Unloading Site'))),
+          DataColumn(label: Text(AppLocalization.t('Diesel'))),
         ],
         rows: operations.map((item) {
           return DataRow(
@@ -756,22 +767,22 @@ class _ServiceOverviewTile extends StatelessWidget {
   _StatusDetails _statusDetails(ServiceStatus status) {
     switch (status) {
       case ServiceStatus.overdue:
-        return const _StatusDetails(
-          label: 'Overdue',
+        return _StatusDetails(
+          label: AppLocalization.t('Overdue'),
           background: Color(0xFFFFEBEE),
           foreground: Color(0xFFC62828),
         );
 
       case ServiceStatus.due:
-        return const _StatusDetails(
-          label: 'Due',
+        return _StatusDetails(
+          label: AppLocalization.t('Due'),
           background: Color(0xFFFFF8E1),
           foreground: Color(0xFFF57F17),
         );
 
       case ServiceStatus.upcoming:
-        return const _StatusDetails(
-          label: 'Upcoming',
+        return _StatusDetails(
+          label: AppLocalization.t('Upcoming'),
           background: Color(0xFFE8F5E9),
           foreground: Color(0xFF2E7D32),
         );
@@ -808,13 +819,13 @@ class _RecentServiceTable extends StatelessWidget {
         headingRowHeight: 44,
         dataRowMinHeight: 48,
         dataRowMaxHeight: 58,
-        columns: const [
-          DataColumn(label: Text('Vehicle')),
-          DataColumn(label: Text('Date')),
-          DataColumn(label: Text('Service')),
-          DataColumn(label: Text('Current KM')),
-          DataColumn(label: Text('Current Hours')),
-          DataColumn(label: Text('Cost')),
+        columns: [
+          DataColumn(label: Text(AppLocalization.t('Vehicle'))),
+          DataColumn(label: Text(AppLocalization.t('Date'))),
+          DataColumn(label: Text(AppLocalization.t('Service'))),
+          DataColumn(label: Text(AppLocalization.t('Current KM'))),
+          DataColumn(label: Text(AppLocalization.t('Current Hours'))),
+          DataColumn(label: Text(AppLocalization.t('Cost'))),
         ],
         rows: services.map((item) {
           return DataRow(
@@ -890,7 +901,7 @@ class _ErrorView extends StatelessWidget {
           const Icon(Icons.error_outline, size: 42),
           const SizedBox(height: 12),
           Text(
-            'Unable to load dashboard',
+            AppLocalization.t('Unable to load dashboard'),
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 6),
@@ -903,7 +914,7 @@ class _ErrorView extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: onRetry,
             icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
+            label: Text(AppLocalization.t('Retry')),
           ),
         ],
       ),

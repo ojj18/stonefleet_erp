@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../app/app_config.dart';
@@ -259,7 +260,7 @@ class _TransportServiceAddEditScreenState
           IconButton(
             onPressed: _saving ? null : () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back),
-            tooltip: 'Back',
+            tooltip: AppLocalization.t('Back'),
           ),
 
           const SizedBox(width: 8),
@@ -281,7 +282,7 @@ class _TransportServiceAddEditScreenState
                 clipBehavior: Clip.none,
                 children: [
                   IconButton(
-                    tooltip: 'Service Notifications',
+                    tooltip: AppLocalization.t('Service Notifications'),
                     onPressed: () {
                       handleMenuTap(7, context: context);
                     },
@@ -339,8 +340,8 @@ class _TransportServiceAddEditScreenState
             children: [
               Text(
                 widget.isEdit
-                    ? 'Edit Transport Service'
-                    : 'Add Transport Service',
+                    ? AppLocalization.t('Edit Transport Service')
+                    : AppLocalization.t('Add Transport Service'),
                 style: const TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w700,
@@ -350,8 +351,12 @@ class _TransportServiceAddEditScreenState
               const SizedBox(height: 6),
               Text(
                 widget.isEdit
-                    ? 'Update service details and spare parts used.'
-                    : 'Record transport vehicle service details and spare parts used.',
+                    ? AppLocalization.t(
+                        'Update service details and spare parts used.',
+                      )
+                    : AppLocalization.t(
+                        'Record transport vehicle service details and spare parts used.',
+                      ),
                 style: const TextStyle(fontSize: 14, color: Color(0xFF4E5867)),
               ),
             ],
@@ -363,7 +368,7 @@ class _TransportServiceAddEditScreenState
         ElevatedButton.icon(
           onPressed: _saving ? null : _extractSheetData,
           icon: const Icon(Icons.upload_file_outlined),
-          label: const Text('Upload Image'),
+          label: Text(AppLocalization.t('Upload Image')),
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
             foregroundColor: Colors.white,
@@ -382,7 +387,7 @@ class _TransportServiceAddEditScreenState
 
   Widget _buildServiceDetails() {
     return _sectionCard(
-      title: 'Service Details',
+      title: AppLocalization.t('Service Details'),
       icon: Icons.build_outlined,
       child: Consumer<TransportProvider>(
         builder: (context, provider, child) {
@@ -398,7 +403,7 @@ class _TransportServiceAddEditScreenState
                     initialValue: _selectedVehicleId,
                     isExpanded: true,
                     decoration: _inputDecoration(
-                      label: 'Transport Registration',
+                      label: AppLocalization.t('Transport Registration'),
                       icon: Icons.local_shipping_outlined,
                     ),
                     items: vehicles.map((vehicle) {
@@ -419,7 +424,7 @@ class _TransportServiceAddEditScreenState
                           },
                     validator: (value) {
                       if (value == null) {
-                        return 'Select transport vehicle';
+                        return AppLocalization.t('Select transport vehicle');
                       }
 
                       return null;
@@ -434,13 +439,13 @@ class _TransportServiceAddEditScreenState
                     controller: _dateController,
                     readOnly: true,
                     decoration: _inputDecoration(
-                      label: 'Service Date',
+                      label: AppLocalization.t('Service Date'),
                       icon: Icons.calendar_today_outlined,
                     ),
                     onTap: _saving ? null : _selectDate,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Select service date';
+                        return AppLocalization.t('Select service date');
                       }
 
                       return null;
@@ -457,7 +462,7 @@ class _TransportServiceAddEditScreenState
                       decimal: true,
                     ),
                     decoration: _inputDecoration(
-                      label: 'Current KM',
+                      label: AppLocalization.t('Current KM'),
                       hint: 'e.g. 125850',
                       icon: Icons.speed_outlined,
                     ),
@@ -465,11 +470,11 @@ class _TransportServiceAddEditScreenState
                       final number = double.tryParse(value?.trim() ?? '');
 
                       if (number == null) {
-                        return 'Enter current KM';
+                        return AppLocalization.t('Enter current KM');
                       }
 
                       if (number < 0) {
-                        return 'Invalid KM';
+                        return AppLocalization.t('Invalid KM');
                       }
 
                       return null;
@@ -504,15 +509,15 @@ class _TransportServiceAddEditScreenState
 
   Widget _buildServiceItems() {
     return _sectionCard(
-      title: 'Service Items',
+      title: AppLocalization.t('Service Items'),
       icon: Icons.inventory_2_outlined,
       child: Column(
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Spare parts used during this service',
+                  AppLocalization.t('Spare parts used during this service'),
                   style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
                 ),
               ),
@@ -520,7 +525,7 @@ class _TransportServiceAddEditScreenState
               OutlinedButton.icon(
                 onPressed: _saving ? null : _addItem,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Spare'),
+                label: Text(AppLocalization.t('Add Spare')),
               ),
             ],
           ),
@@ -556,21 +561,21 @@ class _TransportServiceAddEditScreenState
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: const Color(0xFFE1E5E9)),
       ),
-      child: const Column(
+      child: Column(
         children: [
           Icon(Icons.inventory_2_outlined, size: 32, color: Color(0xFF68717D)),
 
           SizedBox(height: 8),
 
           Text(
-            'No spare parts added',
+            AppLocalization.t('No spare parts added'),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
 
           SizedBox(height: 4),
 
           Text(
-            'Click "Add Spare" to add a service item.',
+            AppLocalization.t('Click "Add Spare" to add a service item.'),
             style: TextStyle(fontSize: 12, color: Color(0xFF68717D)),
           ),
         ],
@@ -693,7 +698,7 @@ class _TransportServiceAddEditScreenState
       initialValue: selectedValue,
       isExpanded: true,
       decoration: _inputDecoration(
-        label: 'Spare Part',
+        label: AppLocalization.t('Spare Part'),
         icon: Icons.settings_outlined,
       ),
       items: _spares.map((spare) {
@@ -719,7 +724,7 @@ class _TransportServiceAddEditScreenState
             },
       validator: (value) {
         if (value == null) {
-          return 'Select spare';
+          return AppLocalization.t('Select spare');
         }
 
         return null;
@@ -735,7 +740,7 @@ class _TransportServiceAddEditScreenState
     return TextFormField(
       controller: item.quantityController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: _inputDecoration(label: 'Quantity'),
+      decoration: _inputDecoration(label: AppLocalization.t('Quantity')),
       onChanged: (_) {
         setState(() {});
       },
@@ -743,7 +748,7 @@ class _TransportServiceAddEditScreenState
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number <= 0) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
 
         return null;
@@ -759,7 +764,10 @@ class _TransportServiceAddEditScreenState
     return TextFormField(
       controller: item.costController,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
-      decoration: _inputDecoration(label: 'Cost / Unit', prefix: '₹ '),
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Cost / Unit'),
+        prefix: '₹ ',
+      ),
       onChanged: (_) {
         setState(() {});
       },
@@ -767,7 +775,7 @@ class _TransportServiceAddEditScreenState
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number < 0) {
-          return 'Invalid';
+          return AppLocalization.t('Invalid');
         }
 
         return null;
@@ -782,7 +790,10 @@ class _TransportServiceAddEditScreenState
   Widget _buildItemRemarkField(_ServiceItemDraft item) {
     return TextFormField(
       controller: item.remarkController,
-      decoration: _inputDecoration(label: 'Item Remark', hint: 'Optional'),
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Item Remark'),
+        hint: AppLocalization.t('Optional'),
+      ),
       maxLines: 1,
     );
   }
@@ -793,7 +804,7 @@ class _TransportServiceAddEditScreenState
 
   Widget _removeButton(int index) {
     return IconButton(
-      tooltip: 'Remove',
+      tooltip: AppLocalization.t('Remove'),
       onPressed: _saving
           ? null
           : () {
@@ -821,8 +832,8 @@ class _TransportServiceAddEditScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const Text(
-          'TOTAL',
+        Text(
+          AppLocalization.t('TOTAL'),
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.w700,
@@ -862,9 +873,9 @@ class _TransportServiceAddEditScreenState
 
           const SizedBox(width: 10),
 
-          const Expanded(
+          Expanded(
             child: Text(
-              'Total Service Cost',
+              AppLocalization.t('Total Service Cost'),
               style: TextStyle(
                 fontWeight: FontWeight.w600,
                 color: Color(0xFF174D2B),
@@ -891,14 +902,14 @@ class _TransportServiceAddEditScreenState
 
   Widget _buildRemarks() {
     return _sectionCard(
-      title: 'Remarks',
+      title: AppLocalization.t('Remarks'),
       icon: Icons.notes_outlined,
       child: TextFormField(
         controller: _remarksController,
         maxLines: 4,
         decoration: _inputDecoration(
-          label: 'Service Remarks',
-          hint: 'Enter any additional service notes...',
+          label: AppLocalization.t('Service Remarks'),
+          hint: AppLocalization.t('Enter any additional service notes...'),
         ),
       ),
     );
@@ -917,7 +928,7 @@ class _TransportServiceAddEditScreenState
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           ),
-          child: const Text('Cancel'),
+          child: Text(AppLocalization.t('Cancel')),
         ),
 
         const SizedBox(width: 12),
@@ -936,10 +947,10 @@ class _TransportServiceAddEditScreenState
               : const Icon(Icons.save_outlined),
           label: Text(
             _saving
-                ? 'Saving...'
+                ? AppLocalization.t('Saving...')
                 : widget.isEdit
-                ? 'Update Service'
-                : 'Save Service',
+                ? AppLocalization.t('Update Service')
+                : AppLocalization.t('Save Service'),
           ),
           style: FilledButton.styleFrom(
             backgroundColor: const Color(0xFF00652C),
@@ -956,7 +967,11 @@ class _TransportServiceAddEditScreenState
 
   void _addItem() {
     if (_spares.isEmpty) {
-      _showError('No active spare parts found. Please add spares first.');
+      _showError(
+        AppLocalization.t(
+          'No active spare parts found. Please add spares first.',
+        ),
+      );
       return;
     }
 
@@ -1063,8 +1078,8 @@ class _TransportServiceAddEditScreenState
         SnackBar(
           content: Text(
             widget.isEdit
-                ? 'Service updated successfully.'
-                : 'Service added successfully.',
+                ? AppLocalization.t('Service updated successfully.')
+                : AppLocalization.t('Service added successfully.'),
           ),
           backgroundColor: const Color(0xFF00652C),
         ),
@@ -1257,8 +1272,8 @@ class _TransportServiceAddEditScreenState
     bool loaderShown = false;
 
     try {
-      const typeGroup = XTypeGroup(
-        label: 'Images',
+      var typeGroup = XTypeGroup(
+        label: AppLocalization.t('Images'),
         extensions: ['jpg', 'jpeg', 'png', 'webp'],
       );
 
@@ -1317,8 +1332,8 @@ class _TransportServiceAddEditScreenState
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Uploaded Sheet',
+          title: Text(
+            AppLocalization.t('Uploaded Sheet'),
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           content: SizedBox(
@@ -1333,14 +1348,14 @@ class _TransportServiceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context, false);
               },
-              child: const Text('Cancel'),
+              child: Text(AppLocalization.t('Cancel')),
             ),
             ElevatedButton.icon(
               onPressed: () {
                 Navigator.pop(context, true);
               },
               icon: const Icon(Icons.file_upload_outlined),
-              label: const Text('Use Image'),
+              label: Text(AppLocalization.t('Use Image')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF00652C),
                 foregroundColor: Colors.white,
@@ -1363,8 +1378,8 @@ class _TransportServiceAddEditScreenState
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return const AlertDialog(
-          title: Text('Extracting Data'),
+        return AlertDialog(
+          title: Text(AppLocalization.t('Extracting Data')),
           content: SizedBox(
             width: 300,
             child: Row(
@@ -1375,7 +1390,7 @@ class _TransportServiceAddEditScreenState
                   child: CircularProgressIndicator(strokeWidth: 3),
                 ),
                 SizedBox(width: 20),
-                Text('Please wait...'),
+                Text(AppLocalization.t('Please wait...')),
               ],
             ),
           ),
@@ -1396,8 +1411,8 @@ class _TransportServiceAddEditScreenState
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text(
-            'Review Extracted Data',
+          title: Text(
+            AppLocalization.t('Review Extracted Data'),
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
           ),
           content: SizedBox(
@@ -1412,16 +1427,16 @@ class _TransportServiceAddEditScreenState
 
                   const SizedBox(height: 12),
 
-                  const Text(
-                    'Service Items',
+                  Text(
+                    AppLocalization.t('Service Items'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
 
                   const SizedBox(height: 12),
 
                   if (result.serviceItems.isEmpty)
-                    const Text(
-                      'No service items detected.',
+                    Text(
+                      AppLocalization.t('No service items detected.'),
                       style: TextStyle(color: Color(0xFF68717D)),
                     )
                   else
@@ -1461,7 +1476,7 @@ class _TransportServiceAddEditScreenState
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: const Text('Change'),
+              child: Text(AppLocalization.t('Change')),
             ),
             ElevatedButton(
               onPressed: () {
@@ -1473,7 +1488,7 @@ class _TransportServiceAddEditScreenState
                 foregroundColor: Colors.white,
                 minimumSize: const Size(180, 48),
               ),
-              child: const Text('Use These Values'),
+              child: Text(AppLocalization.t('Use These Values')),
             ),
           ],
         );
