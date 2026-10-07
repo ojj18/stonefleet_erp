@@ -365,6 +365,8 @@ class ReportExcelService {
 
     sheet.appendRow([
       TextCellValue('Date'),
+      TextCellValue('Operator'),
+      TextCellValue('Salary'),
       TextCellValue('Bullet Qty'),
       TextCellValue('Bullet Unit Price'),
       TextCellValue('Bullet Total'),
@@ -383,6 +385,8 @@ class ReportExcelService {
     for (final record in records) {
       sheet.appendRow([
         TextCellValue(_formatDate(record.purchaseDate)),
+        TextCellValue(record.operatorName),
+        _cellValue(record.salary),
         _cellValue(record.bulletQuantity),
         _cellValue(record.bulletPrice),
         _cellValue(record.bulletTotal),

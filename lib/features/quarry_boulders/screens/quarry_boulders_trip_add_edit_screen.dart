@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../core/localization/app_localization.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../../../data/models/transport_vehicle_model.dart';
+import '../../../data/repositories/driver_repository.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
 import '../../transport/master/providers/transport_master_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
@@ -22,6 +23,9 @@ class _QuarryBouldersTripAddEditScreenState
     extends State<QuarryBouldersTripAddEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final _driver = TextEditingController();
+  final DriverRepository _driverRepository = DriverRepository();
+  List<String> _drivers = [];
+  String? _selectedDriver;
   final _trip = TextEditingController();
   DateTime _date = DateTime.now();
   TransportModel? _vehicle;
@@ -33,10 +37,15 @@ class _QuarryBouldersTripAddEditScreenState
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context.read<TransportProvider>().loadActiveVehicles();
+      _drivers = await _driverRepository.getDrivers();
       if (widget.trip != null) {
         final t = widget.trip!;
         _date = DateTime.parse(t.tripDate);
         _driver.text = t.driverName;
+        _selectedDriver = t.driverName;
+        if (!_drivers.contains(t.driverName) && t.driverName.trim().isNotEmpty && t.driverName.toLowerCase() != 'company') {
+          _drivers = [..._drivers, t.driverName];
+        }
         _trip.text = '${t.trips}';
         if (mounted) {
           _vehicle = await context
@@ -84,7 +93,7 @@ class _QuarryBouldersTripAddEditScreenState
             tripDate: DateFormat('yyyy-MM-dd').format(_date),
             transportVehicleId: _vehicle!.id!,
             registrationNumber: _vehicle!.registrationNumber,
-            driverName: _driver.text,
+            driverName: (_selectedDriver ?? _driver.text).trim(),
             unit: _unit,
             tripsCount: count,
           )
@@ -92,7 +101,7 @@ class _QuarryBouldersTripAddEditScreenState
             tripDate: DateFormat('yyyy-MM-dd').format(_date),
             transportVehicleId: _vehicle!.id!,
             registrationNumber: _vehicle!.registrationNumber,
-            driverName: _driver.text,
+            driverName: (_selectedDriver ?? _driver.text).trim(),
             unit: _unit,
             tripsCount: count,
           );
@@ -341,15 +350,79 @@ class _QuarryBouldersTripAddEditScreenState
     );
   }
 
-  Widget _driverField() => TextFormField(
-    controller: _driver,
-    enabled: !_saving,
-    textCapitalization: TextCapitalization.words,
-    decoration: _dec(AppLocalization.t('Driver Name'), Icons.person_outline),
-    validator: (v) => v == null || v.trim().isEmpty
-        ? AppLocalization.t('Enter driver name')
-        : null,
-  );
+  Future<void> _addDriver() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppLocalization.t('Add Driver')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Driver Name'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(AppLocalization.t('Add')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    if (name.trim().toLowerCase() == 'company') {
+      _snack(AppLocalization.t('Company cannot be selected as a driver.'));
+      return;
+    }
+    await _driverRepository.addDriver(name);
+    _drivers = await _driverRepository.getDrivers();
+    if (mounted) {
+      setState(() {
+        _selectedDriver = name.trim();
+        _driver.text = name.trim();
+      });
+    }
+  }
+
+  Widget _driverField() {
+    final selected = _selectedDriver != null && _drivers.contains(_selectedDriver)
+        ? _selectedDriver
+        : null;
+    return DropdownButtonFormField<String>(
+      initialValue: selected,
+      decoration: _dec(AppLocalization.t('Driver Name'), Icons.person_outline),
+      items: [
+        ..._drivers.map(
+          (name) => DropdownMenuItem<String>(value: name, child: Text(name)),
+        ),
+        DropdownMenuItem<String>(
+          value: '__add_driver__',
+          child: Text('+ ${AppLocalization.t('Add Driver')}'),
+        ),
+      ],
+      onChanged: _saving ? null : (value) async {
+        if (value == '__add_driver__') {
+          await _addDriver();
+          return;
+        }
+        setState(() {
+          _selectedDriver = value;
+          _driver.text = value ?? '';
+        });
+      },
+      validator: (_) => (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
+          ? AppLocalization.t('Enter driver name')
+          : null,
+    );
+  }
   Widget _unitField() => InputDecorator(
     decoration: _dec(AppLocalization.t('Unit'), Icons.scale_outlined),
     child: Text(

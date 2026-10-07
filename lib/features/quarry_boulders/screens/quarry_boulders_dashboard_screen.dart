@@ -6,6 +6,7 @@ import '../../../core/widgets/app_sidebar.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
+import '../../../data/repositories/driver_repository.dart';
 import '../providers/quarry_boulder_provider.dart';
 import 'quarry_boulders_reports_screen.dart';
 import 'quarry_boulders_trip_add_edit_screen.dart';
@@ -23,13 +24,18 @@ class _QuarryBouldersDashboardScreenState
   DateTime? _to;
   final _search = TextEditingController();
   String _driver = '';
+  List<String> _drivers = [];
   int _page = 1;
   int _rows = 10;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _drivers = await DriverRepository().getDrivers();
+      if (mounted) setState(() {});
+      await _load();
+    });
   }
 
   @override
@@ -432,22 +438,34 @@ class _QuarryBouldersDashboardScreenState
         ),
         const SizedBox(width: 12),
         Expanded(
-          child: TextField(
-            onChanged: (v) {
-              _driver = v;
-              setState(() {
-                _page = 1;
-              });
-              _load();
-            },
+          child: DropdownButtonFormField<String>(
+            initialValue: _driver.isEmpty ? '' : _driver,
             decoration: InputDecoration(
               labelText: AppLocalization.t('Driver Name'),
-              hintText: AppLocalization.t('Search driver name...'),
               prefixIcon: const Icon(Icons.person_outline),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
               ),
             ),
+            items: [
+              DropdownMenuItem<String>(
+                value: '',
+                child: Text(AppLocalization.t('All Drivers')),
+              ),
+              ..._drivers.map(
+                (name) => DropdownMenuItem<String>(
+                  value: name,
+                  child: Text(name),
+                ),
+              ),
+            ],
+            onChanged: (v) {
+              setState(() {
+                _driver = v ?? '';
+                _page = 1;
+              });
+              _load();
+            },
           ),
         ),
         const SizedBox(width: 12),

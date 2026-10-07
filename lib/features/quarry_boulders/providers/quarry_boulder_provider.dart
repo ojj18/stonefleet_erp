@@ -16,16 +16,16 @@ class QuarryBoulderProvider extends ChangeNotifier {
   Future<void> loadTrips({DateTime? fromDate, DateTime? toDate, String? registrationNumber, String? driverName}) async {
     await _run(() async {
       trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, registrationNumber: registrationNumber, driverName: driverName);
-      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate);
+      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName);
     });
   }
 
-  Future<void> loadReports({DateTime? fromDate, DateTime? toDate}) async {
+  Future<void> loadReports({DateTime? fromDate, DateTime? toDate, String? driverName}) async {
     await _run(() async {
-      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate);
+      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName);
       driverSummary = await _repository.getDriverSummary(fromDate: fromDate, toDate: toDate);
       lorrySummary = await _repository.getLorrySummary(fromDate: fromDate, toDate: toDate);
-      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate);
+      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, driverName: driverName);
     });
   }
 

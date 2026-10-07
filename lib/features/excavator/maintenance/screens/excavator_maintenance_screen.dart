@@ -9,6 +9,7 @@ import '../../../../data/models/excavator_maintenance_list_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
+import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_maintenance_provider.dart';
 import 'excavator_maintenance_add_edit_screen.dart';
 
@@ -670,7 +671,7 @@ class _ExcavatorMaintenanceScreenState
             ),
 
             SizedBox(
-              width: 100,
+              width: 150,
               child: Text(
                 '${_formatNumber(record.dieselFilled)} L',
                 style: const TextStyle(fontSize: 13),
@@ -692,6 +693,12 @@ class _ExcavatorMaintenanceScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  IconButton(
+                    tooltip: AppLocalization.t('View'),
+                    onPressed: () => _viewMaintenance(record),
+                    icon: const Icon(Icons.visibility_outlined, size: 19),
+                    color: const Color(0xFF00652C),
+                  ),
                   IconButton(
                     tooltip: AppLocalization.t('Edit'),
                     onPressed: () => _openEditScreen(record),
@@ -886,6 +893,101 @@ class _ExcavatorMaintenanceScreenState
   // ============================================================
   // EDIT
   // ============================================================
+
+  Future<void> _viewMaintenance(ExcavatorMaintenanceModel record) async {
+    final excavator = await context.read<ExcavatorProvider>().getById(
+      record.excavatorId,
+    );
+    if (mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => _MaintenanceDetailsDialog(
+          title: AppLocalization.t('Excavator Maintenance Details'),
+          children: [
+            _d(AppLocalization.t('Date'), _formatDate(record.createdAt)),
+            _d(AppLocalization.t('Excavator'), excavator?.registrationNumber),
+            _d(AppLocalization.t('Operator Name'), record.operatorName),
+            _d(AppLocalization.t('Shift'), record.shift),
+            _d(
+              AppLocalization.t('Starting Hour'),
+              _formatNumber(record.startingHour),
+            ),
+            _d(
+              AppLocalization.t('Closing Hour'),
+              _formatNumber(record.closingHour),
+            ),
+            _d(
+              AppLocalization.t('Total Working Hour'),
+              _formatNumber(record.totalWorkingHour),
+            ),
+            _d(
+              AppLocalization.t('Bucket Working Hour'),
+              _formatNumber(record.bucketWorkingHour),
+            ),
+            _d(
+              AppLocalization.t('Breaker Working Hour'),
+              _formatNumber(record.breakerWorkingHour),
+            ),
+            _d(
+              AppLocalization.t('Total Running Hour'),
+              _formatNumber(record.totalRunningHour),
+            ),
+            _d(
+              AppLocalization.t('Number of Loads'),
+              record.numberOfLoads.toString(),
+            ),
+            _d(AppLocalization.t('Units'), _formatNumber(record.units)),
+            _d(
+              AppLocalization.t('Diesel Filled'),
+              '${_formatNumber(record.dieselFilled)} L',
+            ),
+            _d(
+              AppLocalization.t('Diesel Rate'),
+              _formatCurrency(record.dieselRate),
+            ),
+            _d(
+              AppLocalization.t('Diesel Expense'),
+              _formatCurrency(record.dieselExpense),
+            ),
+            _d(
+              AppLocalization.t('Diesel Consumption (L/H)'),
+              _formatNumber(record.dieselExpensePerHour),
+            ),
+            _d(
+              AppLocalization.t('Teeth Set Changed'),
+              record.teethSetChanged
+                  ? AppLocalization.t('Yes')
+                  : AppLocalization.t('No'),
+            ),
+            _d(AppLocalization.t('Remarks'), record.remarks),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _d(String label, String? value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 175,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF68717D),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(value == null || value.trim().isEmpty ? '-' : value),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _openEditScreen(ExcavatorMaintenanceModel record) async {
     if (record.id == null) return;
@@ -1119,4 +1221,29 @@ class _ExcavatorMaintenanceScreenState
       return value;
     }
   }
+}
+
+class _MaintenanceDetailsDialog extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const _MaintenanceDetailsDialog({
+    required this.title,
+    required this.children,
+  });
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(title),
+    content: SizedBox(
+      width: 580,
+      child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(AppLocalization.t('Close')),
+      ),
+    ],
+  );
 }

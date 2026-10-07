@@ -3,6 +3,7 @@ import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/quarry_blasting_purchase_model.dart';
+import '../../../data/repositories/blasting_operator_repository.dart';
 import '../providers/quarry_blasting_provider.dart';
 import '../widgets/quarry_blasting_shell.dart';
 
@@ -21,6 +22,10 @@ class QuarryBlastingNewPurchaseScreen extends StatefulWidget {
 class _QuarryBlastingNewPurchaseScreenState
     extends State<QuarryBlastingNewPurchaseScreen> {
   DateTime _date = DateTime.now();
+  final _salaryController = TextEditingController();
+  final BlastingOperatorRepository _operatorRepository = BlastingOperatorRepository();
+  List<String> _operators = [];
+  String _selectedOperator = 'Company';
   final _bulletQty = TextEditingController();
   final _bulletPrice = TextEditingController();
   final _wire3Qty = TextEditingController();
@@ -35,6 +40,7 @@ class _QuarryBlastingNewPurchaseScreenState
   void initState() {
     super.initState();
     final p = widget.purchase;
+    _loadOperators();
     if (p != null) {
       final parsed = DateTime.tryParse(p.purchaseDate);
       if (parsed != null) _date = parsed;
@@ -46,6 +52,8 @@ class _QuarryBlastingNewPurchaseScreenState
       _wire4Price.text = _valueText(p.wire4mPrice);
       _edQty.text = _valueText(p.edQuantity);
       _edPrice.text = _valueText(p.edPrice);
+      _selectedOperator = p.operatorName.isEmpty ? 'Company' : p.operatorName;
+      _salaryController.text = _valueText(p.salary);
     }
     for (final controller in [
       _bulletQty,
@@ -76,6 +84,52 @@ class _QuarryBlastingNewPurchaseScreenState
       controller.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _loadOperators() async {
+    try {
+      final values = await _operatorRepository.getOperators();
+      if (!mounted) return;
+      setState(() {
+        _operators = values;
+        if (!_operators.contains(_selectedOperator)) {
+          _operators = [..._operators, _selectedOperator];
+        }
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _addOperator() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppLocalization.t('Add Operator')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Operator'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(AppLocalization.t('Add')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    await _operatorRepository.addOperator(name);
+    _operators = await _operatorRepository.getOperators();
+    if (mounted) setState(() => _selectedOperator = name.trim());
   }
 
   void _refresh() => setState(() {});
@@ -136,6 +190,8 @@ class _QuarryBlastingNewPurchaseScreenState
       await provider.updatePurchase(
         id: widget.purchase!.id!,
         purchaseDate: _date.toIso8601String(),
+        operatorName: _selectedOperator,
+        salary: double.tryParse(_salaryController.text.trim()) ?? 0,
         bulletQuantity: quantities[0],
         bulletPrice: prices[0],
         wire3mQuantity: quantities[1],
@@ -148,6 +204,8 @@ class _QuarryBlastingNewPurchaseScreenState
     } else {
       await provider.savePurchase(
         purchaseDate: _date.toIso8601String(),
+        operatorName: _selectedOperator,
+        salary: double.tryParse(_salaryController.text.trim()) ?? 0,
         bulletQuantity: quantities[0],
         bulletPrice: prices[0],
         wire3mQuantity: quantities[1],
@@ -207,27 +265,72 @@ class _QuarryBlastingNewPurchaseScreenState
                   const SizedBox(height: 24),
                   QuarryCard(
                     title: AppLocalization.t('Purchase Details'),
-                    icon: Icons.receipt_long_outlined,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 280,
-                          child: InkWell(
-                            onTap: _pickDate,
-                            child: InputDecorator(
-                              decoration: InputDecoration(
-                                labelText: AppLocalization.t('Purchase Date'),
-                                border: OutlineInputBorder(),
-                                suffixIcon: Icon(Icons.calendar_today_outlined),
-                              ),
-                              child: Text(
-                                '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}',
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                     icon: Icons.receipt_long_outlined,
+                     child: Row(
+                       children: [
+                         Expanded(
+                           child: InkWell(
+                             onTap: _pickDate,
+                             child: InputDecorator(
+                               decoration: InputDecoration(
+                                 labelText: AppLocalization.t('Purchase Date'),
+                                 border: const OutlineInputBorder(),
+                                 suffixIcon: const Icon(Icons.calendar_today_outlined),
+                               ),
+                               child: Text(
+                                 '${_date.day.toString().padLeft(2, '0')}/${_date.month.toString().padLeft(2, '0')}/${_date.year}',
+                               ),
+                             ),
+                           ),
+                         ),
+                         const SizedBox(width: 12),
+                         Expanded(
+                           child: DropdownButtonFormField<String>(
+                             initialValue: _selectedOperator,
+                             decoration: InputDecoration(
+                               labelText: AppLocalization.t('Operator'),
+                               border: const OutlineInputBorder(),
+                             ),
+                             items: [
+                               ..._operators.map(
+                                 (name) => DropdownMenuItem<String>(
+                                   value: name,
+                                   child: Text(name),
+                                 ),
+                               ),
+                               DropdownMenuItem<String>(
+                                 value: '__add_operator__',
+                                 child: Text('+ ${AppLocalization.t('Add Operator')}'),
+                               ),
+                             ],
+                             onChanged: (value) async {
+                               if (value == '__add_operator__') {
+                                 await _addOperator();
+                                 return;
+                               }
+                               if (value != null) setState(() => _selectedOperator = value);
+                             },
+                           ),
+                         ),
+                         const SizedBox(width: 12),
+                         Expanded(
+                           child: TextFormField(
+                             controller: _salaryController,
+                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                             decoration: InputDecoration(
+                               labelText: AppLocalization.t('Salary'),
+                               prefixText: '₹ ',
+                               border: const OutlineInputBorder(),
+                             ),
+                             validator: (value) {
+                               if (value == null || value.trim().isEmpty) return null;
+                               final n = double.tryParse(value.trim());
+                               return n == null || n < 0 ? AppLocalization.t('Invalid') : null;
+                             },
+                           ),
+                         ),
+                       ],
+                     ),
                   ),
                   const SizedBox(height: 18),
                   QuarryCard(

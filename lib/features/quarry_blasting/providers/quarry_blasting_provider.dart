@@ -25,16 +25,19 @@ class QuarryBlastingProvider extends ChangeNotifier {
     String? search,
     DateTime? fromDate,
     DateTime? toDate,
+    String? operatorName,
   }) async {
     await _run(() async {
       purchases = await _repository.getPurchases(
         search: search,
         fromDate: fromDate,
         toDate: toDate,
+        operatorName: operatorName,
       );
       summary = await _repository.getSummary(
         fromDate: fromDate,
         toDate: toDate,
+        operatorName: operatorName,
       );
     });
   }
@@ -43,6 +46,7 @@ class QuarryBlastingProvider extends ChangeNotifier {
     required String period,
     DateTime? fromDate,
     DateTime? toDate,
+    String? operatorName,
   }) async {
     DateTime? from = fromDate;
     DateTime? to = toDate;
@@ -63,11 +67,13 @@ class QuarryBlastingProvider extends ChangeNotifier {
       to = DateTime(now.year, 12, 31);
     }
 
-    await loadPurchases(fromDate: from, toDate: to);
+    await loadPurchases(fromDate: from, toDate: to, operatorName: operatorName);
   }
 
   Future<void> savePurchase({
     required String purchaseDate,
+    required String operatorName,
+    required double salary,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -80,6 +86,8 @@ class QuarryBlastingProvider extends ChangeNotifier {
     await _run(() async {
       await _repository.createPurchase(
         purchaseDate: purchaseDate,
+        operatorName: operatorName,
+        salary: salary,
         bulletQuantity: bulletQuantity,
         bulletPrice: bulletPrice,
         wire3mQuantity: wire3mQuantity,
@@ -98,6 +106,8 @@ class QuarryBlastingProvider extends ChangeNotifier {
   Future<void> updatePurchase({
     required int id,
     required String purchaseDate,
+    required String operatorName,
+    required double salary,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -111,6 +121,8 @@ class QuarryBlastingProvider extends ChangeNotifier {
       await _repository.updatePurchase(
         id: id,
         purchaseDate: purchaseDate,
+        operatorName: operatorName,
+        salary: salary,
         bulletQuantity: bulletQuantity,
         bulletPrice: bulletPrice,
         wire3mQuantity: wire3mQuantity,

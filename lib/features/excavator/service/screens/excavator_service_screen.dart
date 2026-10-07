@@ -494,7 +494,7 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
             ),
           ),
           SizedBox(
-            width: 100,
+            width: 150,
             child: Text(
               AppLocalization.t('ACTION'),
               style: _headerStyle,
@@ -612,10 +612,18 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
               ),
             ),
             SizedBox(
-              width: 100,
+              width: 150,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  IconButton(
+                    tooltip: AppLocalization.t('View'),
+                    onPressed: service.id == null
+                        ? null
+                        : () => _viewService(service),
+                    icon: const Icon(Icons.visibility_outlined, size: 19),
+                    color: const Color(0xFF00652C),
+                  ),
                   IconButton(
                     tooltip: AppLocalization.t('Edit'),
                     onPressed: service.id == null
@@ -693,6 +701,35 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
       await context.read<ServiceNotificationProvider>().loadNotifications();
     }
   }
+
+  Future<void> _viewService(ExcavatorServiceModel service) async {
+    final excavator = await context.read<ExcavatorProvider>().getById(service.excavatorId);
+    final summary = await _getItemSummary(service.id);
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _ServiceDetailsDialog(
+        title: AppLocalization.t('Excavator Service Details'),
+        children: [
+          _sd(AppLocalization.t('Service Date'), _formatDate(service.serviceDate)),
+          _sd(AppLocalization.t('Excavator'), excavator?.registrationNumber),
+          _sd(AppLocalization.t('Current Hour Meter'), _formatNumber(service.currentHourMeter)),
+          _sd(AppLocalization.t('Service Items'), summary.count.toString()),
+          _sd(AppLocalization.t('Total Service Cost'), _formatCurrency(summary.total)),
+          _sd(AppLocalization.t('Service Remarks'), service.remarks),
+        ],
+      ),
+    );
+  }
+
+  Widget _sd(String label, String? value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(width: 175, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF68717D)))),
+      const SizedBox(width: 10), Expanded(child: Text(value == null || value.trim().isEmpty ? '-' : value)),
+    ]),
+  );
+
 
   Future<void> _openEditScreen(ExcavatorServiceModel service) async {
     if (service.id == null) return;
@@ -980,3 +1017,13 @@ const TextStyle _headerStyle = TextStyle(
   color: Color(0xFF68717D),
   letterSpacing: 0.4,
 );
+
+class _ServiceDetailsDialog extends StatelessWidget {
+  final String title; final List<Widget> children;
+  const _ServiceDetailsDialog({required this.title, required this.children});
+  @override Widget build(BuildContext context) => AlertDialog(
+    title: Text(title),
+    content: SizedBox(width: 560, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: children))),
+    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalization.t('Close')))],
+  );
+}

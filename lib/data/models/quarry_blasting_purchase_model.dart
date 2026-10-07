@@ -1,6 +1,8 @@
 class QuarryBlastingPurchase {
   final int? id;
   final String purchaseDate;
+  final String operatorName;
+  final double salary;
   final double bulletQuantity;
   final double bulletPrice;
   final double bulletTotal;
@@ -20,6 +22,8 @@ class QuarryBlastingPurchase {
   const QuarryBlastingPurchase({
     this.id,
     required this.purchaseDate,
+    this.operatorName = 'Company',
+    this.salary = 0,
     this.bulletQuantity = 0,
     this.bulletPrice = 0,
     this.bulletTotal = 0,
@@ -43,6 +47,8 @@ class QuarryBlastingPurchase {
     return QuarryBlastingPurchase(
       id: (map['id'] as num?)?.toInt(),
       purchaseDate: map['purchase_date']?.toString() ?? '',
+      operatorName: map['operator_name']?.toString() ?? 'Company',
+      salary: number('salary'),
       bulletQuantity: number('bullet_quantity'),
       bulletPrice: number('bullet_price'),
       bulletTotal: number('bullet_total'),

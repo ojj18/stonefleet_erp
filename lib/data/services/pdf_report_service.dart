@@ -344,6 +344,8 @@ class PdfReportService {
         .map(
           (row) => [
             _formatDateString(row['purchaseDate']?.toString()),
+            _value(row['operatorName']),
+            _currency(row['salary']),
             _number(row['bulletQuantity']),
             _currency(row['bulletPrice']),
             _currency(row['bulletTotal']),
@@ -364,6 +366,8 @@ class PdfReportService {
     return pw.TableHelper.fromTextArray(
       headers: const [
         'Date',
+        'Operator',
+        'Salary',
         'Bullet Qty',
         'Bullet Price',
         'Bullet Total',

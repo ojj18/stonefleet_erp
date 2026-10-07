@@ -3,6 +3,7 @@ import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/models/quarry_blasting_purchase_model.dart';
+import '../../../data/repositories/blasting_operator_repository.dart';
 import '../../auth/providers/auth_provider.dart';
 
 import '../providers/quarry_blasting_provider.dart';
@@ -21,11 +22,17 @@ class _QuarryBlastingPurchaseHistoryScreenState
     extends State<QuarryBlastingPurchaseHistoryScreen> {
   DateTime? _from;
   DateTime? _to;
+  String _operator = '';
+  List<String> _operators = [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _load());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _operators = await BlastingOperatorRepository().getOperators();
+      if (mounted) setState(() {});
+      await _load();
+    });
   }
 
   @override
@@ -37,6 +44,7 @@ class _QuarryBlastingPurchaseHistoryScreenState
     await context.read<QuarryBlastingProvider>().loadPurchases(
       fromDate: _from,
       toDate: _to,
+      operatorName: _operator.isEmpty ? null : _operator,
     );
   }
 
@@ -89,6 +97,8 @@ class _QuarryBlastingPurchaseHistoryScreenState
             mainAxisSize: MainAxisSize.min,
             children: [
               _detailRow('Purchase Date', formatDate(purchase.purchaseDate)),
+              _detailRow('Operator', purchase.operatorName),
+              _detailRow('Salary', formatMoney(purchase.salary)),
               _detailRow(
                 'Bullet',
                 '${formatQty(purchase.bulletQuantity)} × ${formatMoney(purchase.bulletPrice)}',
@@ -262,11 +272,38 @@ class _QuarryBlastingPurchaseHistoryScreenState
                             ),
                           ),
                           const SizedBox(width: 12),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _operator,
+                              decoration: InputDecoration(
+                                labelText: AppLocalization.t('Operator'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: '',
+                                  child: Text(AppLocalization.t('All Operators')),
+                                ),
+                                ..._operators.map(
+                                  (name) => DropdownMenuItem<String>(
+                                    value: name,
+                                    child: Text(name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setState(() => _operator = value ?? '');
+                                _load();
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           OutlinedButton.icon(
                             onPressed: () {
                               setState(() {
                                 _from = null;
                                 _to = null;
+                                _operator = '';
                               });
                               _load();
                             },
@@ -371,6 +408,8 @@ class _QuarryBlastingPurchaseHistoryScreenState
         headingRowColor: const WidgetStatePropertyAll(Color(0xFFF8F9FB)),
         columns: [
           DataColumn(label: Text(AppLocalization.t('Date'))),
+          DataColumn(label: Text(AppLocalization.t('Operator'))),
+          DataColumn(label: Text(AppLocalization.t('Salary'))),
           DataColumn(label: Text(AppLocalization.t('Bullet Qty'))),
           DataColumn(label: Text(AppLocalization.t('Bullet Price'))),
           DataColumn(label: Text(AppLocalization.t('3m Wire Qty'))),
@@ -387,6 +426,8 @@ class _QuarryBlastingPurchaseHistoryScreenState
               (p) => DataRow(
                 cells: [
                   DataCell(Text(formatDate(p.purchaseDate))),
+                  DataCell(Text(p.operatorName)),
+                  DataCell(Text(formatMoney(p.salary))),
                   DataCell(Text(formatQty(p.bulletQuantity))),
                   DataCell(Text(formatMoney(p.bulletPrice))),
                   DataCell(Text(formatQty(p.wire3mQuantity))),

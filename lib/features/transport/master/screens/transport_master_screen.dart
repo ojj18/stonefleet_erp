@@ -397,6 +397,16 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
+                                        tooltip: AppLocalization.t('View'),
+                                        icon: const Icon(
+                                          Icons.visibility_outlined,
+                                          size: 18,
+                                        ),
+                                        onPressed: () {
+                                          _viewVehicle(vehicle);
+                                        },
+                                      ),
+                                      IconButton(
                                         tooltip: AppLocalization.t('Edit'),
                                         icon: const Icon(
                                           Icons.edit_outlined,
@@ -664,6 +674,43 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
   // EDIT
   // ============================================================
 
+  Future<void> _viewVehicle(TransportModel item) async {
+    await showDialog<void>(
+      context: context,
+      builder: (_) => _TransportDetailsDialog(
+        title: AppLocalization.t('Transport Details'),
+        children: [
+          _detail(AppLocalization.t('Registration'), item.registrationNumber),
+          _detail(AppLocalization.t('Manufacturer'), item.manufacturerName),
+          _detail(AppLocalization.t('Model'), item.modelName),
+          _detail(AppLocalization.t('Unit'), item.unit == 0 ? '-' : _formatUnit(item.unit)),
+          _detail(AppLocalization.t('Manufacturing Year'), item.manufacturingYear?.toString()),
+          _detail(AppLocalization.t('Owner Name'), item.ownerName),
+          _detail(AppLocalization.t('Permanent Address'), item.permanentAddress),
+          _detail(AppLocalization.t('Chassis Number'), item.vehicleChasiNumber),
+          _detail(AppLocalization.t('Engine Number'), item.vehicleEngineNumber),
+          _detail(AppLocalization.t('Color'), item.color),
+          _detail(AppLocalization.t('Insurance Company'), item.insuranceCompany),
+          _detail(AppLocalization.t('Emission Standard'), item.emissionStandard),
+          _detail(AppLocalization.t('Insurance Expiry'), item.insuranceExpiry),
+          _detail(AppLocalization.t('FC Expiry'), item.fcExpiry),
+          _detail(AppLocalization.t('Permit Expiry'), item.permitExpiry),
+          _detail(AppLocalization.t('Tax Expiry'), item.taxExpiry),
+          _detail(AppLocalization.t('Status'), item.status ? AppLocalization.t('Active') : AppLocalization.t('Inactive')),
+        ],
+      ),
+    );
+  }
+
+  Widget _detail(String label, String? value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 7),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(width: 155, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF68717D)))),
+      const SizedBox(width: 12), Expanded(child: Text(value == null || value.trim().isEmpty ? '-' : value)),
+    ]),
+  );
+
+
   Future<void> _editVehicle(int id) async {
     final result = await Navigator.push(
       context,
@@ -805,4 +852,14 @@ class _TransportMasterScreenState extends State<TransportMasterScreen> {
       ),
     );
   }
+}
+
+class _TransportDetailsDialog extends StatelessWidget {
+  final String title; final List<Widget> children;
+  const _TransportDetailsDialog({required this.title, required this.children});
+  @override Widget build(BuildContext context) => AlertDialog(
+    title: Text(title),
+    content: SizedBox(width: 620, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: children))),
+    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalization.t('Close')))],
+  );
 }

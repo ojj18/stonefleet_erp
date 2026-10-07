@@ -22,6 +22,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
   XFile? _file;
   Uint8List? _bytes;
   SparePurchaseOcrModel? _ocr;
+  bool _manualMode = false;
   final _billController = TextEditingController();
   final _supplierController = TextEditingController();
   final _dateController = TextEditingController();
@@ -56,9 +57,53 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
     if (file == null) return;
     final bytes = await file.readAsBytes();
     setState(() {
+      _manualMode = false;
       _file = file;
       _bytes = bytes;
       _ocr = null;
+    });
+  }
+
+  void _startManualEntry() {
+    for (final item in _items) {
+      item.dispose();
+    }
+    _items.clear();
+    _ocr = null;
+    _manualMode = true;
+    _file = null;
+    _bytes = null;
+    _billController.clear();
+    _supplierController.clear();
+    _dateController.text = DateTime.now().toIso8601String().substring(0, 10);
+    _subtotalController.text = '0';
+    _gstController.text = '0';
+    _grandTotalController.text = '0';
+    _items.add(
+      _EditableItem(
+        name: TextEditingController(),
+        quantity: TextEditingController(),
+        unitPrice: TextEditingController(),
+        gst: TextEditingController(text: '0'),
+        subtotal: TextEditingController(),
+        total: TextEditingController(),
+      ),
+    );
+    setState(() {});
+  }
+
+  void _addManualItem() {
+    setState(() {
+      _items.add(
+        _EditableItem(
+          name: TextEditingController(),
+          quantity: TextEditingController(),
+          unitPrice: TextEditingController(),
+          gst: TextEditingController(text: '0'),
+          subtotal: TextEditingController(),
+          total: TextEditingController(),
+        ),
+      );
     });
   }
 
@@ -98,9 +143,18 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
   }
 
   Future<void> _save() async {
+    _items.removeWhere((item) => item.name.text.trim().isEmpty);
     if (_items.isEmpty) {
       _show(AppLocalization.t('Add at least one purchase item.'));
       return;
+    }
+    for (final item in _items) {
+      final qty = double.tryParse(item.quantity.text.trim()) ?? 0;
+      final price = double.tryParse(item.unitPrice.text.trim()) ?? 0;
+      if (item.name.text.trim().isEmpty || qty <= 0 || price < 0) {
+        _show(AppLocalization.t('Enter valid purchase item details.'));
+        return;
+      }
     }
     final provider = context.read<InventoryProvider>();
     final input = InventoryPurchaseInput(
@@ -228,10 +282,19 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                             ),
                           ),
                         ),
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: OutlinedButton.icon(
+                            onPressed: _startManualEntry,
+                            icon: const Icon(Icons.edit_note_outlined),
+                            label: Text(AppLocalization.t('Add Manually')),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                  if (_ocr != null) ...[
+                  if (_ocr != null || _manualMode) ...[
                     const SizedBox(height: 24),
                     _buildReviewCard(),
                   ],
@@ -363,6 +426,15 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                         .toList(),
                   ),
                 ),
+           const SizedBox(height: 16),
+           Align(
+             alignment: Alignment.centerLeft,
+             child: OutlinedButton.icon(
+               onPressed: _addManualItem,
+               icon: const Icon(Icons.add),
+               label: Text(AppLocalization.t('Add Item')),
+             ),
+           ),
           const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,

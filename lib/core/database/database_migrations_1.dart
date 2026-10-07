@@ -278,6 +278,7 @@ class DatabaseMigrations {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
         transport_vehicle_id INTEGER NOT NULL,
+        maintenance_date TEXT NOT NULL,
         driver_name TEXT,
 
         starting_km REAL NOT NULL,
@@ -483,6 +484,40 @@ class DatabaseMigrations {
       ON UPDATE CASCADE
   )
 ''');
+
+
+    // ============================================================
+    // DRIVERS
+    // ============================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS drivers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    // ============================================================
+    // BLASTING OPERATORS
+    // ============================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS blasting_operators (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    final seedNow = DateTime.now().toIso8601String();
+    for (final name in ['Madhavan', 'Murugan', 'Company']) {
+      await db.insert(
+        'blasting_operators',
+        {'name': name, 'is_active': 1, 'created_at': seedNow},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
 
     await DatabaseSeed.seed(db);
 

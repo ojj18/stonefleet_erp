@@ -79,12 +79,13 @@ class QuarryBoulderRepository {
     return db.delete('quarry_boulder_trips', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<QuarryBoulderSummary> getSummary({DateTime? fromDate, DateTime? toDate}) async {
+  Future<QuarryBoulderSummary> getSummary({DateTime? fromDate, DateTime? toDate, String? driverName}) async {
     final db = await _dbHelper.database;
     final where = <String>[];
     final args = <Object?>[];
     if (fromDate != null) { where.add('trip_date >= ?'); args.add(_dateOnly(fromDate)); }
     if (toDate != null) { where.add('trip_date <= ?'); args.add(_dateOnly(toDate)); }
+    if (driverName != null && driverName.trim().isNotEmpty) { where.add('LOWER(driver_name) = ?'); args.add(driverName.trim().toLowerCase()); }
     final clause = where.isEmpty ? '' : ' WHERE ${where.join(' AND ')}';
     final row = (await db.rawQuery('''
       SELECT COUNT(*) records,

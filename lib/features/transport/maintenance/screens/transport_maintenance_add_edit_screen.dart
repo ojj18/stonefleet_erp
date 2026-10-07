@@ -1,5 +1,6 @@
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +9,7 @@ import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/ocr/transport_maintenance_ocr_model.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
+import '../../../../data/repositories/driver_repository.dart';
 import '../../../../data/services/ocr_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../../transport/master/providers/transport_master_provider.dart';
@@ -34,6 +36,10 @@ class _TransportMaintenanceAddEditScreenState
   // ============================================================
 
   final _driverController = TextEditingController();
+  final DriverRepository _driverRepository = DriverRepository();
+  List<String> _drivers = [];
+  String? _selectedDriver;
+  DateTime _maintenanceDate = DateTime.now();
 
   final _startingKmController = TextEditingController();
   final _closingKmController = TextEditingController();
@@ -89,6 +95,7 @@ class _TransportMaintenanceAddEditScreenState
   Future<void> _initialize() async {
     try {
       final transportProvider = context.read<TransportProvider>();
+      _drivers = await _driverRepository.getDrivers();
 
       if (transportProvider.vehicles.isEmpty) {
         await transportProvider.loadVehicles();
@@ -108,6 +115,14 @@ class _TransportMaintenanceAddEditScreenState
 
       if (record != null) {
         _driverController.text = record.driverName ?? '';
+        _selectedDriver = record.driverName;
+        final parsedDate = DateTime.tryParse(record.maintenanceDate);
+        if (parsedDate != null) _maintenanceDate = parsedDate;
+        if (_selectedDriver != null &&
+            _selectedDriver!.trim().isNotEmpty &&
+            !_drivers.contains(_selectedDriver)) {
+          _drivers = [..._drivers, _selectedDriver!];
+        }
 
         _startingKmController.text = record.startingKm.toString();
 
@@ -439,22 +454,127 @@ class _TransportMaintenanceAddEditScreenState
     return _sectionCard(
       title: AppLocalization.t('Vehicle & Driver'),
       icon: Icons.local_shipping_outlined,
-      child: Row(
+      child: Column(
         children: [
-          Expanded(child: _buildVehicleDropdown()),
+          _buildMaintenanceDateField(),
+          const SizedBox(height: 20),
+          Row(
+            children: [
+              Expanded(child: _buildVehicleDropdown()),
 
-          const SizedBox(width: 20),
+              const SizedBox(width: 20),
 
-          Expanded(
-            child: _buildTextField(
-              controller: _driverController,
-              label: AppLocalization.t('Driver Name'),
-              hint: AppLocalization.t('Enter driver name'),
-              icon: Icons.person_outline,
-            ),
+              Expanded(child: _buildDriverDropdown()),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMaintenanceDateField() {
+    return InkWell(
+      onTap: _saving
+          ? null
+          : () async {
+              final picked = await showDatePicker(
+                context: context,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+                initialDate: _maintenanceDate,
+              );
+              if (picked != null) setState(() => _maintenanceDate = picked);
+            },
+      child: InputDecorator(
+        decoration: _inputDecoration(
+          label: AppLocalization.t('Date'),
+          hint: AppLocalization.t('Select date'),
+          icon: Icons.calendar_today_outlined,
+        ),
+        child: Text(DateFormat('dd/MM/yyyy').format(_maintenanceDate)),
+      ),
+    );
+  }
+
+  Future<void> _addDriver() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppLocalization.t('Add Driver')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Driver Name'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(AppLocalization.t('Add')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    if (name.trim().toLowerCase() == 'company') {
+      _showError(AppLocalization.t('Company cannot be selected as a driver.'));
+      return;
+    }
+    await _driverRepository.addDriver(name);
+    _drivers = await _driverRepository.getDrivers();
+    if (mounted) {
+      setState(() {
+        _selectedDriver = name.trim();
+        _driverController.text = name.trim();
+      });
+    }
+  }
+
+  Widget _buildDriverDropdown() {
+    final selected =
+        _selectedDriver != null && _drivers.contains(_selectedDriver)
+        ? _selectedDriver
+        : null;
+    return DropdownButtonFormField<String>(
+      initialValue: selected,
+      decoration: _inputDecoration(
+        label: AppLocalization.t('Driver Name'),
+        hint: AppLocalization.t('Select driver'),
+        icon: Icons.person_outline,
+      ),
+      items: [
+        ..._drivers.map(
+          (name) => DropdownMenuItem<String>(value: name, child: Text(name)),
+        ),
+        DropdownMenuItem<String>(
+          value: '__add_driver__',
+          child: Text('+ ${AppLocalization.t('Add Driver')}'),
+        ),
+      ],
+      onChanged: _saving
+          ? null
+          : (value) async {
+              if (value == '__add_driver__') {
+                await _addDriver();
+                return;
+              }
+              setState(() {
+                _selectedDriver = value;
+                _driverController.text = value ?? '';
+              });
+            },
+      validator: (_) =>
+          (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
+          ? AppLocalization.t('Enter driver name')
+          : null,
     );
   }
 
@@ -794,10 +914,13 @@ class _TransportMaintenanceAddEditScreenState
 
       transportVehicleId: _selectedVehicle!.id!,
 
-      driverName: _driverController.text.trim().isEmpty
-          ? null
-          : _driverController.text.trim(),
+      maintenanceDate: DateFormat('yyyy-MM-dd').format(_maintenanceDate),
 
+      driverName: (_selectedDriver ?? _driverController.text).trim().isEmpty
+          ? null
+          : (_selectedDriver ?? _driverController.text).trim(),
+
+      //
       startingKm: startingKm,
 
       closingKm: closingKm,
@@ -1321,6 +1444,7 @@ class _TransportMaintenanceAddEditScreenState
     // 2. Driver
     if (result.driverName != null) {
       _driverController.text = result.driverName!;
+      _selectedDriver = result.driverName;
     }
 
     // 3. Starting KM

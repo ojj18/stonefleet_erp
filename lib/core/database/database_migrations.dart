@@ -279,6 +279,7 @@ class DatabaseMigrations {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
         transport_vehicle_id INTEGER NOT NULL,
+        maintenance_date TEXT NOT NULL,
         driver_name TEXT,
 
         starting_km REAL NOT NULL,
@@ -515,6 +516,8 @@ class DatabaseMigrations {
       CREATE TABLE quarry_blasting_purchases (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         purchase_date TEXT NOT NULL,
+        operator_name TEXT NOT NULL DEFAULT 'Company',
+        salary REAL NOT NULL DEFAULT 0,
 
         bullet_quantity REAL NOT NULL DEFAULT 0,
         bullet_price REAL NOT NULL DEFAULT 0,
@@ -554,6 +557,34 @@ class DatabaseMigrations {
           ON DELETE RESTRICT ON UPDATE CASCADE
       )
     ''');
+
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS drivers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS blasting_operators (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    final seedNow = DateTime.now().toIso8601String();
+    for (final name in ['Madhavan', 'Murugan', 'Company']) {
+      await db.insert(
+        'blasting_operators',
+        {'name': name, 'is_active': 1, 'created_at': seedNow},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
 
     await DatabaseSeed.seed(db);
 
@@ -1081,6 +1112,89 @@ class DatabaseMigrations {
         )
       ''');
       log('Database migrated to version 4: transport unit and quarry boulder trips created.');
+    }
+
+    // ============================================================
+    // VERSION 5
+    // DRIVER MASTER + TRANSPORT MAINTENANCE DATE +
+    // BLASTING OPERATORS / OPERATOR-SPECIFIC PURCHASES
+    // ============================================================
+    if (oldVersion < 5) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS drivers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      // Preserve existing driver/operator names as selectable drivers.
+      await db.execute('''
+        INSERT OR IGNORE INTO drivers (name, is_active, created_at)
+        SELECT DISTINCT TRIM(driver_name), 1, ?
+        FROM transport_maintenance
+        WHERE TRIM(COALESCE(driver_name, '')) <> ''
+          AND LOWER(TRIM(driver_name)) <> 'company'
+      ''', [DateTime.now().toIso8601String()]);
+
+      await db.execute('''
+        INSERT OR IGNORE INTO drivers (name, is_active, created_at)
+        SELECT DISTINCT TRIM(operator_name), 1, ?
+        FROM excavator_maintenance
+        WHERE TRIM(COALESCE(operator_name, '')) <> ''
+          AND LOWER(TRIM(operator_name)) <> 'company'
+      ''', [DateTime.now().toIso8601String()]);
+
+      await db.execute('''
+        INSERT OR IGNORE INTO drivers (name, is_active, created_at)
+        SELECT DISTINCT TRIM(driver_name), 1, ?
+        FROM quarry_boulder_trips
+        WHERE TRIM(COALESCE(driver_name, '')) <> ''
+          AND LOWER(TRIM(driver_name)) <> 'company'
+      ''', [DateTime.now().toIso8601String()]);
+
+      if (!await _hasColumn(db, 'transport_maintenance', 'maintenance_date')) {
+        await db.execute(
+          'ALTER TABLE transport_maintenance ADD COLUMN maintenance_date TEXT',
+        );
+        await db.execute('''
+          UPDATE transport_maintenance
+          SET maintenance_date = substr(created_at, 1, 10)
+          WHERE maintenance_date IS NULL OR maintenance_date = ''
+        ''');
+      }
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS blasting_operators (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      final seedNow = DateTime.now().toIso8601String();
+      for (final name in ['Madhavan', 'Murugan', 'Company']) {
+        await db.insert(
+          'blasting_operators',
+          {'name': name, 'is_active': 1, 'created_at': seedNow},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      if (!await _hasColumn(db, 'quarry_blasting_purchases', 'operator_name')) {
+        await db.execute(
+          "ALTER TABLE quarry_blasting_purchases ADD COLUMN operator_name TEXT NOT NULL DEFAULT 'Company'",
+        );
+      }
+      if (!await _hasColumn(db, 'quarry_blasting_purchases', 'salary')) {
+        await db.execute(
+          'ALTER TABLE quarry_blasting_purchases ADD COLUMN salary REAL NOT NULL DEFAULT 0',
+        );
+      }
+
+      log('Database migrated to version 5: drivers, maintenance date and blasting operators created.');
     }
 
   }

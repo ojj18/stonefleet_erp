@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/ocr/excavator_maintenance_ocr_model.dart';
+import '../../../../data/repositories/driver_repository.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
 
@@ -37,6 +38,9 @@ class _ExcavatorMaintenanceAddEditScreenState
   // ------------------------------------------------------------
 
   final _operatorController = TextEditingController();
+  final DriverRepository _driverRepository = DriverRepository();
+  List<String> _drivers = [];
+  String? _selectedOperator;
   final _startingHourController = TextEditingController();
   final _closingHourController = TextEditingController();
   final _totalWorkingHourController = TextEditingController();
@@ -79,6 +83,7 @@ class _ExcavatorMaintenanceAddEditScreenState
   void initState() {
     super.initState();
 
+    _loadDrivers();
     _loadExistingData();
 
     _startingHourController.addListener(_calculateHours);
@@ -89,6 +94,102 @@ class _ExcavatorMaintenanceAddEditScreenState
 
     _dieselFilledController.addListener(_calculateDiesel);
     _dieselRateController.addListener(_calculateDiesel);
+  }
+
+  Future<void> _loadDrivers() async {
+    try {
+      final drivers = await _driverRepository.getDrivers();
+      if (!mounted) return;
+      setState(() {
+        _drivers = drivers;
+        final current = _operatorController.text.trim();
+        if (current.isNotEmpty &&
+            !_drivers.contains(current) &&
+            current.toLowerCase() != 'company') {
+          _drivers = [..._drivers, current];
+        }
+        _selectedOperator = current.isEmpty ? null : current;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _addDriver() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppLocalization.t('Add Driver')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Driver Name'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(AppLocalization.t('Add')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    if (name.trim().toLowerCase() == 'company') {
+      _showError(AppLocalization.t('Company cannot be selected as a driver.'));
+      return;
+    }
+    await _driverRepository.addDriver(name);
+    _drivers = await _driverRepository.getDrivers();
+    if (mounted) {
+      setState(() {
+        _selectedOperator = name.trim();
+        _operatorController.text = name.trim();
+      });
+    }
+  }
+
+  Widget _buildDriverDropdown() {
+    final selected =
+        _selectedOperator != null && _drivers.contains(_selectedOperator)
+        ? _selectedOperator
+        : null;
+    return DropdownButtonFormField<String>(
+      initialValue: selected,
+      decoration: _inputDecoration(
+        AppLocalization.t('Driver Name'),
+        Icons.person_outline,
+      ),
+      items: [
+        ..._drivers.map(
+          (name) => DropdownMenuItem<String>(value: name, child: Text(name)),
+        ),
+        DropdownMenuItem<String>(
+          value: '__add_driver__',
+          child: Text('+ ${AppLocalization.t('Add Driver')}'),
+        ),
+      ],
+      onChanged: (value) async {
+        if (value == '__add_driver__') {
+          await _addDriver();
+          return;
+        }
+        setState(() {
+          _selectedOperator = value;
+          _operatorController.text = value ?? '';
+        });
+      },
+      validator: (_) =>
+          (_selectedOperator == null || _selectedOperator!.trim().isEmpty)
+          ? AppLocalization.t('Enter driver name')
+          : null,
+    );
   }
 
   // ------------------------------------------------------------
@@ -103,6 +204,7 @@ class _ExcavatorMaintenanceAddEditScreenState
     }
 
     _operatorController.text = data.operatorName ?? '';
+    _selectedOperator = data.operatorName;
 
     _selectedShift = data.shift;
 
@@ -243,7 +345,7 @@ class _ExcavatorMaintenanceAddEditScreenState
     }
 
     // Diesel consumption per hour
-    final dieselPerHour = workingHours / diesel;
+    final dieselPerHour = diesel / workingHours;
 
     // Diesel cost per hour
     // final dieselCostPerHour = (diesel * (rate ?? 0)) / workingHours;
@@ -446,7 +548,9 @@ class _ExcavatorMaintenanceAddEditScreenState
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalization.t('Failed to extract data: ') + e.toString()),
+          content: Text(
+            AppLocalization.t('Failed to extract data: ') + e.toString(),
+          ),
         ),
       );
     }
@@ -542,7 +646,10 @@ class _ExcavatorMaintenanceAddEditScreenState
             ),
           ),
           const SizedBox(width: 16),
-          Expanded(flex: 3, child: Text(value ?? AppLocalization.t('Not detected'))),
+          Expanded(
+            flex: 3,
+            child: Text(value ?? AppLocalization.t('Not detected')),
+          ),
         ],
       ),
     );
@@ -723,9 +830,10 @@ class _ExcavatorMaintenanceAddEditScreenState
 
       excavatorId: _selectedExcavator!.id!,
 
-      operatorName: _operatorController.text.trim().isEmpty
+      operatorName:
+          (_selectedOperator ?? _operatorController.text).trim().isEmpty
           ? null
-          : _operatorController.text.trim(),
+          : (_selectedOperator ?? _operatorController.text).trim(),
 
       shift: _selectedShift,
 
@@ -821,18 +929,6 @@ class _ExcavatorMaintenanceAddEditScreenState
 
   String _formatNumber(double value) {
     return value.toStringAsFixed(2);
-  }
-
-  // ------------------------------------------------------------
-  // VALIDATION
-  // ------------------------------------------------------------
-
-  String? _requiredValidator(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return AppLocalization.t('Required');
-    }
-
-    return null;
   }
 
   String? _numberValidator(String? value) {
@@ -1102,7 +1198,9 @@ class _ExcavatorMaintenanceAddEditScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.isEdit ? AppLocalization.t('Edit Maintenance') : AppLocalization.t('Add Maintenance'),
+              widget.isEdit
+                  ? AppLocalization.t('Edit Maintenance')
+                  : AppLocalization.t('Add Maintenance'),
               style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
             ),
 
@@ -1111,7 +1209,9 @@ class _ExcavatorMaintenanceAddEditScreenState
             Text(
               widget.isEdit
                   ? AppLocalization.t('Update excavator maintenance details')
-                  : AppLocalization.t('Record daily excavator maintenance details'),
+                  : AppLocalization.t(
+                      'Record daily excavator maintenance details',
+                    ),
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
             ),
           ],
@@ -1284,13 +1384,7 @@ class _ExcavatorMaintenanceAddEditScreenState
       icon: Icons.person_outline,
       child: Row(
         children: [
-          Expanded(
-            child: _textField(
-              controller: _operatorController,
-              label: AppLocalization.t('Operator Name'),
-              icon: Icons.person_outline,
-            ),
-          ),
+          Expanded(child: _buildDriverDropdown()),
 
           const SizedBox(width: 20),
 
@@ -1298,12 +1392,17 @@ class _ExcavatorMaintenanceAddEditScreenState
             child: DropdownButtonFormField<String>(
               initialValue: _selectedShift,
 
-              decoration: _inputDecoration(AppLocalization.t('Shift'), Icons.schedule_outlined),
+              decoration: _inputDecoration(
+                AppLocalization.t('Shift'),
+                Icons.schedule_outlined,
+              ),
 
               items: _shifts
                   .map(
-                    (shift) =>
-                        DropdownMenuItem(value: shift, child: Text(AppLocalization.t(shift))),
+                    (shift) => DropdownMenuItem(
+                      value: shift,
+                      child: Text(AppLocalization.t(shift)),
+                    ),
                   )
                   .toList(),
 
@@ -1491,7 +1590,7 @@ class _ExcavatorMaintenanceAddEditScreenState
               Expanded(
                 child: _numberField(
                   controller: _dieselPerHourController,
-                  label: AppLocalization.t('Diesel Consumption (L/KM)'),
+                  label: AppLocalization.t('Diesel Consumption (L/H)'),
                   icon: Icons.speed_outlined,
                   readOnly: true,
                   required: false,
@@ -1577,7 +1676,10 @@ class _ExcavatorMaintenanceAddEditScreenState
           TextFormField(
             controller: _remarksController,
             maxLines: 4,
-            decoration: _inputDecoration(AppLocalization.t('Remarks'), Icons.notes_outlined),
+            decoration: _inputDecoration(
+              AppLocalization.t('Remarks'),
+              Icons.notes_outlined,
+            ),
           ),
         ],
       ),
@@ -1688,25 +1790,6 @@ class _ExcavatorMaintenanceAddEditScreenState
           child,
         ],
       ),
-    );
-  }
-
-  // ------------------------------------------------------------
-  // TEXT FIELD
-  // ------------------------------------------------------------
-
-  Widget _textField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    bool required = false,
-    bool readOnly = false,
-  }) {
-    return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      decoration: _inputDecoration(label, icon),
-      validator: required ? _requiredValidator : null,
     );
   }
 

@@ -10,11 +10,16 @@ class QuarryBlastingRepository {
   Future<QuarryPurchaseSummary> getSummary({
     DateTime? fromDate,
     DateTime? toDate,
+    String? operatorName,
   }) async {
     final db = await _databaseHelper.database;
     final where = <String>[];
     final args = <dynamic>[];
     _addDateFilters(where, args, fromDate, toDate);
+    if (operatorName != null && operatorName.trim().isNotEmpty) {
+      where.add('LOWER(operator_name) = ?');
+      args.add(operatorName.trim().toLowerCase());
+    }
     final clause = where.isEmpty ? '' : 'WHERE ${where.join(' AND ')}';
 
     final rows = await db.rawQuery('''
@@ -40,12 +45,17 @@ class QuarryBlastingRepository {
     String? search,
     DateTime? fromDate,
     DateTime? toDate,
+    String? operatorName,
   }) async {
     final db = await _databaseHelper.database;
     final where = <String>[];
     final args = <dynamic>[];
 
     _addDateFilters(where, args, fromDate, toDate);
+    if (operatorName != null && operatorName.trim().isNotEmpty) {
+      where.add('LOWER(operator_name) = ?');
+      args.add(operatorName.trim().toLowerCase());
+    }
 
     if (search != null && search.trim().isNotEmpty) {
       final value = '%${search.trim()}%';
@@ -65,6 +75,8 @@ class QuarryBlastingRepository {
 
   Future<int> createPurchase({
     required String purchaseDate,
+    required String operatorName,
+    required double salary,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -85,6 +97,8 @@ class QuarryBlastingRepository {
 
     return db.insert('quarry_blasting_purchases', {
       'purchase_date': purchaseDate,
+      'operator_name': operatorName,
+      'salary': salary,
       'bullet_quantity': bulletQuantity,
       'bullet_price': bulletPrice,
       'bullet_total': bulletTotal,
@@ -107,6 +121,8 @@ class QuarryBlastingRepository {
   Future<int> updatePurchase({
     required int id,
     required String purchaseDate,
+    required String operatorName,
+    required double salary,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -129,6 +145,8 @@ class QuarryBlastingRepository {
       'quarry_blasting_purchases',
       {
         'purchase_date': purchaseDate,
+        'operator_name': operatorName,
+        'salary': salary,
         'bullet_quantity': bulletQuantity,
         'bullet_price': bulletPrice,
         'bullet_total': bulletTotal,

@@ -6,6 +6,7 @@ import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 
 import '../../../data/services/report_excel_service.dart';
+import '../../../data/repositories/blasting_operator_repository.dart';
 import '../../../data/services/pdf_report_service.dart';
 import '../providers/quarry_blasting_provider.dart';
 import '../widgets/quarry_blasting_shell.dart';
@@ -23,11 +24,17 @@ class _QuarryBlastingPurchaseReportsScreenState
   String _period = 'Monthly';
   DateTime? _from;
   DateTime? _to;
+  String _operator = '';
+  List<String> _operators = [];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _generate());
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      _operators = await BlastingOperatorRepository().getOperators();
+      if (mounted) setState(() {});
+      await _generate();
+    });
   }
 
   Future<void> _generate() async {
@@ -35,6 +42,7 @@ class _QuarryBlastingPurchaseReportsScreenState
       period: _period,
       fromDate: _from,
       toDate: _to,
+      operatorName: _operator.isEmpty ? null : _operator,
     );
   }
 
@@ -81,6 +89,8 @@ class _QuarryBlastingPurchaseReportsScreenState
           .map(
             (p) => {
               'purchaseDate': p.purchaseDate,
+              'operatorName': p.operatorName,
+              'salary': p.salary,
               'bulletQuantity': p.bulletQuantity,
               'bulletPrice': p.bulletPrice,
               'bulletTotal': p.bulletTotal,
@@ -255,6 +265,29 @@ class _QuarryBlastingPurchaseReportsScreenState
                             ),
                           ],
                           const SizedBox(width: 12),
+                          Expanded(
+                            child: DropdownButtonFormField<String>(
+                              initialValue: _operator,
+                              decoration: InputDecoration(
+                                labelText: AppLocalization.t('Operator'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              items: [
+                                DropdownMenuItem<String>(
+                                  value: '',
+                                  child: Text(AppLocalization.t('All Operators')),
+                                ),
+                                ..._operators.map(
+                                  (name) => DropdownMenuItem<String>(
+                                    value: name,
+                                    child: Text(name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) => setState(() => _operator = value ?? ''),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
                           FilledButton.icon(
                             onPressed: _generate,
                             icon: const Icon(Icons.analytics_outlined),
@@ -386,6 +419,8 @@ class _QuarryBlastingPurchaseReportsScreenState
                                   DataColumn(
                                     label: Text(AppLocalization.t('Date')),
                                   ),
+                                  DataColumn(label: Text(AppLocalization.t('Operator'))),
+                                  DataColumn(label: Text(AppLocalization.t('Salary'))),
                                   DataColumn(
                                     label: Text(
                                       AppLocalization.t('Bullet Qty'),
@@ -414,9 +449,9 @@ class _QuarryBlastingPurchaseReportsScreenState
                                     .map(
                                       (p) => DataRow(
                                         cells: [
-                                          DataCell(
-                                            Text(formatDate(p.purchaseDate)),
-                                          ),
+                                          DataCell(Text(formatDate(p.purchaseDate))),
+                                          DataCell(Text(p.operatorName)),
+                                          DataCell(Text(formatMoney(p.salary))),
                                           DataCell(
                                             Text(formatQty(p.bulletQuantity)),
                                           ),

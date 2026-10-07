@@ -503,6 +503,7 @@ class _TransportMaintenanceScreenState
       color: const Color(0xFFF8F9FB),
       child: Row(
         children: [
+          _headerCell(AppLocalization.t('DATE'), width: 105),
           _headerCell(AppLocalization.t('VEHICLE'), width: 130),
 
           _headerCell(AppLocalization.t('DRIVER'), width: 150),
@@ -564,6 +565,16 @@ class _TransportMaintenanceScreenState
         ),
         child: Row(
           children: [
+            // DATE
+            SizedBox(
+              width: 105,
+              child: Text(
+                _formatDate(record.maintenanceDate),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+
             // VEHICLE
             SizedBox(
               width: 130,
@@ -606,7 +617,7 @@ class _TransportMaintenanceScreenState
 
             // DIESEL
             SizedBox(
-              width: 100,
+              width: 150,
               child: Text(
                 '${_formatNumber(record.dieselFilled)} L',
                 style: const TextStyle(fontSize: 13),
@@ -641,6 +652,12 @@ class _TransportMaintenanceScreenState
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  IconButton(
+                    tooltip: AppLocalization.t('View'),
+                    onPressed: () => _viewMaintenance(record),
+                    icon: const Icon(Icons.visibility_outlined, size: 19),
+                    color: const Color(0xFF00652C),
+                  ),
                   IconButton(
                     tooltip: AppLocalization.t('Edit'),
                     onPressed: () => _openEditScreen(record),
@@ -783,6 +800,76 @@ class _TransportMaintenanceScreenState
   // ============================================================
   // EDIT
   // ============================================================
+
+  Future<void> _viewMaintenance(TransportMaintenanceModel record) async {
+    final vehicle = await context.read<TransportProvider>().getById(
+      record.transportVehicleId,
+    );
+    if (mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (_) => _MaintenanceDetailsDialog(
+          title: AppLocalization.t('Transport Maintenance Details'),
+          children: [
+            _d(AppLocalization.t('Date'), _formatDate(record.maintenanceDate)),
+            _d(AppLocalization.t('Vehicle'), vehicle?.registrationNumber),
+            _d(AppLocalization.t('Driver Name'), record.driverName),
+            _d(
+              AppLocalization.t('Starting KM'),
+              _formatNumber(record.startingKm),
+            ),
+            _d(
+              AppLocalization.t('Closing KM'),
+              _formatNumber(record.closingKm),
+            ),
+            _d(AppLocalization.t('Total KM'), _formatNumber(record.totalKm)),
+            _d(
+              AppLocalization.t('Number of Loads'),
+              record.numberOfLoads.toString(),
+            ),
+            _d(AppLocalization.t('Loading Site'), record.loadingSite),
+            _d(AppLocalization.t('Unloading Site'), record.unloadingSite),
+            _d(
+              AppLocalization.t('Diesel Filled'),
+              '${_formatNumber(record.dieselFilled)} L',
+            ),
+            _d(
+              AppLocalization.t('Diesel Rate'),
+              _formatCurrency(record.dieselRate),
+            ),
+            _d(
+              AppLocalization.t('Diesel Expense'),
+              _formatCurrency(record.dieselExpense),
+            ),
+            _d(AppLocalization.t('Remarks'), record.remarks),
+          ],
+        ),
+      );
+    }
+  }
+
+  Widget _d(String label, String? value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 165,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF68717D),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(value == null || value.trim().isEmpty ? '-' : value),
+        ),
+      ],
+    ),
+  );
 
   Future<void> _openEditScreen(TransportMaintenanceModel record) async {
     if (record.id == null) {
@@ -1006,4 +1093,35 @@ class _TransportMaintenanceScreenState
   String _formatCurrency(double value) {
     return '₹${value.toStringAsFixed(2)}';
   }
+
+  String _formatDate(String value) {
+    final d = DateTime.tryParse(value);
+    if (d == null) return value;
+    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+  }
+}
+
+class _MaintenanceDetailsDialog extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  const _MaintenanceDetailsDialog({
+    required this.title,
+    required this.children,
+  });
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(title),
+    content: SizedBox(
+      width: 580,
+      child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(AppLocalization.t('Close')),
+      ),
+    ],
+  );
 }

@@ -2,6 +2,7 @@ class TransportMaintenanceModel {
   final int? id;
 
   final int transportVehicleId;
+  final String maintenanceDate;
   final String? driverName;
 
   final double startingKm;
@@ -26,6 +27,7 @@ class TransportMaintenanceModel {
     this.id,
 
     required this.transportVehicleId,
+    required this.maintenanceDate,
     this.driverName,
 
     required this.startingKm,
@@ -56,6 +58,9 @@ class TransportMaintenanceModel {
       id: map['id'] as int?,
 
       transportVehicleId: map['transport_vehicle_id'] as int,
+
+      maintenanceDate: map['maintenance_date']?.toString() ??
+          (map['created_at']?.toString().substring(0, 10) ?? ''),
 
       driverName: map['driver_name'] as String?,
 
@@ -95,6 +100,8 @@ class TransportMaintenanceModel {
 
       'transport_vehicle_id': transportVehicleId,
 
+      'maintenance_date': maintenanceDate,
+
       'driver_name': driverName,
 
       'starting_km': startingKm,
@@ -131,6 +138,7 @@ class TransportMaintenanceModel {
     int? id,
 
     int? transportVehicleId,
+    String? maintenanceDate,
     String? driverName,
 
     double? startingKm,
@@ -155,6 +163,8 @@ class TransportMaintenanceModel {
       id: id ?? this.id,
 
       transportVehicleId: transportVehicleId ?? this.transportVehicleId,
+
+      maintenanceDate: maintenanceDate ?? this.maintenanceDate,
 
       driverName: driverName ?? this.driverName,
 
