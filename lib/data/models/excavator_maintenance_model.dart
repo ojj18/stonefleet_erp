@@ -1,6 +1,7 @@
 class ExcavatorMaintenanceModel {
   final int? id;
   final int excavatorId;
+  final String maintenanceDate;
   final String? operatorName;
   final String? shift;
   final double startingHour;
@@ -23,6 +24,7 @@ class ExcavatorMaintenanceModel {
   const ExcavatorMaintenanceModel({
     this.id,
     required this.excavatorId,
+    required this.maintenanceDate,
     this.operatorName,
     this.shift,
     required this.startingHour,
@@ -47,6 +49,8 @@ class ExcavatorMaintenanceModel {
     return ExcavatorMaintenanceModel(
       id: map['id'] as int?,
       excavatorId: map['excavator_id'] as int,
+      maintenanceDate: map['maintenance_date']?.toString() ??
+          (map['created_at']?.toString().substring(0, 10) ?? ''),
       operatorName: map['operator_name'] as String?,
       shift: map['shift'] as String?,
       startingHour: (map['starting_hour'] as num).toDouble(),
@@ -73,6 +77,7 @@ class ExcavatorMaintenanceModel {
     return {
       'id': id,
       'excavator_id': excavatorId,
+      'maintenance_date': maintenanceDate,
       'operator_name': operatorName,
       'shift': shift,
       'starting_hour': startingHour,
@@ -97,6 +102,7 @@ class ExcavatorMaintenanceModel {
   ExcavatorMaintenanceModel copyWith({
     int? id,
     int? excavatorId,
+    String? maintenanceDate,
     String? operatorName,
     String? shift,
     double? startingHour,
@@ -119,6 +125,7 @@ class ExcavatorMaintenanceModel {
     return ExcavatorMaintenanceModel(
       id: id ?? this.id,
       excavatorId: excavatorId ?? this.excavatorId,
+      maintenanceDate: maintenanceDate ?? this.maintenanceDate,
       operatorName: operatorName ?? this.operatorName,
       shift: shift ?? this.shift,
       startingHour: startingHour ?? this.startingHour,

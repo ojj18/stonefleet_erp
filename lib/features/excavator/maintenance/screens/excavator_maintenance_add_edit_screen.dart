@@ -70,6 +70,7 @@ class _ExcavatorMaintenanceAddEditScreenState
   bool _teethSetChanged = false;
 
   bool _isSaving = false;
+  DateTime _maintenanceDate = DateTime.now();
 
   final List<String> _shifts = const ['Day', 'Night'];
   XFile? _selectedSheet;
@@ -85,6 +86,10 @@ class _ExcavatorMaintenanceAddEditScreenState
 
     _loadDrivers();
     _loadExistingData();
+
+    if (widget.maintenance != null && widget.maintenance!.maintenanceDate.isNotEmpty) {
+      _maintenanceDate = DateTime.tryParse(widget.maintenance!.maintenanceDate) ?? DateTime.now();
+    }
 
     _startingHourController.addListener(_calculateHours);
     _closingHourController.addListener(_calculateHours);
@@ -830,6 +835,8 @@ class _ExcavatorMaintenanceAddEditScreenState
 
       excavatorId: _selectedExcavator!.id!,
 
+      maintenanceDate: _dateToIso(_maintenanceDate),
+
       operatorName:
           (_selectedOperator ?? _operatorController.text).trim().isEmpty
           ? null
@@ -974,6 +981,10 @@ class _ExcavatorMaintenanceAddEditScreenState
                               _buildPageHeader(),
 
                               const SizedBox(height: 24),
+
+                              _buildMaintenanceDateField(),
+
+                              const SizedBox(height: 20),
 
                               _buildExcavatorSection(),
 
@@ -1243,6 +1254,49 @@ class _ExcavatorMaintenanceAddEditScreenState
           ),
         ),
       ],
+    );
+  }
+
+  String _dateToIso(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
+  String _displayDate(DateTime date) =>
+      '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+  Widget _buildMaintenanceDateField() {
+    return _sectionCard(
+      title: AppLocalization.t('Maintenance Date'),
+      icon: Icons.calendar_today_outlined,
+      child: SizedBox(
+        width: 390,
+        child: InkWell(
+          onTap: () async {
+            final picked = await showDatePicker(
+              context: context,
+              initialDate: _maintenanceDate,
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+            );
+            if (picked != null && mounted) {
+              setState(() => _maintenanceDate = picked);
+            }
+          },
+          borderRadius: BorderRadius.circular(8),
+          child: InputDecorator(
+            decoration: _inputDecoration(
+              AppLocalization.t('Date'),
+              Icons.event_outlined,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(_displayDate(_maintenanceDate)),
+                const Icon(Icons.calendar_month_outlined, size: 20),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ class ExcavatorMaintenanceListModel {
   final int? id;
 
   final int excavatorId;
+  final String maintenanceDate;
   final String registrationNumber;
 
   final String? operatorName;
@@ -33,6 +34,7 @@ class ExcavatorMaintenanceListModel {
   const ExcavatorMaintenanceListModel({
     this.id,
     required this.excavatorId,
+    required this.maintenanceDate,
     required this.registrationNumber,
     this.operatorName,
     this.shift,
@@ -59,6 +61,9 @@ class ExcavatorMaintenanceListModel {
       id: map['id'] as int?,
 
       excavatorId: (map['excavator_id'] as num).toInt(),
+
+      maintenanceDate: map['maintenance_date']?.toString() ??
+          (map['created_at']?.toString().substring(0, 10) ?? ''),
 
       registrationNumber: map['registration_number'] as String? ?? '',
 

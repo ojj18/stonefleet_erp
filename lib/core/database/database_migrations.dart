@@ -152,6 +152,7 @@ class DatabaseMigrations {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
 
         excavator_id INTEGER NOT NULL,
+        maintenance_date TEXT,
         operator_name TEXT,
         shift TEXT,
 
@@ -570,6 +571,33 @@ class DatabaseMigrations {
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS blasting_operators (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS transport_sites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS transport_loading_sites (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS transport_unloading_sites (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
         is_active INTEGER NOT NULL DEFAULT 1,
@@ -1115,6 +1143,24 @@ class DatabaseMigrations {
     }
 
     // ============================================================
+    // VERSION 6
+    // EXCAVATOR MAINTENANCE DATE
+    // ============================================================
+    if (oldVersion < 6) {
+      if (!await _hasColumn(db, 'excavator_maintenance', 'maintenance_date')) {
+        await db.execute(
+          'ALTER TABLE excavator_maintenance ADD COLUMN maintenance_date TEXT',
+        );
+        await db.execute('''
+          UPDATE excavator_maintenance
+          SET maintenance_date = substr(created_at, 1, 10)
+          WHERE maintenance_date IS NULL OR maintenance_date = ''
+        ''');
+      }
+      log('Database migrated to version 6: excavator maintenance date created.');
+    }
+
+    // ============================================================
     // VERSION 5
     // DRIVER MASTER + TRANSPORT MAINTENANCE DATE +
     // BLASTING OPERATORS / OPERATOR-SPECIFIC PURCHASES
@@ -1195,6 +1241,84 @@ class DatabaseMigrations {
       }
 
       log('Database migrated to version 5: drivers, maintenance date and blasting operators created.');
+    }
+
+    // ============================================================
+    // VERSION 7
+    // TRANSPORT LOADING / UNLOADING SITE MASTER
+    // ============================================================
+    if (oldVersion < 7) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS transport_sites (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      log('Database migrated to version 7: transport site master created.');
+    }
+
+    // ============================================================
+    // VERSION 8
+    // SEPARATE TRANSPORT LOADING / UNLOADING SITE MASTERS
+    // ============================================================
+    if (oldVersion < 8) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS transport_loading_sites (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS transport_unloading_sites (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      // Migrate only the values actually used in existing records.
+      // Loading values go only to loading master; unloading values go only
+      // to unloading master. This prevents one type from appearing in the other.
+      final loadingRows = await db.rawQuery('''
+        SELECT DISTINCT TRIM(loading_site) AS name
+        FROM transport_maintenance
+        WHERE loading_site IS NOT NULL AND TRIM(loading_site) <> ''
+      ''');
+      for (final row in loadingRows) {
+        final name = row['name']?.toString().trim() ?? '';
+        if (name.isNotEmpty) {
+          await db.insert(
+            'transport_loading_sites',
+            {'name': name, 'is_active': 1, 'created_at': DateTime.now().toIso8601String()},
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+      }
+
+      final unloadingRows = await db.rawQuery('''
+        SELECT DISTINCT TRIM(unloading_site) AS name
+        FROM transport_maintenance
+        WHERE unloading_site IS NOT NULL AND TRIM(unloading_site) <> ''
+      ''');
+      for (final row in unloadingRows) {
+        final name = row['name']?.toString().trim() ?? '';
+        if (name.isNotEmpty) {
+          await db.insert(
+            'transport_unloading_sites',
+            {'name': name, 'is_active': 1, 'created_at': DateTime.now().toIso8601String()},
+            conflictAlgorithm: ConflictAlgorithm.ignore,
+          );
+        }
+      }
+
+      log('Database migrated to version 8: separate loading and unloading site masters created.');
     }
 
   }

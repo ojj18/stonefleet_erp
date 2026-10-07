@@ -22,12 +22,12 @@ class ReportRepository {
     final args = <dynamic>[];
 
     if (fromDate != null) {
-      conditions.add('date(em.created_at) >= date(?)');
+      conditions.add('date(COALESCE(em.maintenance_date, substr(em.created_at, 1, 10))) >= date(?)');
       args.add(_dateOnly(fromDate));
     }
 
     if (toDate != null) {
-      conditions.add('date(em.created_at) <= date(?)');
+      conditions.add('date(COALESCE(em.maintenance_date, substr(em.created_at, 1, 10))) <= date(?)');
       args.add(_dateOnly(toDate));
     }
     if (excavatorId != null) {
@@ -86,6 +86,7 @@ class ReportRepository {
         em.teeth_set_changed,
         em.remarks,
 
+        em.maintenance_date,
         em.created_at,
         em.updated_at
 
@@ -96,7 +97,7 @@ class ReportRepository {
 
       $whereClause
 
-      ORDER BY em.created_at DESC, em.id DESC
+      ORDER BY COALESCE(em.maintenance_date, substr(em.created_at, 1, 10)) DESC, em.id DESC
       ''', args);
   }
 

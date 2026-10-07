@@ -16,7 +16,7 @@ class ExcavatorMaintenanceRepository {
 
     final result = await db.query(
       TableConstants.excavatorMaintenance,
-      orderBy: 'created_at DESC',
+      orderBy: 'maintenance_date DESC, created_at DESC',
     );
 
     return result.map(ExcavatorMaintenanceModel.fromMap).toList();
@@ -31,7 +31,7 @@ class ExcavatorMaintenanceRepository {
       TableConstants.excavatorMaintenance,
       where: 'excavator_id = ?',
       whereArgs: [excavatorId],
-      orderBy: 'created_at DESC',
+      orderBy: 'maintenance_date DESC, created_at DESC',
     );
 
     return result.map(ExcavatorMaintenanceModel.fromMap).toList();

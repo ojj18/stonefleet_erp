@@ -71,8 +71,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
                               _buildKpiSection(dashboard),
 
-                              const SizedBox(height: 24),
-                              _buildServiceNotificationCard(),
+                              // const SizedBox(height: 24),
+                              // _buildServiceNotificationCard(),
                               const SizedBox(height: 24),
                               _buildExcavatorSection(dashboard),
 

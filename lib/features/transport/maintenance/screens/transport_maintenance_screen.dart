@@ -638,7 +638,7 @@ class _TransportMaintenanceScreenState
 
             // ROUTE
             SizedBox(
-              width: 190,
+              width: 150,
               child: Text(
                 _routeText(record),
                 maxLines: 1,

@@ -628,7 +628,7 @@ class _ExcavatorMaintenanceScreenState
             SizedBox(
               width: 105,
               child: Text(
-                _formatDate(record.createdAt),
+                _formatDate(record.maintenanceDate),
                 style: const TextStyle(fontSize: 13, color: Color(0xFF4E5867)),
               ),
             ),
@@ -904,7 +904,7 @@ class _ExcavatorMaintenanceScreenState
         builder: (_) => _MaintenanceDetailsDialog(
           title: AppLocalization.t('Excavator Maintenance Details'),
           children: [
-            _d(AppLocalization.t('Date'), _formatDate(record.createdAt)),
+            _d(AppLocalization.t('Date'), _formatDate(record.maintenanceDate)),
             _d(AppLocalization.t('Excavator'), excavator?.registrationNumber),
             _d(AppLocalization.t('Operator Name'), record.operatorName),
             _d(AppLocalization.t('Shift'), record.shift),

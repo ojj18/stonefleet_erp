@@ -10,6 +10,7 @@ import '../../../../data/models/ocr/transport_maintenance_ocr_model.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../../data/repositories/driver_repository.dart';
+import '../../../../data/repositories/transport_site_repository.dart';
 import '../../../../data/services/ocr_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../../transport/master/providers/transport_master_provider.dart';
@@ -39,6 +40,11 @@ class _TransportMaintenanceAddEditScreenState
   final DriverRepository _driverRepository = DriverRepository();
   List<String> _drivers = [];
   String? _selectedDriver;
+  final TransportSiteRepository _siteRepository = TransportSiteRepository();
+  List<String> _loadingSites = [];
+  List<String> _unloadingSites = [];
+  String? _selectedLoadingSite;
+  String? _selectedUnloadingSite;
   DateTime _maintenanceDate = DateTime.now();
 
   final _startingKmController = TextEditingController();
@@ -96,6 +102,8 @@ class _TransportMaintenanceAddEditScreenState
     try {
       final transportProvider = context.read<TransportProvider>();
       _drivers = await _driverRepository.getDrivers();
+      _loadingSites = await _siteRepository.getSites(isLoadingSite: true);
+      _unloadingSites = await _siteRepository.getSites(isLoadingSite: false);
 
       if (transportProvider.vehicles.isEmpty) {
         await transportProvider.loadVehicles();
@@ -131,8 +139,19 @@ class _TransportMaintenanceAddEditScreenState
         _numberOfLoadsController.text = record.numberOfLoads.toString();
 
         _loadingSiteController.text = record.loadingSite ?? '';
-
+        _selectedLoadingSite = record.loadingSite;
         _unloadingSiteController.text = record.unloadingSite ?? '';
+        _selectedUnloadingSite = record.unloadingSite;
+
+        final loadingValue = record.loadingSite?.trim() ?? '';
+        if (loadingValue.isNotEmpty && !_loadingSites.contains(loadingValue)) {
+          _loadingSites = [..._loadingSites, loadingValue];
+        }
+        final unloadingValue = record.unloadingSite?.trim() ?? '';
+        if (unloadingValue.isNotEmpty &&
+            !_unloadingSites.contains(unloadingValue)) {
+          _unloadingSites = [..._unloadingSites, unloadingValue];
+        }
 
         _dieselFilledController.text = record.dieselFilled.toString();
 
@@ -716,29 +735,126 @@ class _TransportMaintenanceAddEditScreenState
 
           Row(
             children: [
-              Expanded(
-                child: _buildTextField(
-                  controller: _loadingSiteController,
-                  label: AppLocalization.t('Loading Site'),
-                  hint: AppLocalization.t('Enter loading location'),
-                  icon: Icons.upload_outlined,
-                ),
-              ),
+              Expanded(child: _buildSiteDropdown(isLoadingSite: true)),
 
               const SizedBox(width: 20),
 
-              Expanded(
-                child: _buildTextField(
-                  controller: _unloadingSiteController,
-                  label: AppLocalization.t('Unloading Site'),
-                  hint: AppLocalization.t('Enter unloading location'),
-                  icon: Icons.download_outlined,
-                ),
-              ),
+              Expanded(child: _buildSiteDropdown(isLoadingSite: false)),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _addSite({required bool isLoadingSite}) async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(
+          isLoadingSite
+              ? AppLocalization.t('Add Loading Site')
+              : AppLocalization.t('Add Unloading Site'),
+        ),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Site Name'),
+            hintText: AppLocalization.t('Enter site name'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: Text(AppLocalization.t('Add')),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+
+    final value = name?.trim() ?? '';
+    if (value.isEmpty) return;
+
+    await _siteRepository.addSite(value, isLoadingSite: isLoadingSite);
+    if (isLoadingSite) {
+      _loadingSites = await _siteRepository.getSites(isLoadingSite: true);
+    } else {
+      _unloadingSites = await _siteRepository.getSites(isLoadingSite: false);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      if (isLoadingSite) {
+        _selectedLoadingSite = value;
+        _loadingSiteController.text = value;
+      } else {
+        _selectedUnloadingSite = value;
+        _unloadingSiteController.text = value;
+      }
+    });
+  }
+
+  Widget _buildSiteDropdown({required bool isLoadingSite}) {
+    final selected = isLoadingSite
+        ? _selectedLoadingSite
+        : _selectedUnloadingSite;
+    final label = isLoadingSite
+        ? AppLocalization.t('Loading Site')
+        : AppLocalization.t('Unloading Site');
+    final icon = isLoadingSite
+        ? Icons.upload_outlined
+        : Icons.download_outlined;
+
+    final sites = isLoadingSite ? _loadingSites : _unloadingSites;
+    final validSelected = selected != null && sites.contains(selected)
+        ? selected
+        : null;
+
+    return DropdownButtonFormField<String>(
+      initialValue: validSelected,
+      decoration: _inputDecoration(
+        label: label,
+        hint: AppLocalization.t('Select site'),
+        icon: icon,
+      ),
+      items: [
+        ...sites.map(
+          (site) => DropdownMenuItem<String>(
+            value: site,
+            child: Text(site, overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        DropdownMenuItem<String>(
+          value: '__add_site__',
+          child: Text('+ ${AppLocalization.t('Add Site')}'),
+        ),
+      ],
+      onChanged: _saving
+          ? null
+          : (value) async {
+              if (value == '__add_site__') {
+                await _addSite(isLoadingSite: isLoadingSite);
+                return;
+              }
+
+              setState(() {
+                if (isLoadingSite) {
+                  _selectedLoadingSite = value;
+                  _loadingSiteController.text = value ?? '';
+                } else {
+                  _selectedUnloadingSite = value;
+                  _unloadingSiteController.text = value ?? '';
+                }
+              });
+            },
     );
   }
 
@@ -909,6 +1025,19 @@ class _TransportMaintenanceAddEditScreenState
 
     final now = DateTime.now().toIso8601String();
 
+    if (_loadingSiteController.text.trim().isNotEmpty) {
+      await _siteRepository.ensureSite(
+        _loadingSiteController.text.trim(),
+        isLoadingSite: true,
+      );
+    }
+    if (_unloadingSiteController.text.trim().isNotEmpty) {
+      await _siteRepository.ensureSite(
+        _unloadingSiteController.text.trim(),
+        isLoadingSite: false,
+      );
+    }
+
     final model = TransportMaintenanceModel(
       id: widget.maintenance?.id,
 
@@ -957,6 +1086,8 @@ class _TransportMaintenanceAddEditScreenState
     });
 
     final provider = context.read<TransportMaintenanceProvider>();
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final navigator = Navigator.of(context);
 
     bool success;
 
@@ -975,7 +1106,7 @@ class _TransportMaintenanceAddEditScreenState
     });
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger?.showSnackBar(
         SnackBar(
           content: Text(
             widget.isEdit
@@ -990,7 +1121,7 @@ class _TransportMaintenanceAddEditScreenState
         ),
       );
 
-      Navigator.pop(context, true);
+      navigator.pop(true);
     } else {
       _showError(
         AppLocalization.t(
@@ -998,23 +1129,6 @@ class _TransportMaintenanceAddEditScreenState
         ),
       );
     }
-  }
-
-  // ============================================================
-  // TEXT FIELD
-  // ============================================================
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hint,
-    required IconData icon,
-  }) {
-    return TextFormField(
-      controller: controller,
-      textCapitalization: TextCapitalization.words,
-      decoration: _inputDecoration(label: label, hint: hint, icon: icon),
-    );
   }
 
   // ============================================================
@@ -1464,12 +1578,22 @@ class _TransportMaintenanceAddEditScreenState
 
     // 6. Loading Site
     if (result.loadingSite != null) {
-      _loadingSiteController.text = result.loadingSite!;
+      final value = result.loadingSite!.trim();
+      _loadingSiteController.text = value;
+      _selectedLoadingSite = value;
+      if (value.isNotEmpty && !_loadingSites.contains(value)) {
+        _loadingSites = [..._loadingSites, value];
+      }
     }
 
     // 7. Unloading Site
     if (result.unloadingSite != null) {
-      _unloadingSiteController.text = result.unloadingSite!;
+      final value = result.unloadingSite!.trim();
+      _unloadingSiteController.text = value;
+      _selectedUnloadingSite = value;
+      if (value.isNotEmpty && !_unloadingSites.contains(value)) {
+        _unloadingSites = [..._unloadingSites, value];
+      }
     }
 
     // 8. Diesel Filled
