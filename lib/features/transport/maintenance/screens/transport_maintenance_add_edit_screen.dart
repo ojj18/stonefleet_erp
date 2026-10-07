@@ -237,7 +237,7 @@ class _TransportMaintenanceAddEditScreenState
     //double dieselCostPerKm = 0;
 
     if (totalKm > 0 && dieselFilled > 0) {
-      dieselConsumptionPerKm = totalKm / dieselFilled;
+      dieselConsumptionPerKm = dieselFilled / totalKm;
 
       //dieselCostPerKm = dieselExpense / totalKm;
     }

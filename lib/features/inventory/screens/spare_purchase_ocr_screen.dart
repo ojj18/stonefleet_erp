@@ -357,6 +357,12 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
               : SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    horizontalMargin: 0,
+                    columnSpacing: 18,
+                    headingRowHeight: 44,
+                    dataRowMinHeight: 64,
+                    dataRowMaxHeight: 64,
+                    dividerThickness: 1,
                     columns: [
                       DataColumn(label: Text(AppLocalization.t('SPARE ITEM'))),
                       DataColumn(label: Text(AppLocalization.t('QTY'))),
@@ -371,13 +377,13 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                             cells: [
                               DataCell(
                                 SizedBox(
-                                  width: 220,
+                                  width: 260,
                                   child: TextField(controller: item.name),
                                 ),
                               ),
                               DataCell(
                                 SizedBox(
-                                  width: 90,
+                                  width: 95,
                                   child: TextField(
                                     controller: item.quantity,
                                     keyboardType: TextInputType.number,
@@ -386,7 +392,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                               ),
                               DataCell(
                                 SizedBox(
-                                  width: 110,
+                                  width: 125,
                                   child: TextField(
                                     controller: item.unitPrice,
                                     keyboardType: TextInputType.number,
@@ -395,7 +401,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                               ),
                               DataCell(
                                 SizedBox(
-                                  width: 90,
+                                  width: 95,
                                   child: TextField(
                                     controller: item.gst,
                                     keyboardType: TextInputType.number,
@@ -404,7 +410,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                               ),
                               DataCell(
                                 SizedBox(
-                                  width: 110,
+                                  width: 125,
                                   child: TextField(
                                     controller: item.subtotal,
                                     keyboardType: TextInputType.number,
@@ -413,7 +419,7 @@ class _SparePurchaseOcrScreenState extends State<SparePurchaseOcrScreen> {
                               ),
                               DataCell(
                                 SizedBox(
-                                  width: 110,
+                                  width: 125,
                                   child: TextField(
                                     controller: item.total,
                                     keyboardType: TextInputType.number,
