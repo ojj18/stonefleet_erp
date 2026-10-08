@@ -15,6 +15,7 @@ import 'data/services/vehicle_api_service.dart';
 import 'features/auth/providers/auth_provider.dart';
 import 'features/compliance/providers/compliance_provider.dart';
 import 'features/dashboard/provider/dashboard_provider.dart';
+import 'features/diesel/providers/diesel_provider.dart';
 import 'features/excavator/master/providers/excavator_master_provider.dart';
 import 'features/excavator/master/providers/excavator_provider.dart';
 
@@ -40,6 +41,7 @@ import 'features/service_notification/providers/service_notification_provider.da
 import 'features/inventory/providers/inventory_provider.dart';
 import 'features/quarry_blasting/providers/quarry_blasting_provider.dart';
 import 'features/quarry_boulders/providers/quarry_boulder_provider.dart';
+import 'features/retreading/providers/retreading_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -163,6 +165,11 @@ class StoneFleetApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ReportProvider()),
 
         // --------------------------------------------------------
+        // DIESEL MANAGEMENT
+        // --------------------------------------------------------
+        ChangeNotifierProvider(create: (_) => DieselProvider()),
+
+        // --------------------------------------------------------
         // AUTH SERVICE
         // --------------------------------------------------------
         ChangeNotifierProvider(create: (_) => AuthProvider()),
@@ -182,6 +189,7 @@ class StoneFleetApp extends StatelessWidget {
         // --------------------------------------------------------
         ChangeNotifierProvider(create: (_) => QuarryBlastingProvider()),
         ChangeNotifierProvider(create: (_) => QuarryBoulderProvider()),
+        ChangeNotifierProvider(create: (_) => RetreadingProvider()),
         ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
 

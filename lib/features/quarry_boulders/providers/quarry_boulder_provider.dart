@@ -29,12 +29,13 @@ class QuarryBoulderProvider extends ChangeNotifier {
     });
   }
 
-  Future<bool> saveTrip({required String tripDate, required int transportVehicleId, required String registrationNumber, required String driverName, required double unit, required int tripsCount}) async {
+  Future<bool> saveTrip({required String tripDate, required int transportVehicleId, required String registrationNumber, required String driverName, required String producerName, required double unit, required int tripsCount}) async {
     return _save(QuarryBoulderTrip(
       tripDate: tripDate,
       transportVehicleId: transportVehicleId,
       registrationNumber: registrationNumber,
       driverName: driverName.trim(),
+      producerName: producerName.trim(),
       unit: unit,
       trips: tripsCount,
       totalLoad: tripsCount * unit,
@@ -42,7 +43,7 @@ class QuarryBoulderProvider extends ChangeNotifier {
     ));
   }
 
-  Future<bool> updateTrip({required int id, required String tripDate, required int transportVehicleId, required String registrationNumber, required String driverName, required double unit, required int tripsCount}) async {
+  Future<bool> updateTrip({required int id, required String tripDate, required int transportVehicleId, required String registrationNumber, required String driverName, required String producerName, required double unit, required int tripsCount}) async {
     final old = await _repository.getById(id);
     if (old == null) { error = 'Trip record not found.'; notifyListeners(); return false; }
     return _save(QuarryBoulderTrip(
@@ -51,6 +52,7 @@ class QuarryBoulderProvider extends ChangeNotifier {
       transportVehicleId: transportVehicleId,
       registrationNumber: registrationNumber,
       driverName: driverName.trim(),
+      producerName: producerName.trim(),
       unit: unit,
       trips: tripsCount,
       totalLoad: tripsCount * unit,

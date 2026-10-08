@@ -146,6 +146,40 @@ class DieselProvider extends ChangeNotifier {
     });
   }
 
+  Future<void> updateReceipt({required int id, required String receiptDate, required String sourceName, required double quantityLitres, required double rate, String? supplierName, String? billNumber, String? remarks}) async {
+    await _run(() async {
+      await _repository.updateReceipt(id: id, receiptDate: receiptDate, sourceName: sourceName, quantityLitres: quantityLitres, rate: rate, supplierName: supplierName, billNumber: billNumber, remarks: remarks);
+      summary = await _repository.getSummary();
+      receipts = await _repository.getReceipts();
+      movements = await _repository.getStockMovements();
+    });
+  }
+
+  Future<void> deleteReceipt(int id) async {
+    await _run(() async {
+      await _repository.deleteReceipt(id);
+      summary = await _repository.getSummary();
+      receipts = await _repository.getReceipts();
+      movements = await _repository.getStockMovements();
+    });
+  }
+
+  Future<void> updateFilling({required int id, required String fillingDate, required String vehicleType, required int vehicleId, required String vehicleRegistration, required double quantityLitres, required double rate, double? meterReading, String? operatorName, String? shift, String? remarks}) async {
+    await _run(() async {
+      await _repository.updateFilling(id: id, fillingDate: fillingDate, vehicleType: vehicleType, vehicleId: vehicleId, vehicleRegistration: vehicleRegistration, quantityLitres: quantityLitres, rate: rate, meterReading: meterReading, operatorName: operatorName, shift: shift, remarks: remarks);
+      summary = await _repository.getSummary();
+      fillings = await _repository.getFillings();
+    });
+  }
+
+  Future<void> deleteFilling(int id) async {
+    await _run(() async {
+      await _repository.deleteFilling(id);
+      summary = await _repository.getSummary();
+      fillings = await _repository.getFillings();
+    });
+  }
+
   Future<void> _run(Future<void> Function() action) async {
     isLoading = true;
     error = null;

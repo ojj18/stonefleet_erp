@@ -48,7 +48,7 @@ class _DieselDashboardScreenState extends State<DieselDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return DieselShell(
-      selectedIndex: 15,
+      selectedIndex: 19,
       child: Consumer<DieselProvider>(
         builder: (context, provider, _) {
           final s = provider.summary;
@@ -338,7 +338,7 @@ class _StockValue extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
-        title,
+        AppLocalization.t(title),
         style: const TextStyle(fontSize: 12, color: Color(0xFF68717D)),
       ),
       const SizedBox(height: 5),

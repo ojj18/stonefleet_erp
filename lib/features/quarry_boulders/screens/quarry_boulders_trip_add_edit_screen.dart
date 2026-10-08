@@ -5,6 +5,7 @@ import '../../../core/localization/app_localization.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../../../data/models/transport_vehicle_model.dart';
 import '../../../data/repositories/driver_repository.dart';
+import '../../../data/repositories/boulder_producer_repository.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
 import '../../transport/master/providers/transport_master_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
@@ -24,8 +25,11 @@ class _QuarryBouldersTripAddEditScreenState
   final _formKey = GlobalKey<FormState>();
   final _driver = TextEditingController();
   final DriverRepository _driverRepository = DriverRepository();
+  final BoulderProducerRepository _producerRepository = BoulderProducerRepository();
   List<String> _drivers = [];
   String? _selectedDriver;
+  List<String> _producers = [];
+  String? _selectedProducer;
   final _trip = TextEditingController();
   DateTime _date = DateTime.now();
   TransportModel? _vehicle;
@@ -38,11 +42,16 @@ class _QuarryBouldersTripAddEditScreenState
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context.read<TransportProvider>().loadActiveVehicles();
       _drivers = await _driverRepository.getDrivers();
+      _producers = await _producerRepository.getProducers();
       if (widget.trip != null) {
         final t = widget.trip!;
         _date = DateTime.parse(t.tripDate);
         _driver.text = t.driverName;
         _selectedDriver = t.driverName;
+        _selectedProducer = t.producerName;
+        if (!_producers.contains(t.producerName) && t.producerName.trim().isNotEmpty) {
+          _producers = [..._producers, t.producerName];
+        }
         if (!_drivers.contains(t.driverName) && t.driverName.trim().isNotEmpty && t.driverName.toLowerCase() != 'company') {
           _drivers = [..._drivers, t.driverName];
         }
@@ -94,6 +103,7 @@ class _QuarryBouldersTripAddEditScreenState
             transportVehicleId: _vehicle!.id!,
             registrationNumber: _vehicle!.registrationNumber,
             driverName: (_selectedDriver ?? _driver.text).trim(),
+            producerName: (_selectedProducer ?? 'Company').trim(),
             unit: _unit,
             tripsCount: count,
           )
@@ -102,6 +112,7 @@ class _QuarryBouldersTripAddEditScreenState
             transportVehicleId: _vehicle!.id!,
             registrationNumber: _vehicle!.registrationNumber,
             driverName: (_selectedDriver ?? _driver.text).trim(),
+            producerName: (_selectedProducer ?? 'Company').trim(),
             unit: _unit,
             tripsCount: count,
           );
@@ -269,15 +280,23 @@ class _QuarryBouldersTripAddEditScreenState
           children: [
             Expanded(child: _driverField()),
             const SizedBox(width: 20),
-            Expanded(child: _unitField()),
+            Expanded(child: _producerField()),
           ],
         ),
         const SizedBox(height: 20),
         Row(
           children: [
-            Expanded(child: _tripField()),
+            Expanded(child: _unitField()),
             const SizedBox(width: 20),
+            Expanded(child: _tripField()),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
             Expanded(child: _loadField()),
+            const SizedBox(width: 20),
+            const Expanded(child: SizedBox()),
           ],
         ),
       ],
@@ -420,6 +439,54 @@ class _QuarryBouldersTripAddEditScreenState
       },
       validator: (_) => (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
           ? AppLocalization.t('Enter driver name')
+          : null,
+    );
+  }
+  Future<void> _addProducer() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(AppLocalization.t('Add Boulder Producer')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            labelText: AppLocalization.t('Boulder Producer'),
+            border: const OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalization.t('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(context, controller.text.trim()), child: Text(AppLocalization.t('Add'))),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || name.trim().isEmpty) return;
+    await _producerRepository.addProducer(name);
+    _producers = await _producerRepository.getProducers();
+    if (mounted) setState(() => _selectedProducer = name.trim());
+  }
+
+  Widget _producerField() {
+    final selected = _selectedProducer != null && _producers.contains(_selectedProducer)
+        ? _selectedProducer
+        : (_producers.contains('Company') ? 'Company' : null);
+    if (_selectedProducer == null && selected != null) _selectedProducer = selected;
+    return DropdownButtonFormField<String>(
+      initialValue: selected,
+      decoration: _dec(AppLocalization.t('Boulder Producer'), Icons.person_outline),
+      items: [
+        ..._producers.map((name) => DropdownMenuItem<String>(value: name, child: Text(name))),
+        DropdownMenuItem<String>(value: '__add_producer__', child: Text('+ ${AppLocalization.t('Add Boulder Producer')}')),
+      ],
+      onChanged: _saving ? null : (value) async {
+        if (value == '__add_producer__') { await _addProducer(); return; }
+        setState(() => _selectedProducer = value);
+      },
+      validator: (_) => (_selectedProducer == null || _selectedProducer!.trim().isEmpty)
+          ? AppLocalization.t('Select boulder producer')
           : null,
     );
   }

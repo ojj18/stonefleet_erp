@@ -57,6 +57,9 @@ class AppLocalization {
     'Search registration number...': 'பதிவு எண்ணைத் தேடுக...',
     'Search driver name...': 'ஓட்டுநர் பெயரைத் தேடுக...',
     'Driver Name': 'ஓட்டுநர் பெயர்',
+    'Boulder Producer': 'குவாரி கல் உற்பத்தியாளர்',
+    'Add Boulder Producer': 'குவாரி கல் உற்பத்தியாளரைச் சேர்',
+    'Select boulder producer': 'குவாரி கல் உற்பத்தியாளரைத் தேர்ந்தெடுக்கவும்',
     'All Drivers': 'அனைத்து ஓட்டுநர்கள்',
     'Add Driver': 'ஓட்டுநரைச் சேர்',
     'Select driver': 'ஓட்டுநரைத் தேர்ந்தெடுக்கவும்',
@@ -66,13 +69,15 @@ class AppLocalization {
     'Site Name': 'தளத்தின் பெயர்',
     'Enter site name': 'தளத்தின் பெயரை உள்ளிடவும்',
     'Select site': 'தளத்தைத் தேர்ந்தெடுக்கவும்',
-    'Company cannot be selected as a driver.': 'Company-ஐ ஓட்டுநராகத் தேர்ந்தெடுக்க முடியாது.',
+    'Company cannot be selected as a driver.':
+        'Company-ஐ ஓட்டுநராகத் தேர்ந்தெடுக்க முடியாது.',
     'All Operators': 'அனைத்து ஆபரேட்டர்கள்',
     'Add Operator': 'ஆபரேட்டரைச் சேர்',
     'Salary': 'சம்பளம்',
     'Add Manually': 'கைமுறையாகச் சேர்',
     'Add Item': 'பொருளைச் சேர்',
-    'Enter valid purchase item details.': 'சரியான கொள்முதல் பொருள் விவரங்களை உள்ளிடவும்.',
+    'Enter valid purchase item details.':
+        'சரியான கொள்முதல் பொருள் விவரங்களை உள்ளிடவும்.',
     'Diesel Consumption (L/H)': 'டீசல் பயன்பாடு (லிட்டர் / மணி)',
 
     'Select Date': 'தேதியைத் தேர்ந்தெடுக்கவும்',
@@ -151,7 +156,7 @@ class AppLocalization {
     'Confirm & Save': 'உறுதிசெய்து சேமி',
     'Please wait...': 'தயவுசெய்து காத்திருக்கவும்...',
     'Date': 'தேதி',
-      'Maintenance Date': 'பராமரிப்பு தேதி',
+    'Maintenance Date': 'பராமரிப்பு தேதி',
     'Day': 'நாள்',
     'Monthly': 'மாதாந்திரம்',
     'YEAR': 'ஆண்டு',
@@ -316,8 +321,51 @@ class AppLocalization {
     'Live balance': 'தற்போதைய இருப்பு',
     'Receipt Date': 'ரசீது தேதி',
     'Diesel Management': 'டீசல் மேலாண்மை',
+    'Diesel Dashboard': 'டீசல் டாஷ்போர்டு',
+    'Diesel Consumption': 'டீசல் பயன்பாடு',
+    'Diesel Filling': 'டீசல் நிரப்பல்',
+    'Diesel Stock': 'டீசல் இருப்பு',
+    'Diesel Receipts': 'டீசல் பெறுபதிவுகள்',
+    'Diesel Receipt Details': 'டீசல் பெறுபதிவு விவரங்கள்',
+    'Diesel Filling Details': 'டீசல் நிரப்பல் விவரங்கள்',
+    'Edit Diesel Receipt': 'டீசல் பெறுபதிவைத் திருத்து',
+    'Add Diesel Filling': 'டீசல் நிரப்பலைச் சேர்',
+    'Edit Diesel Filling': 'டீசல் நிரப்பலைத் திருத்து',
+    'Update Receipt': 'பெறுபதிவைப் புதுப்பி',
+    'Update Filling': 'நிரப்பலைப் புதுப்பி',
+    'Diesel Quantity': 'டீசல் அளவு',
+    'Diesel Quantity (Litres)': 'டீசல் அளவு (லிட்டர்)',
+    'Diesel Lorry': 'டீசல் லாரி',
+    'Source': 'மூலம்',
+    'Delete Diesel Receipt?': 'டீசல் பெறுபதிவை நீக்கவா?',
+    'Delete Diesel Filling?': 'டீசல் நிரப்பல் பதிவை நீக்கவா?',
+    'This diesel receipt record will be permanently deleted.':
+        'இந்த டீசல் பெறுபதிவு நிரந்தரமாக நீக்கப்படும்.',
+    'This diesel filling record will be permanently deleted.':
+        'இந்த டீசல் நிரப்பல் பதிவு நிரந்தரமாக நீக்கப்படும்.',
+    'Track diesel stock, vehicle consumption and fuel expenses.':
+        'டீசல் இருப்பு, வாகன பயன்பாடு மற்றும் எரிபொருள் செலவுகளைப் பதிவு செய்யுங்கள்.',
+    'Record diesel filled from the diesel lorry into a vehicle.':
+        'டீசல் லாரியிலிருந்து வாகனத்திற்கு வழங்கிய டீசலைப் பதிவு செய்யவும்.',
+    'Generate daily, weekly, monthly and custom diesel reports.':
+        'தினசரி, வாராந்திர, மாதாந்திர மற்றும் தனிப்பயன் டீசல் அறிக்கைகளை உருவாக்கவும்.',
+    'Compare diesel consumption and cost vehicle by vehicle.':
+        'ஒவ்வொரு வாகனத்திற்குமான டீசல் பயன்பாடு மற்றும் செலவை ஒப்பிடவும்.',
     'Available Diesel': 'கிடைக்கும் டீசல்',
     'Total Diesel Cost': 'மொத்த டீசல் செலவு',
+    'Filling Cost': 'நிரப்பல் செலவு',
+    'Remaining After Fill': 'நிரப்பிய பின் மீதம்',
+    'Meter Reading (Optional)': 'மீட்டர் அளவீடு (விருப்பம்)',
+    'Operator (Optional)': 'ஆபரேட்டர் (விருப்பம்)',
+    'Shift (Optional)': 'ஷிப்ட் (விருப்பம்)',
+    'Rows per page': 'ஒரு பக்கத்திற்கான வரிசைகள்',
+    'Add Filling': 'நிரப்பலைச் சேர்',
+    'Type': 'வகை',
+    'Bill Number': 'பில் எண்',
+    'Supplier': 'சப்ளையர்',
+    'Enter a valid value': 'சரியான மதிப்பை உள்ளிடவும்',
+    'Select vehicle': 'வாகனத்தைத் தேர்ந்தெடுக்கவும்',
+    'No diesel receipts recorded yet.': 'இன்னும் டீசல் பெறுபதிவுகள் இல்லை.',
     'Compliance Type': 'இணக்கப்பாட்டு வகை',
     'Compliance Report': 'இணக்கப்பாட்டு அறிக்கை',
     'Mandatory RTO Compliance': 'கட்டாய RTO இணக்கப்பாடு',
@@ -464,14 +512,10 @@ class AppLocalization {
     'Next': 'அடுத்து',
     'Back': 'பின் செல்',
     'Bills': 'பில்கள்',
-    'Diesel Stock': 'டீசல் இருப்பு',
-    'Diesel Filling': 'டீசல் நிரப்பல்',
     'Vehicles': 'வாகனங்கள்',
-    'Diesel Consumption': 'டீசல் பயன்பாடு',
     'Optional': 'விருப்பம்',
     'Enter any additional service notes...':
         'கூடுதல் சேவை குறிப்புகளை உள்ளிடவும்...',
-    'Select vehicle': 'வாகனத்தைத் தேர்ந்தெடுக்கவும்',
     'Enter loading location': 'ஏற்றுமிடத்தை உள்ளிடவும்',
     'Enter unloading location': 'இறக்குமிடத்தை உள்ளிடவும்',
     'Enter additional notes or observations':
@@ -559,7 +603,6 @@ class AppLocalization {
     'Overview of your fleet operations':
         'உங்கள் வாகனப் பட்டியல் செயல்பாடுகளின் மேலோட்டம்',
     'Password': 'கடவுச்சொல்',
-    'Rows per page': 'ஒரு பக்கத்திற்கான வரிசைகள்',
     'SIGN IN': 'உள்நுழைக',
     'Secure access for authorized users':
         'அங்கீகரிக்கப்பட்ட பயனர்களுக்கான பாதுகாப்பான அணுகல்',
@@ -615,7 +658,6 @@ class AppLocalization {
     'Night': 'இரவு',
     'REMARKS': 'குறிப்புகள்',
     'STATUS': 'நிலை',
-    'Type': 'வகை',
     'English': 'English',
     'Save Service': 'சேவையை சேமி',
     'Save Maintenance': 'பராமரிப்பை சேமி',
@@ -692,7 +734,6 @@ class AppLocalization {
         'உதிரி பாக கொள்முதல், இருப்பு பயன்பாடு மற்றும் இருப்பு அறிக்கைகளை நிர்வகிக்கவும்.',
     'Upload a purchase bill, extract data and verify it before saving.':
         'கொள்முதல் பில்லை பதிவேற்றி, தரவைப் பிரித்தெடுத்து, சேமிப்பதற்கு முன் சரிபார்க்கவும்.',
-    'Bill Number': 'பில் எண்',
     'Supplier Name': 'சப்ளையர் பெயர்',
     'Purchase Date (YYYY-MM-DD)': 'கொள்முதல் தேதி (YYYY-MM-DD)',
     'Subtotal': 'கூட்டுத்தொகை',
@@ -704,19 +745,11 @@ class AppLocalization {
     'Add at least one purchase item.':
         'குறைந்தது ஒரு கொள்முதல் பொருளையாவது சேர்க்கவும்.',
     'Available Stock': 'கிடைக்கும் இருப்பு',
-    'Shift (Optional)': 'ஷிப்ட் (விருப்பம்)',
     'Select excavator': 'எக்ஸ்கவேட்டரைத் தேர்ந்தெடுக்கவும்',
     'Select service date': 'சேவை தேதியைத் தேர்ந்தெடுக்கவும்',
     'Select spare': 'உதிரி பாகத்தைத் தேர்ந்தெடுக்கவும்',
     'Select transport vehicle': 'போக்குவரத்து வாகனத்தைத் தேர்ந்தெடுக்கவும்',
     'Select a spare item': 'ஒரு உதிரி பாகத்தைத் தேர்ந்தெடுக்கவும்',
-    'Diesel Lorry': 'டீசல் லாரி',
-    'Compare diesel consumption and cost vehicle by vehicle.':
-        'ஒவ்வொரு வாகனத்திற்குமான டீசல் பயன்பாடு மற்றும் செலவை ஒப்பிடவும்.',
-    'Generate daily, weekly, monthly and custom diesel reports.':
-        'தினசரி, வாராந்திர, மாதாந்திர மற்றும் தனிப்பயன் டீசல் அறிக்கைகளை உருவாக்கவும்.',
-    'Track diesel stock, vehicle consumption and fuel expenses.':
-        'டீசல் இருப்பு, வாகன பயன்பாடு மற்றும் எரிபொருள் செலவுகளைக் கண்காணிக்கவும்.',
     'Track purchased, used and remaining quantities for each spare.':
         'ஒவ்வொரு உதிரி பாகத்திற்கும் வாங்கிய, பயன்படுத்திய மற்றும் மீதமுள்ள அளவைக் கண்காணிக்கவும்.',
     'Show password': 'கடவுச்சொல்லைக் காட்டு',
@@ -785,9 +818,6 @@ class AppLocalization {
         'இந்த சேவை பதிவை நீக்க விரும்புகிறீர்களா: ',
     'Click \\"Add Spare\\" to add a service item.':
         'சேவை பொருளைச் சேர்க்க "உதிரி பாகத்தை சேர்" என்பதை அழுத்தவும்.',
-
-    'Record diesel filled from the diesel lorry into a vehicle.':
-        'டீசல் லாரியிலிருந்து வாகனத்திற்கு நிரப்பிய டீசலைப் பதிவு செய்யவும்.',
     'Record spare parts consumed during maintenance and service.':
         'பராமரிப்பு மற்றும் சேவையில் பயன்படுத்திய உதிரி பாகங்களைப் பதிவு செய்யவும்.',
     'EXCAVATOR': 'எக்ஸ்கவேட்டர்',
@@ -878,7 +908,6 @@ class AppLocalization {
         'முடிவு மணி, தொடக்க மணியை விட குறைவாக இருக்க முடியாது.',
     'Closing KM cannot be less than Starting KM.':
         'முடிவு கி.மீ., தொடக்க கி.மீ.யை விட குறைவாக இருக்க முடியாது.',
-    'Enter a valid value': 'சரியான மதிப்பை உள்ளிடவும்',
     'File picker error: ': 'கோப்பு தேர்வு பிழை: ',
     'Failed to extract transport maintenance data: ':
         'போக்குவரத்து பராமரிப்பு தரவைப் பிரித்தெடுக்க முடியவில்லை: ',
@@ -927,5 +956,57 @@ class AppLocalization {
     'VEHICLE': 'வாகனம்',
     'DRIVER': 'ஓட்டுநர்',
     'ROUTE': 'வழித்தடம்',
+    'Tyre Management': 'டயர் மேலாண்மை',
+    'Tyre Retreading': 'டயர் ரீட்ரெடிங்',
+    'Retreading Reports': 'ரீட்ரெடிங் அறிக்கைகள்',
+    'Tyre Retreading Management': 'டயர் ரீட்ரெடிங் மேலாண்மை',
+    'Track each tyre by serial number from retreading dispatch to return and cost.':
+        'ரீட்ரெடிங்கிற்கு அனுப்பியதிலிருந்து திரும்பி வரும் வரை ஒவ்வொரு டயரையும் அதன் சீரியல் எண்ணால் கண்காணிக்கவும்.',
+    'Send Tyre for Retreading': 'டயரை ரீட்ரெடிங்கிற்கு அனுப்பு',
+    'Edit Retreading Record': 'ரீட்ரெடிங் பதிவைத் திருத்து',
+    'Record Tyre Return': 'டயர் திரும்பியதைப் பதிவு செய்',
+    'Tyre Returned': 'டயர் திரும்பி வந்தது',
+    'Enable this when the tyre has come back from retreading.':
+        'ரீட்ரெடிங்கிலிருந்து டயர் திரும்பி வந்ததும் இதை இயக்கவும்.',
+    'Save Return': 'திரும்பிய பதிவைச் சேமி',
+    'Tyre Brand': 'டயர் பிராண்ட்',
+    'Tyre Serial Number': 'டயர் சீரியல் எண்',
+    'Tyre Size': 'டயர் அளவு',
+    'Retreading Company': 'ரீட்ரெடிங் நிறுவனம்',
+    'Sent Date': 'அனுப்பிய தேதி',
+    'Return Date': 'திரும்பிய தேதி',
+    'Retreading Cost': 'ரீட்ரெடிங் செலவு',
+    'Guarantee': 'உத்தரவாதம்',
+    'No Guarantee': 'உத்தரவாதம் இல்லை',
+    'At Retreading': 'ரீட்ரெடிங்கில் உள்ளது',
+    'Returned': 'திரும்பி வந்தது',
+    'Total Retreading Records': 'மொத்த ரீட்ரெடிங் பதிவுகள்',
+    'Total Retreading Cost': 'மொத்த ரீட்ரெடிங் செலவு',
+    'Search Tyre Serial Number': 'டயர் சீரியல் எண்ணைத் தேடுக',
+    'Retreading Details': 'ரீட்ரெடிங் விவரங்கள்',
+    'Delete Retreading Record?': 'ரீட்ரெடிங் பதிவை நீக்கவா?',
+    'This retreading record will be permanently deleted. This action cannot be undone.':
+        'இந்த ரீட்ரெடிங் பதிவு நிரந்தரமாக நீக்கப்படும். இந்த செயலை மீண்டும் மாற்ற முடியாது.',
+    'Tyre return recorded successfully.':
+        'டயர் திரும்பிய பதிவு வெற்றிகரமாக சேமிக்கப்பட்டது.',
+    'Tyre sent for retreading successfully.':
+        'டயர் ரீட்ரெடிங்கிற்கு வெற்றிகரமாக அனுப்பப்பட்டது.',
+    'Retreading record updated successfully.':
+        'ரீட்ரெடிங் பதிவு வெற்றிகரமாகப் புதுப்பிக்கப்பட்டது.',
+    'Retreading record deleted successfully.':
+        'ரீட்ரெடிங் பதிவு வெற்றிகரமாக நீக்கப்பட்டது.',
+    'Select return date': 'திரும்பிய தேதியைத் தேர்ந்தெடுக்கவும்',
+    'Enter a valid retreading cost': 'சரியான ரீட்ரெடிங் செலவை உள்ளிடவும்',
+    'Unable to save retreading record.':
+        'ரீட்ரெடிங் பதிவைச் சேமிக்க முடியவில்லை.',
+    'Unable to record tyre return.':
+        'டயர் திரும்பிய பதிவைச் சேமிக்க முடியவில்லை.',
+    'Review retreading history, returned tyres and total retreading cost.':
+        'ரீட்ரெடிங் வரலாறு, திரும்பிய டயர்கள் மற்றும் மொத்த ரீட்ரெடிங் செலவைப் பார்க்கவும்.',
+    'Retreading Report': 'ரீட்ரெடிங் அறிக்கை',
+    'Update Record': 'பதிவைப் புதுப்பி',
+    'Save Retreading': 'ரீட்ரெடிங்கைச் சேமி',
+    'Search': 'தேடு',
+    'Action': 'செயல்',
   };
 }

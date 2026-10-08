@@ -106,6 +106,7 @@ class _QuarryBouldersDashboardScreenState
                 trip.registrationNumber,
               ),
               _detail(AppLocalization.t('Driver Name'), trip.driverName),
+              _detail(AppLocalization.t('Boulder Producer'), trip.producerName),
               _detail(AppLocalization.t('Unit'), _num(trip.unit)),
               _detail(AppLocalization.t('Trip'), '${trip.trips}'),
               _detail(
@@ -534,7 +535,7 @@ class _QuarryBouldersDashboardScreenState
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SizedBox(
-              width: 1150,
+              width: 1320,
               child: DataTable(
                 headingRowColor: WidgetStateProperty.all(
                   const Color(0xFFF3F4F6),
@@ -545,6 +546,7 @@ class _QuarryBouldersDashboardScreenState
                     label: Text(AppLocalization.t('Lorry Registration No')),
                   ),
                   DataColumn(label: Text(AppLocalization.t('Driver Name'))),
+                  DataColumn(label: Text(AppLocalization.t('Boulder Producer'))),
                   DataColumn(label: Text(AppLocalization.t('Unit'))),
                   DataColumn(label: Text(AppLocalization.t('Trip'))),
                   DataColumn(label: Text(AppLocalization.t('Total Load'))),
@@ -564,6 +566,7 @@ class _QuarryBouldersDashboardScreenState
                             ),
                           ),
                           DataCell(Text(t.driverName)),
+                          DataCell(Text(t.producerName)),
                           DataCell(Text(_num(t.unit))),
                           DataCell(Text('${t.trips}')),
                           DataCell(

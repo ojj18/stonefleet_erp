@@ -428,6 +428,7 @@ class _QuarryBouldersReportsScreenState
       TextCellValue('Date'),
       TextCellValue('Lorry Registration No'),
       TextCellValue('Driver Name'),
+      TextCellValue('Boulder Producer'),
       TextCellValue('Unit'),
       TextCellValue('Trip'),
       TextCellValue('Total Load'),
@@ -439,6 +440,7 @@ class _QuarryBouldersReportsScreenState
         ),
         TextCellValue(t.registrationNumber),
         TextCellValue(t.driverName),
+        TextCellValue(t.producerName),
         DoubleCellValue(t.unit),
         IntCellValue(t.trips),
         DoubleCellValue(t.totalLoad),
@@ -476,13 +478,14 @@ class _QuarryBouldersReportsScreenState
           pw.Text('Period: ${_periodLabel()}'),
           pw.SizedBox(height: 16),
           pw.TableHelper.fromTextArray(
-            headers: ['Date', 'Lorry', 'Driver', 'Unit', 'Trips', 'Load'],
+            headers: ['Date', 'Lorry', 'Driver', 'Boulder Producer', 'Unit', 'Trips', 'Load'],
             data: p.trips
                 .map(
                   (t) => [
                     DateFormat('dd/MM/yyyy').format(DateTime.parse(t.tripDate)),
                     t.registrationNumber,
                     t.driverName,
+                    t.producerName,
                     _n(t.unit),
                     '${t.trips}',
                     _n(t.totalLoad),

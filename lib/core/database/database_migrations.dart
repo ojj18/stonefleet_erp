@@ -549,6 +549,7 @@ class DatabaseMigrations {
         transport_vehicle_id INTEGER NOT NULL,
         registration_number TEXT NOT NULL,
         driver_name TEXT NOT NULL,
+        producer_name TEXT NOT NULL DEFAULT 'Company',
         unit REAL NOT NULL DEFAULT 0,
         trips INTEGER NOT NULL DEFAULT 0,
         total_load REAL NOT NULL DEFAULT 0,
@@ -559,6 +560,24 @@ class DatabaseMigrations {
       )
     ''');
 
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS quarry_boulder_producers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    final producerSeedNow = DateTime.now().toIso8601String();
+    for (final name in ['Murugan', 'Madhavan', 'Company']) {
+      await db.insert(
+        'quarry_boulder_producers',
+        {'name': name, 'is_active': 1, 'created_at': producerSeedNow},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
 
     await db.execute('''
       CREATE TABLE IF NOT EXISTS drivers (
@@ -613,6 +632,84 @@ class DatabaseMigrations {
         conflictAlgorithm: ConflictAlgorithm.ignore,
       );
     }
+
+
+    // ============================================================
+    // DIESEL MANAGEMENT
+    // ============================================================
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS diesel_receipts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        receipt_date TEXT NOT NULL,
+        source_name TEXT NOT NULL,
+        quantity_litres REAL NOT NULL DEFAULT 0,
+        rate REAL NOT NULL DEFAULT 0,
+        total_cost REAL NOT NULL DEFAULT 0,
+        supplier_name TEXT,
+        bill_number TEXT,
+        remarks TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS diesel_fillings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filling_date TEXT NOT NULL,
+        vehicle_type TEXT NOT NULL,
+        vehicle_id INTEGER NOT NULL,
+        vehicle_registration TEXT NOT NULL,
+        quantity_litres REAL NOT NULL DEFAULT 0,
+        rate REAL NOT NULL DEFAULT 0,
+        total_cost REAL NOT NULL DEFAULT 0,
+        meter_reading REAL,
+        operator_name TEXT,
+        shift TEXT,
+        remarks TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS diesel_stock_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transaction_type TEXT NOT NULL,
+        quantity REAL NOT NULL DEFAULT 0,
+        previous_stock REAL NOT NULL DEFAULT 0,
+        current_stock REAL NOT NULL DEFAULT 0,
+        reference_id INTEGER,
+        transaction_date TEXT NOT NULL,
+        remarks TEXT,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+
+    // ============================================================
+    // 21. TYRE RETREADING MANAGEMENT
+    // ============================================================
+    await db.execute('''
+      CREATE TABLE tyre_retreading_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        transport_vehicle_id INTEGER NOT NULL,
+        registration_number TEXT NOT NULL,
+        tyre_brand TEXT,
+        tyre_serial_number TEXT NOT NULL,
+        tyre_size TEXT NOT NULL,
+        retreading_company TEXT NOT NULL,
+        sent_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'AT_RETREADING',
+        return_date TEXT,
+        retreading_cost REAL NOT NULL DEFAULT 0,
+        bill_number TEXT,
+        guarantee TEXT,
+        remarks TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT,
+        FOREIGN KEY (transport_vehicle_id) REFERENCES transport_vehicles(id)
+          ON DELETE RESTRICT ON UPDATE CASCADE
+      )
+    ''');
 
     await DatabaseSeed.seed(db);
 
@@ -1320,6 +1417,124 @@ class DatabaseMigrations {
 
       log('Database migrated to version 8: separate loading and unloading site masters created.');
     }
+    // ============================================================
+    // VERSION 9
+    // DIESEL MANAGEMENT
+    // ============================================================
+    if (oldVersion < 9) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS diesel_receipts (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          receipt_date TEXT NOT NULL,
+          source_name TEXT NOT NULL,
+          quantity_litres REAL NOT NULL DEFAULT 0,
+          rate REAL NOT NULL DEFAULT 0,
+          total_cost REAL NOT NULL DEFAULT 0,
+          supplier_name TEXT,
+          bill_number TEXT,
+          remarks TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS diesel_fillings (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          filling_date TEXT NOT NULL,
+          vehicle_type TEXT NOT NULL,
+          vehicle_id INTEGER NOT NULL,
+          vehicle_registration TEXT NOT NULL,
+          quantity_litres REAL NOT NULL DEFAULT 0,
+          rate REAL NOT NULL DEFAULT 0,
+          total_cost REAL NOT NULL DEFAULT 0,
+          meter_reading REAL,
+          operator_name TEXT,
+          shift TEXT,
+          remarks TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS diesel_stock_movements (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          transaction_type TEXT NOT NULL,
+          quantity REAL NOT NULL DEFAULT 0,
+          previous_stock REAL NOT NULL DEFAULT 0,
+          current_stock REAL NOT NULL DEFAULT 0,
+          reference_id INTEGER,
+          transaction_date TEXT NOT NULL,
+          remarks TEXT,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      log('Database migrated to version 9: diesel management tables created.');
+    }
+
+
+    // ============================================================
+    // VERSION 10
+    // QUARRY BOULDER PRODUCER MASTER + PRODUCER FIELD
+    // ============================================================
+    if (oldVersion < 10) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quarry_boulder_producers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+
+      final producerNow = DateTime.now().toIso8601String();
+      for (final name in ['Murugan', 'Madhavan', 'Company']) {
+        await db.insert(
+          'quarry_boulder_producers',
+          {'name': name, 'is_active': 1, 'created_at': producerNow},
+          conflictAlgorithm: ConflictAlgorithm.ignore,
+        );
+      }
+
+      if (!await _hasColumn(db, 'quarry_boulder_trips', 'producer_name')) {
+        await db.execute(
+          "ALTER TABLE quarry_boulder_trips ADD COLUMN producer_name TEXT NOT NULL DEFAULT 'Company'",
+        );
+      }
+
+      log('Database migrated to version 10: quarry boulder producer created.');
+    }
+
+    // ============================================================
+    // VERSION 11
+    // TYRE RETREADING MANAGEMENT
+    // ============================================================
+    if (oldVersion < 11) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS tyre_retreading_records (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          transport_vehicle_id INTEGER NOT NULL,
+          registration_number TEXT NOT NULL,
+          tyre_brand TEXT,
+          tyre_serial_number TEXT NOT NULL,
+          tyre_size TEXT NOT NULL,
+          retreading_company TEXT NOT NULL,
+          sent_date TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'AT_RETREADING',
+          return_date TEXT,
+          retreading_cost REAL NOT NULL DEFAULT 0,
+          bill_number TEXT,
+          guarantee TEXT,
+          remarks TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT,
+          FOREIGN KEY (transport_vehicle_id) REFERENCES transport_vehicles(id)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      ''');
+      log('Database migrated to version 11: tyre retreading management created.');
+    }
+
 
   }
 }

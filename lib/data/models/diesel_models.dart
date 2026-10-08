@@ -126,6 +126,7 @@ class DieselStockMovementRow {
   final double previousStock;
   final double currentStock;
   final String transactionDate;
+  final int? referenceId;
   final String? remarks;
 
   const DieselStockMovementRow({
@@ -135,6 +136,7 @@ class DieselStockMovementRow {
     required this.previousStock,
     required this.currentStock,
     required this.transactionDate,
+    required this.referenceId,
     this.remarks,
   });
 
@@ -146,6 +148,7 @@ class DieselStockMovementRow {
       previousStock: (map['previous_stock'] as num?)?.toDouble() ?? 0,
       currentStock: (map['current_stock'] as num?)?.toDouble() ?? 0,
       transactionDate: map['transaction_date']?.toString() ?? '',
+      referenceId: (map['reference_id'] as num?)?.toInt(),
       remarks: map['remarks']?.toString(),
     );
   }

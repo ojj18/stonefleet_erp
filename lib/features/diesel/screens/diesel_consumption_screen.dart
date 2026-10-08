@@ -16,6 +16,8 @@ class DieselConsumptionScreen extends StatefulWidget {
 class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
   String type = 'All';
   int? vehicleId;
+  int page = 0;
+  int rowsPerPage = 10;
   DateTimeRange range = DateTimeRange(
     start: DateTime(DateTime.now().year, DateTime.now().month, 1),
     end: DateTime.now(),
@@ -32,6 +34,7 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
   }
 
   Future<void> _load() {
+    setState(() => page = 0);
     return context.read<DieselProvider>().loadConsumption(
       fromDate: range.start,
       toDate: range.end,
@@ -43,7 +46,7 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
   @override
   Widget build(BuildContext context) {
     return DieselShell(
-      selectedIndex: 18,
+      selectedIndex: 22,
       child: Consumer<DieselProvider>(
         builder: (context, p, _) {
           final totalLitres = p.consumption.fold<double>(
@@ -54,6 +57,10 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
             0,
             (s, x) => s + x.totalCost,
           );
+
+          final start = page * rowsPerPage;
+          final end = (start + rowsPerPage).clamp(0, p.consumption.length);
+          final visibleRows = p.consumption.sublist(start, end);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -215,7 +222,7 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                                 label: Text(AppLocalization.t('Fillings')),
                               ),
                             ],
-                            rows: p.consumption
+                            rows: visibleRows
                                 .map(
                                   (r) => DataRow(
                                     cells: [
@@ -234,6 +241,8 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
                                 .toList(),
                           ),
                         ),
+                      if (p.consumption.isNotEmpty)
+                        _Pager(total: p.consumption.length, page: page, rowsPerPage: rowsPerPage, onPage: (v) => setState(() => page = v), onRows: (v) => setState(() { rowsPerPage = v; page = 0; })),
                     ],
                   ),
                 ),
@@ -244,4 +253,11 @@ class _DieselConsumptionScreenState extends State<DieselConsumptionScreen> {
       ),
     );
   }
+}
+
+
+class _Pager extends StatelessWidget {
+  final int total, page, rowsPerPage; final ValueChanged<int> onPage; final ValueChanged<int> onRows;
+  const _Pager({required this.total,required this.page,required this.rowsPerPage,required this.onPage,required this.onRows});
+  @override Widget build(BuildContext context){final pages=(total/rowsPerPage).ceil();final from=page*rowsPerPage+1;final to=((page+1)*rowsPerPage>total)?total:(page+1)*rowsPerPage;return Padding(padding:const EdgeInsets.only(top:14),child:Row(children:[Text('${AppLocalization.t('Rows per page')}: '),DropdownButton<int>(value:rowsPerPage,items:const[10,25,50,100].map((e)=>DropdownMenuItem(value:e,child:Text('$e'))).toList(),onChanged:(v){if(v!=null)onRows(v);}),const Spacer(),Text('${AppLocalization.t('Showing')} $from-$to ${AppLocalization.t('of')} $total'),IconButton(onPressed:page>0?()=>onPage(page-1):null,icon:const Icon(Icons.chevron_left)),Text('${page+1} / ${pages==0?1:pages}'),IconButton(onPressed:page<pages-1?()=>onPage(page+1):null,icon:const Icon(Icons.chevron_right))]));}
 }

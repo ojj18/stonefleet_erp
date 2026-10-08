@@ -4,6 +4,7 @@ class QuarryBoulderTrip {
   final int transportVehicleId;
   final String registrationNumber;
   final String driverName;
+  final String producerName;
   final double unit;
   final int trips;
   final double totalLoad;
@@ -16,6 +17,7 @@ class QuarryBoulderTrip {
     required this.transportVehicleId,
     required this.registrationNumber,
     required this.driverName,
+    required this.producerName,
     required this.unit,
     required this.trips,
     required this.totalLoad,
@@ -30,6 +32,7 @@ class QuarryBoulderTrip {
       transportVehicleId: map['transport_vehicle_id'] as int,
       registrationNumber: map['registration_number'] as String,
       driverName: map['driver_name'] as String,
+      producerName: (map['producer_name'] as String?) ?? 'Company',
       unit: (map['unit'] as num).toDouble(),
       trips: (map['trips'] as num).toInt(),
       totalLoad: (map['total_load'] as num).toDouble(),
@@ -44,6 +47,7 @@ class QuarryBoulderTrip {
         'transport_vehicle_id': transportVehicleId,
         'registration_number': registrationNumber,
         'driver_name': driverName,
+        'producer_name': producerName,
         'unit': unit,
         'trips': trips,
         'total_load': totalLoad,

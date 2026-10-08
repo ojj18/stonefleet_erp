@@ -9,6 +9,11 @@ import '../../features/auth/providers/auth_provider.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/compliance/screens/compliance_screen.dart';
 import '../../features/dashboard/screen/dashboard_screen.dart';
+import '../../features/diesel/screens/diesel_dashboard_screen.dart';
+import '../../features/diesel/screens/diesel_stock_screen.dart';
+import '../../features/diesel/screens/diesel_filling_screen.dart';
+import '../../features/diesel/screens/diesel_consumption_screen.dart';
+import '../../features/diesel/screens/diesel_reports_screen.dart';
 import '../../features/excavator/maintenance/screens/excavator_maintenance_screen.dart';
 import '../../features/excavator/master/screens/excavator_master_screen.dart';
 import '../../features/excavator/service/screens/excavator_service_screen.dart';
@@ -21,6 +26,8 @@ import '../../features/quarry_blasting/screens/quarry_blasting_dashboard_screen.
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_history_screen.dart';
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_reports_screen.dart';
 import '../../features/quarry_boulders/screens/quarry_boulders_dashboard_screen.dart';
+import '../../features/retreading/screens/retreading_dashboard_screen.dart';
+import '../../features/retreading/screens/retreading_reports_screen.dart';
 import '../../features/report/screens/reports_screen.dart';
 
 class AppSidebar extends StatelessWidget {
@@ -211,6 +218,73 @@ class AppSidebar extends StatelessWidget {
                     icon: Icons.local_shipping_outlined,
                     title: AppLocalization.t('Quarry Boulders'),
                     index: 18,
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppLocalization.t('Diesel Management'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.dashboard_outlined,
+                    title: AppLocalization.t('Diesel Dashboard'),
+                    index: 19,
+                  ),
+                  _menuItem(
+                    icon: Icons.inventory_2_outlined,
+                    title: AppLocalization.t('Diesel Stock'),
+                    index: 20,
+                  ),
+                  _menuItem(
+                    icon: Icons.local_gas_station_outlined,
+                    title: AppLocalization.t('Diesel Filling'),
+                    index: 21,
+                  ),
+                  _menuItem(
+                    icon: Icons.water_drop_outlined,
+                    title: AppLocalization.t('Diesel Consumption'),
+                    index: 22,
+                  ),
+                  _menuItem(
+                    icon: Icons.assessment_outlined,
+                    title: AppLocalization.t('Diesel Reports'),
+                    index: 23,
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        AppLocalization.t('Tyre Management'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF68717D),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  _menuItem(
+                    icon: Icons.tire_repair_outlined,
+                    title: AppLocalization.t('Tyre Retreading'),
+                    index: 24,
+                  ),
+                  _menuItem(
+                    icon: Icons.assessment_outlined,
+                    title: AppLocalization.t('Retreading Reports'),
+                    index: 25,
                   ),
                 ],
               ),
@@ -520,6 +594,50 @@ void handleMenuTap(int index, {required BuildContext? context}) {
         MaterialPageRoute(
           builder: (_) => const QuarryBouldersDashboardScreen(),
         ),
+      );
+      break;
+
+    case 19:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DieselDashboardScreen()),
+      );
+      break;
+    case 20:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DieselStockScreen()),
+      );
+      break;
+    case 21:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DieselFillingScreen()),
+      );
+      break;
+    case 22:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DieselConsumptionScreen()),
+      );
+      break;
+    case 23:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const DieselReportsScreen()),
+      );
+      break;
+
+    case 24:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const RetreadingDashboardScreen()),
+      );
+      break;
+    case 25:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const RetreadingReportsScreen()),
       );
       break;
   }

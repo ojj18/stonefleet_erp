@@ -106,78 +106,78 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // SERVICE NOTIFICATIONS
   // ============================================================
 
-  Widget _buildServiceNotificationCard() {
-    return Consumer<ServiceNotificationProvider>(
-      builder: (context, notificationProvider, _) {
-        return _DashboardCard(
-          title: AppLocalization.t('Service Notifications'),
-          icon: Icons.notifications_active_outlined,
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _NotificationSummaryItem(
-                      title: AppLocalization.t('Overdue'),
-                      count: notificationProvider.overdueCount,
-                      icon: Icons.error_outline_rounded,
-                      color: const Color(0xFFD93025),
-                      backgroundColor: const Color(0xFFFFEEEE),
-                    ),
-                  ),
+  // Widget _buildServiceNotificationCard() {
+  //   return Consumer<ServiceNotificationProvider>(
+  //     builder: (context, notificationProvider, _) {
+  //       return _DashboardCard(
+  //         title: AppLocalization.t('Service Notifications'),
+  //         icon: Icons.notifications_active_outlined,
+  //         child: Column(
+  //           children: [
+  //             Row(
+  //               children: [
+  //                 Expanded(
+  //                   child: _NotificationSummaryItem(
+  //                     title: AppLocalization.t('Overdue'),
+  //                     count: notificationProvider.overdueCount,
+  //                     icon: Icons.error_outline_rounded,
+  //                     color: const Color(0xFFD93025),
+  //                     backgroundColor: const Color(0xFFFFEEEE),
+  //                   ),
+  //                 ),
 
-                  const SizedBox(width: 12),
+  //                 const SizedBox(width: 12),
 
-                  Expanded(
-                    child: _NotificationSummaryItem(
-                      title: AppLocalization.t('Due'),
-                      count: notificationProvider.dueCount,
-                      icon: Icons.access_alarm_rounded,
-                      color: const Color(0xFFE67E22),
-                      backgroundColor: const Color(0xFFFFF3E6),
-                    ),
-                  ),
+  //                 Expanded(
+  //                   child: _NotificationSummaryItem(
+  //                     title: AppLocalization.t('Due'),
+  //                     count: notificationProvider.dueCount,
+  //                     icon: Icons.access_alarm_rounded,
+  //                     color: const Color(0xFFE67E22),
+  //                     backgroundColor: const Color(0xFFFFF3E6),
+  //                   ),
+  //                 ),
 
-                  const SizedBox(width: 12),
+  //                 const SizedBox(width: 12),
 
-                  Expanded(
-                    child: _NotificationSummaryItem(
-                      title: AppLocalization.t('Upcoming'),
-                      count: notificationProvider.upcomingCount,
-                      icon: Icons.schedule_rounded,
-                      color: const Color(0xFF3159C9),
-                      backgroundColor: const Color(0xFFEEF2FF),
-                    ),
-                  ),
+  //                 Expanded(
+  //                   child: _NotificationSummaryItem(
+  //                     title: AppLocalization.t('Upcoming'),
+  //                     count: notificationProvider.upcomingCount,
+  //                     icon: Icons.schedule_rounded,
+  //                     color: const Color(0xFF3159C9),
+  //                     backgroundColor: const Color(0xFFEEF2FF),
+  //                   ),
+  //                 ),
 
-                  const SizedBox(width: 12),
+  //                 const SizedBox(width: 12),
 
-                  Expanded(
-                    child: _NotificationSummaryItem(
-                      title: AppLocalization.t('Not Recorded'),
-                      count: notificationProvider.serviceNotRecordedCount,
-                      icon: Icons.help_outline_rounded,
-                      color: const Color(0xFF64686D),
-                      backgroundColor: const Color(0xFFF0F1F2),
-                    ),
-                  ),
+  //                 Expanded(
+  //                   child: _NotificationSummaryItem(
+  //                     title: AppLocalization.t('Not Recorded'),
+  //                     count: notificationProvider.serviceNotRecordedCount,
+  //                     icon: Icons.help_outline_rounded,
+  //                     color: const Color(0xFF64686D),
+  //                     backgroundColor: const Color(0xFFF0F1F2),
+  //                   ),
+  //                 ),
 
-                  const SizedBox(width: 16),
+  //                 const SizedBox(width: 16),
 
-                  OutlinedButton(
-                    onPressed: () {
-                      handleMenuTap(7, context: context);
-                    },
-                    child: Text(AppLocalization.t('View All')),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  //                 OutlinedButton(
+  //                   onPressed: () {
+  //                     handleMenuTap(7, context: context);
+  //                   },
+  //                   child: Text(AppLocalization.t('View All')),
+  //                 ),
+  //               ],
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   Widget _buildTopBar() {
     return Container(
@@ -922,59 +922,59 @@ class _ErrorView extends StatelessWidget {
   }
 }
 
-class _NotificationSummaryItem extends StatelessWidget {
-  final String title;
-  final int count;
-  final IconData icon;
-  final Color color;
-  final Color backgroundColor;
+// class _NotificationSummaryItem extends StatelessWidget {
+//   final String title;
+//   final int count;
+//   final IconData icon;
+//   final Color color;
+//   final Color backgroundColor;
 
-  const _NotificationSummaryItem({
-    required this.title,
-    required this.count,
-    required this.icon,
-    required this.color,
-    required this.backgroundColor,
-  });
+//   const _NotificationSummaryItem({
+//     required this.title,
+//     required this.count,
+//     required this.icon,
+//     required this.color,
+//     required this.backgroundColor,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(9),
-        border: Border.all(color: color.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 19, color: color),
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+//       decoration: BoxDecoration(
+//         color: backgroundColor,
+//         borderRadius: BorderRadius.circular(9),
+//         border: Border.all(color: color.withValues(alpha: 0.12)),
+//       ),
+//       child: Row(
+//         children: [
+//           Icon(icon, size: 19, color: color),
 
-          const SizedBox(width: 10),
+//           const SizedBox(width: 10),
 
-          Expanded(
-            child: Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ),
+//           Expanded(
+//             child: Text(
+//               title,
+//               maxLines: 1,
+//               overflow: TextOverflow.ellipsis,
+//               style: TextStyle(
+//                 fontSize: 12,
+//                 fontWeight: FontWeight.w600,
+//                 color: Colors.grey.shade700,
+//               ),
+//             ),
+//           ),
 
-          Text(
-            '$count',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+//           Text(
+//             '$count',
+//             style: TextStyle(
+//               fontSize: 18,
+//               fontWeight: FontWeight.w700,
+//               color: color,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

@@ -26,6 +26,7 @@ class QuarryBoulderRepository {
     DateTime? toDate,
     String? registrationNumber,
     String? driverName,
+    String? producerName,
   }) async {
     final db = await _dbHelper.database;
     final where = <String>[];
@@ -45,6 +46,10 @@ class QuarryBoulderRepository {
     if (driverName != null && driverName.trim().isNotEmpty) {
       where.add('LOWER(driver_name) LIKE ?');
       args.add('%${driverName.trim().toLowerCase()}%');
+    }
+    if (producerName != null && producerName.trim().isNotEmpty) {
+      where.add('LOWER(producer_name) LIKE ?');
+      args.add('%${producerName.trim().toLowerCase()}%');
     }
     final rows = await db.query(
       'quarry_boulder_trips',

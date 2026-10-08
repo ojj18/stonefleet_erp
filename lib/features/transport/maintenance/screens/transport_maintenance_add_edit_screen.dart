@@ -237,7 +237,7 @@ class _TransportMaintenanceAddEditScreenState
     //double dieselCostPerKm = 0;
 
     if (totalKm > 0 && dieselFilled > 0) {
-      dieselConsumptionPerKm = dieselFilled / totalKm;
+      dieselConsumptionPerKm = totalKm / dieselFilled;
 
       //dieselCostPerKm = dieselExpense / totalKm;
     }
@@ -1084,6 +1084,10 @@ class _TransportMaintenanceAddEditScreenState
     setState(() {
       _saving = true;
     });
+
+    if (!mounted) {
+      return;
+    }
 
     final provider = context.read<TransportMaintenanceProvider>();
     final messenger = ScaffoldMessenger.maybeOf(context);
