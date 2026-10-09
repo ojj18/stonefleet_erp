@@ -79,6 +79,32 @@ class RetreadingRepository {
     return db.insert('tyre_retreading_records', data, conflictAlgorithm: ConflictAlgorithm.abort);
   }
 
+  /// When a tyre is sent for its next retreading, its current odometer
+  /// reading closes the previous returned cycle.
+  Future<int> closePreviousCycle({
+    required String serial,
+    required double endingKm,
+  }) async {
+    final db = await _dbHelper.database;
+    final rows = await db.query(
+      'tyre_retreading_records',
+      where: 'LOWER(tyre_serial_number) = ? AND status = ? AND starting_km IS NOT NULL AND ending_km IS NULL',
+      whereArgs: [serial.trim().toLowerCase(), 'RETURNED'],
+      orderBy: 'return_date DESC, id DESC',
+      limit: 1,
+    );
+    if (rows.isEmpty) return 0;
+    final start = (rows.first['starting_km'] as num).toDouble();
+    if (endingKm < start) throw ArgumentError('Ending KM cannot be less than Starting KM.');
+    return db.update(
+      'tyre_retreading_records',
+      {'ending_km': endingKm, 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [rows.first['id']],
+    );
+  }
+
+
   Future<int> update(RetreadingRecord record) async {
     if (record.id == null) throw ArgumentError('Record ID is required.');
     final db = await _dbHelper.database;
@@ -101,8 +127,8 @@ class RetreadingRepository {
     required String returnDate,
     required double cost,
     String? billNumber,
-    String? guarantee,
     String? remarks,
+    double? startingKm,
   }) async {
     final db = await _dbHelper.database;
     return db.update(
@@ -112,7 +138,8 @@ class RetreadingRepository {
         'return_date': returnDate,
         'retreading_cost': cost,
         'bill_number': _nullable(billNumber),
-        'guarantee': _nullable(guarantee),
+        'starting_km': startingKm,
+        'ending_km': null,
         'remarks': _nullable(remarks),
         'updated_at': DateTime.now().toIso8601String(),
       },

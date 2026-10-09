@@ -11,7 +11,8 @@ class RetreadingRecord {
   final String? returnDate;
   final double retreadingCost;
   final String? billNumber;
-  final String? guarantee;
+  final double? startingKm;
+  final double? endingKm;
   final String? remarks;
   final String createdAt;
   final String? updatedAt;
@@ -29,7 +30,8 @@ class RetreadingRecord {
     this.returnDate,
     this.retreadingCost = 0,
     this.billNumber,
-    this.guarantee,
+    this.startingKm,
+    this.endingKm,
     this.remarks,
     required this.createdAt,
     this.updatedAt,
@@ -49,7 +51,8 @@ class RetreadingRecord {
       returnDate: map['return_date'] as String?,
       retreadingCost: (map['retreading_cost'] as num?)?.toDouble() ?? 0,
       billNumber: map['bill_number'] as String?,
-      guarantee: map['guarantee'] as String?,
+      startingKm: (map['starting_km'] as num?)?.toDouble(),
+      endingKm: (map['ending_km'] as num?)?.toDouble(),
       remarks: map['remarks'] as String?,
       createdAt: (map['created_at'] as String?) ?? '',
       updatedAt: map['updated_at'] as String?,
@@ -69,7 +72,8 @@ class RetreadingRecord {
         'return_date': returnDate,
         'retreading_cost': retreadingCost,
         'bill_number': billNumber,
-        'guarantee': guarantee,
+        'starting_km': startingKm,
+        'ending_km': endingKm,
         'remarks': remarks,
         'created_at': createdAt,
         'updated_at': updatedAt,

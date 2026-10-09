@@ -3,6 +3,8 @@ class TransportServiceModel {
   final int transportVehicleId;
   final String serviceDate;
   final double currentKm;
+  final double airBlowerOilQuantity;
+  final double airBlowerOilRate;
   final String? remarks;
   final String createdAt;
   final String? updatedAt;
@@ -12,6 +14,8 @@ class TransportServiceModel {
     required this.transportVehicleId,
     required this.serviceDate,
     required this.currentKm,
+    this.airBlowerOilQuantity = 0,
+    this.airBlowerOilRate = 0,
     this.remarks,
     required this.createdAt,
     this.updatedAt,
@@ -23,6 +27,8 @@ class TransportServiceModel {
       'transport_vehicle_id': transportVehicleId,
       'service_date': serviceDate,
       'current_km': currentKm,
+      'air_blower_oil_quantity': airBlowerOilQuantity,
+      'air_blower_oil_rate': airBlowerOilRate,
       'remarks': remarks,
       'created_at': createdAt,
       'updated_at': updatedAt,
@@ -35,6 +41,8 @@ class TransportServiceModel {
       transportVehicleId: map['transport_vehicle_id'] as int,
       serviceDate: map['service_date'] as String,
       currentKm: (map['current_km'] as num).toDouble(),
+      airBlowerOilQuantity: (map['air_blower_oil_quantity'] as num?)?.toDouble() ?? 0,
+      airBlowerOilRate: (map['air_blower_oil_rate'] as num?)?.toDouble() ?? 0,
       remarks: map['remarks'] as String?,
       createdAt: map['created_at'] as String,
       updatedAt: map['updated_at'] as String?,
@@ -46,6 +54,8 @@ class TransportServiceModel {
     int? transportVehicleId,
     String? serviceDate,
     double? currentKm,
+    double? airBlowerOilQuantity,
+    double? airBlowerOilRate,
     String? remarks,
     String? createdAt,
     String? updatedAt,
@@ -55,6 +65,8 @@ class TransportServiceModel {
       transportVehicleId: transportVehicleId ?? this.transportVehicleId,
       serviceDate: serviceDate ?? this.serviceDate,
       currentKm: currentKm ?? this.currentKm,
+      airBlowerOilQuantity: airBlowerOilQuantity ?? this.airBlowerOilQuantity,
+      airBlowerOilRate: airBlowerOilRate ?? this.airBlowerOilRate,
       remarks: remarks ?? this.remarks,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

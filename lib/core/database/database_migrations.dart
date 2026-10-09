@@ -236,7 +236,9 @@ class DatabaseMigrations {
         FOREIGN KEY (spare_id)
           REFERENCES spares(id)
           ON DELETE RESTRICT
-          ON UPDATE CASCADE
+          ON UPDATE CASCADE,
+
+        UNIQUE(service_id, spare_id)
       )
     ''');
 
@@ -317,6 +319,8 @@ class DatabaseMigrations {
 
         service_date TEXT NOT NULL,
         current_km REAL NOT NULL,
+        air_blower_oil_quantity REAL NOT NULL DEFAULT 0,
+        air_blower_oil_rate REAL NOT NULL DEFAULT 0,
 
         remarks TEXT,
 
@@ -356,7 +360,9 @@ class DatabaseMigrations {
         FOREIGN KEY (spare_id)
           REFERENCES spares(id)
           ON DELETE RESTRICT
-          ON UPDATE CASCADE
+          ON UPDATE CASCADE,
+
+        UNIQUE(service_id, spare_id)
       )
     ''');
 
@@ -699,6 +705,8 @@ class DatabaseMigrations {
         retreading_cost REAL NOT NULL DEFAULT 0,
         bill_number TEXT,
         guarantee TEXT,
+        starting_km REAL,
+        ending_km REAL,
         remarks TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT,
@@ -1531,67 +1539,56 @@ class DatabaseMigrations {
       log('Database migrated to version 11: tyre retreading management created.');
     }
 
-    // ============================================================
-    // VERSION 12
-    // ALLOW THE SAME SPARE TO BE RECORDED MORE THAN ONCE PER SERVICE
-    // ============================================================
+    // VERSION 12: Tyre return starting/ending odometer readings.
     if (oldVersion < 12) {
-      await db.execute('''
-        CREATE TABLE excavator_service_items_new (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          service_id INTEGER NOT NULL,
-          spare_id INTEGER NOT NULL,
-          quantity REAL NOT NULL DEFAULT 1,
-          cost REAL NOT NULL DEFAULT 0,
-          remark TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT,
-          FOREIGN KEY (service_id) REFERENCES excavator_service(id)
-            ON DELETE CASCADE ON UPDATE CASCADE,
-          FOREIGN KEY (spare_id) REFERENCES spares(id)
-            ON DELETE RESTRICT ON UPDATE CASCADE
-        )
-      ''');
-      await db.execute('''
-        INSERT INTO excavator_service_items_new
-          (id, service_id, spare_id, quantity, cost, remark, created_at, updated_at)
-        SELECT id, service_id, spare_id, quantity, cost, remark, created_at, updated_at
-        FROM excavator_service_items
-      ''');
-      await db.execute('DROP TABLE excavator_service_items');
-      await db.execute(
-        'ALTER TABLE excavator_service_items_new RENAME TO excavator_service_items',
-      );
-
-      await db.execute('''
-        CREATE TABLE transport_service_items_new (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          service_id INTEGER NOT NULL,
-          spare_id INTEGER NOT NULL,
-          quantity REAL NOT NULL DEFAULT 1,
-          cost REAL NOT NULL DEFAULT 0,
-          remark TEXT,
-          created_at TEXT NOT NULL,
-          updated_at TEXT,
-          FOREIGN KEY (service_id) REFERENCES transport_service(id)
-            ON DELETE CASCADE ON UPDATE CASCADE,
-          FOREIGN KEY (spare_id) REFERENCES spares(id)
-            ON DELETE RESTRICT ON UPDATE CASCADE
-        )
-      ''');
-      await db.execute('''
-        INSERT INTO transport_service_items_new
-          (id, service_id, spare_id, quantity, cost, remark, created_at, updated_at)
-        SELECT id, service_id, spare_id, quantity, cost, remark, created_at, updated_at
-        FROM transport_service_items
-      ''');
-      await db.execute('DROP TABLE transport_service_items');
-      await db.execute(
-        'ALTER TABLE transport_service_items_new RENAME TO transport_service_items',
-      );
-
-      log('Database migrated to version 12: repeated spare items are supported.');
+      if (await _hasColumn(db, 'tyre_retreading_records', 'id')) {
+        if (!await _hasColumn(db, 'tyre_retreading_records', 'starting_km')) {
+          await db.execute('ALTER TABLE tyre_retreading_records ADD COLUMN starting_km REAL');
+        }
+        if (!await _hasColumn(db, 'tyre_retreading_records', 'ending_km')) {
+          await db.execute('ALTER TABLE tyre_retreading_records ADD COLUMN ending_km REAL');
+        }
+      }
+      log('Database migrated to version 12: tyre return KM fields added.');
     }
+
+    // VERSION 14: Optional air blower oil tracking for transport service.
+    // Idempotent so existing databases and records are preserved.
+    if (oldVersion < 14) {
+      final transportServiceExists = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        ['transport_service'],
+      );
+      if (transportServiceExists.isNotEmpty) {
+        if (!await _hasColumn(db, 'transport_service', 'air_blower_oil_quantity')) {
+          await db.execute('ALTER TABLE transport_service ADD COLUMN air_blower_oil_quantity REAL NOT NULL DEFAULT 0');
+        }
+        if (!await _hasColumn(db, 'transport_service', 'air_blower_oil_rate')) {
+          await db.execute('ALTER TABLE transport_service ADD COLUMN air_blower_oil_rate REAL NOT NULL DEFAULT 0');
+        }
+      }
+      log('Database migrated to version 14: transport air blower oil fields added.');
+    }
+
+    // VERSION 13: Repair KM columns for databases that were already marked v12
+    // before the v12 migration ran successfully. This is intentionally
+    // idempotent and preserves all existing retreading records.
+    if (oldVersion < 13) {
+      final tableExists = await db.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+        ['tyre_retreading_records'],
+      );
+      if (tableExists.isNotEmpty) {
+        if (!await _hasColumn(db, 'tyre_retreading_records', 'starting_km')) {
+          await db.execute('ALTER TABLE tyre_retreading_records ADD COLUMN starting_km REAL');
+        }
+        if (!await _hasColumn(db, 'tyre_retreading_records', 'ending_km')) {
+          await db.execute('ALTER TABLE tyre_retreading_records ADD COLUMN ending_km REAL');
+        }
+      }
+      log('Database migrated to version 13: verified tyre KM columns.');
+    }
+
 
   }
 }

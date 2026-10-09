@@ -32,7 +32,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
   bool _returned = false;
   final _cost = TextEditingController(text: '0');
   final _bill = TextEditingController();
-  String? _guarantee;
+  final _startingKm = TextEditingController();
+  final _endingKm = TextEditingController();
 
   @override
   void initState() {
@@ -53,7 +54,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
             : DateTime.tryParse(r.returnDate!);
         _cost.text = r.retreadingCost.toStringAsFixed(2);
         _bill.text = r.billNumber ?? '';
-        _guarantee = r.guarantee;
+        _startingKm.text = r.startingKm?.toString() ?? '';
+        _endingKm.text = r.endingKm?.toString() ?? '';
         if (mounted) {
           _vehicle = await context.read<TransportProvider>().getById(
             r.transportVehicleId,
@@ -73,6 +75,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
     _remarks.dispose();
     _cost.dispose();
     _bill.dispose();
+    _startingKm.dispose();
+    _endingKm.dispose();
     super.dispose();
   }
 
@@ -101,6 +105,25 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
       _snack(AppLocalization.t('Select return date'));
       return;
     }
+    final startKm = _startingKm.text.trim().isEmpty
+        ? null
+        : double.tryParse(_startingKm.text.trim());
+    final endKm = _endingKm.text.trim().isEmpty
+        ? null
+        : double.tryParse(_endingKm.text.trim());
+    if (_startingKm.text.trim().isNotEmpty &&
+        (startKm == null || startKm < 0)) {
+      _snack(AppLocalization.t('Enter a valid starting KM.'));
+      return;
+    }
+    if (_endingKm.text.trim().isNotEmpty && (endKm == null || endKm < 0)) {
+      _snack(AppLocalization.t('Enter a valid ending KM.'));
+      return;
+    }
+    if (startKm != null && endKm != null && endKm < startKm) {
+      _snack(AppLocalization.t('Ending KM cannot be less than Starting KM.'));
+      return;
+    }
     final cost = double.tryParse(_cost.text.trim()) ?? 0;
     if (_returned && cost < 0) {
       _snack(AppLocalization.t('Enter a valid retreading cost'));
@@ -127,7 +150,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
               : null,
           retreadingCost: _returned ? cost : 0,
           billNumber: _returned ? _bill.text.trim() : null,
-          guarantee: _returned ? _guarantee : null,
+          startingKm: startKm,
+          endingKm: endKm,
           remarks: _remarks.text.trim(),
           createdAt: old.createdAt,
           updatedAt: DateTime.now().toIso8601String(),
@@ -142,6 +166,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
         tyreSize: _size.text,
         retreadingCompany: _company.text,
         sentDate: DateFormat('yyyy-MM-dd').format(_sentDate),
+        startingKm: null,
+        endingKm: endKm,
         remarks: _remarks.text,
       );
     }
@@ -385,8 +411,74 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
                 ),
               ),
               const SizedBox(width: 20),
-              Expanded(child: _guaranteeField()),
+              const SizedBox.shrink(),
             ],
+          ),
+        ],
+        const SizedBox(height: 20),
+        if (widget.isEdit)
+          Row(
+            children: [
+              Expanded(
+                child: _textField(
+                  _startingKm,
+                  AppLocalization.t('Starting KM'),
+                  Icons.speed_outlined,
+                  keyboard: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  requiredField: false,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _textField(
+                  _endingKm,
+                  AppLocalization.t('Ending KM'),
+                  Icons.speed_outlined,
+                  keyboard: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  requiredField: false,
+                ),
+              ),
+            ],
+          ),
+        const SizedBox(height: 8),
+        AnimatedBuilder(
+          animation: Listenable.merge([_startingKm, _endingKm]),
+          builder: (_, _) {
+            final start = double.tryParse(_startingKm.text.trim());
+            final end = double.tryParse(_endingKm.text.trim());
+            if (start == null || end == null || end < start) {
+              return const SizedBox.shrink();
+            }
+            return Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '${AppLocalization.t('KM Run This Cycle')}: ${(end - start).toStringAsFixed(1)} KM',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF00652C),
+                ),
+              ),
+            );
+          },
+        ),
+        if (!widget.isEdit) ...[
+          _textField(
+            _endingKm,
+            AppLocalization.t('Ending KM'),
+            Icons.speed_outlined,
+            keyboard: const TextInputType.numberWithOptions(decimal: true),
+            requiredField: false,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            AppLocalization.t(
+              'Enter current odometer KM when sending this tyre for its next retreading.',
+            ),
+            style: const TextStyle(color: Color(0xFF68717D)),
           ),
         ],
         const SizedBox(height: 20),
@@ -422,9 +514,6 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
           )
           .toList(),
       onChanged: _saving ? null : (v) => setState(() => _vehicle = v),
-      validator: (v) => v == null
-          ? AppLocalization.t('Select lorry registration number')
-          : null,
     );
   }
 
@@ -451,22 +540,6 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
             : DateFormat('dd/MM/yyyy').format(_returnDate!),
       ),
     ),
-  );
-
-  Widget _guaranteeField() => DropdownButtonFormField<String>(
-    initialValue: _guarantee,
-    decoration: _dec(AppLocalization.t('Guarantee'), Icons.verified_outlined),
-    items: [
-      DropdownMenuItem(
-        value: 'Guarantee',
-        child: Text(AppLocalization.t('Guarantee')),
-      ),
-      DropdownMenuItem(
-        value: 'No Guarantee',
-        child: Text(AppLocalization.t('No Guarantee')),
-      ),
-    ],
-    onChanged: _saving ? null : (v) => setState(() => _guarantee = v),
   );
 
   Widget _textField(

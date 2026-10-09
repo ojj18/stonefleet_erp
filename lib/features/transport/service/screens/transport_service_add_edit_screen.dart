@@ -35,6 +35,11 @@ class _TransportServiceAddEditScreenState
 
   final _dateController = TextEditingController();
   final _kmController = TextEditingController();
+  final _airBlowerOilQuantityController = TextEditingController(text: '0');
+  final _airBlowerOilRateController = TextEditingController(text: '0');
+  final _oilCanCountController = TextEditingController(text: '1');
+  final _oilLitresPerCanController = TextEditingController(text: '5');
+  String _oilEntryMode = 'litre';
   final _remarksController = TextEditingController();
 
   int? _selectedVehicleId;
@@ -73,6 +78,10 @@ class _TransportServiceAddEditScreenState
   void dispose() {
     _dateController.dispose();
     _kmController.dispose();
+    _airBlowerOilQuantityController.dispose();
+    _airBlowerOilRateController.dispose();
+    _oilCanCountController.dispose();
+    _oilLitresPerCanController.dispose();
     _remarksController.dispose();
 
     for (final item in _items) {
@@ -155,6 +164,9 @@ class _TransportServiceAddEditScreenState
     _dateController.text = _formatDate(_serviceDate);
 
     _kmController.text = service.currentKm.toString();
+    _airBlowerOilQuantityController.text = service.airBlowerOilQuantity.toString();
+    _airBlowerOilRateController.text = service.airBlowerOilRate.toString();
+    _oilEntryMode = 'litre';
 
     _remarksController.text = service.remarks ?? '';
 
@@ -219,6 +231,10 @@ class _TransportServiceAddEditScreenState
                         const SizedBox(height: 24),
 
                         _buildServiceDetails(),
+
+                        const SizedBox(height: 20),
+
+                        _buildAirBlowerOilSection(),
 
                         const SizedBox(height: 20),
 
@@ -503,138 +519,77 @@ class _TransportServiceAddEditScreenState
     );
   }
 
-  Future<void> _addNewSpare() async {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController();
-    final codeController = TextEditingController();
-    final categoryController = TextEditingController();
+  // ============================================================
+  // AIR BLOWER OIL
+  // ============================================================
 
-    final values = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocalization.t('Add New Spare')),
-        content: Form(
-          key: formKey,
-          child: SizedBox(
-            width: 420,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: nameController,
-                    autofocus: true,
-                    decoration: InputDecoration(
-                      labelText: AppLocalization.t('Spare Name'),
-                      border: const OutlineInputBorder(),
-                    ),
-                    validator: (value) => value == null || value.trim().isEmpty
-                        ? AppLocalization.t('Enter spare name')
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: codeController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalization.t('Spare Code (Optional)'),
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: categoryController,
-                    decoration: InputDecoration(
-                      labelText: AppLocalization.t('Category (Optional)'),
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-              ),
+  Widget _buildAirBlowerOilSection() {
+    final quantity = _oilEntryMode == 'can'
+        ? (double.tryParse(_oilCanCountController.text) ?? 0) *
+            (double.tryParse(_oilLitresPerCanController.text) ?? 0)
+        : (double.tryParse(_airBlowerOilQuantityController.text) ?? 0);
+    final rate = double.tryParse(_airBlowerOilRateController.text) ?? 0;
+
+    Widget numberField({required String label, required TextEditingController controller}) {
+      return TextFormField(
+        controller: controller,
+        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+        decoration: _inputDecoration(label: AppLocalization.t(label)),
+        onChanged: (_) => setState(() {}),
+        validator: (value) {
+          final n = double.tryParse((value ?? '').trim());
+          return n == null || n < 0 ? AppLocalization.t('Invalid') : null;
+        },
+      );
+    }
+
+    return _sectionCard(
+      title: AppLocalization.t('Air Blower Oil'),
+      icon: Icons.opacity_outlined,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SegmentedButton<String>(
+            segments: [
+              ButtonSegment(value: 'can', label: Text(AppLocalization.t('Can-wise'))),
+              ButtonSegment(value: 'litre', label: Text(AppLocalization.t('Litre-wise'))),
+            ],
+            selected: {_oilEntryMode},
+            onSelectionChanged: (values) => setState(() {
+              _oilEntryMode = values.first;
+              if (_oilEntryMode == 'litre') {
+                _airBlowerOilQuantityController.text = quantity.toStringAsFixed(2).replaceFirst(RegExp(r'\.00$'), '');
+              }
+            }),
+          ),
+          const SizedBox(height: 16),
+          if (_oilEntryMode == 'can') ...[
+            LayoutBuilder(builder: (context, constraints) {
+              final fields = [
+                Expanded(child: numberField(label: 'Number of Cans', controller: _oilCanCountController)),
+                Expanded(child: numberField(label: 'Litres per Can', controller: _oilLitresPerCanController)),
+              ];
+              return constraints.maxWidth >= 600
+                  ? Row(children: [fields[0], const SizedBox(width: 16), fields[1]])
+                  : Column(children: [numberField(label: 'Number of Cans', controller: _oilCanCountController), const SizedBox(height: 12), numberField(label: 'Litres per Can', controller: _oilLitresPerCanController)]);
+            }),
+          ] else
+            numberField(label: 'Air Blower Oil Quantity (L)', controller: _airBlowerOilQuantityController),
+          const SizedBox(height: 16),
+          numberField(label: 'Oil Cost per Litre', controller: _airBlowerOilRateController),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
+            child: Text(
+              '${AppLocalization.t('Total Oil Quantity')}: ${quantity.toStringAsFixed(2)} L    •    ${AppLocalization.t('Oil Total Cost')}: ₹${(quantity * rate).toStringAsFixed(2)}',
+              style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF00652C)),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(AppLocalization.t('Cancel')),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.of(dialogContext).pop({
-                'name': nameController.text.trim(),
-                'code': codeController.text.trim(),
-                'category': categoryController.text.trim(),
-              });
-            },
-            child: Text(AppLocalization.t('Save')),
           ),
         ],
       ),
     );
-
-    nameController.dispose();
-    codeController.dispose();
-    categoryController.dispose();
-
-    if (values == null || !mounted) return;
-
-    try {
-      final db = await DatabaseHelper.instance.database;
-      final name = values['name']!.trim();
-      final existing = await db.query(
-        TableConstants.spares,
-        where: 'LOWER(TRIM(name)) = LOWER(?)',
-        whereArgs: [name],
-        limit: 1,
-      );
-
-      int spareId;
-      final wasExisting = existing.isNotEmpty;
-      if (wasExisting) {
-        spareId = (existing.first['id'] as num).toInt();
-        await db.update(
-          TableConstants.spares,
-          {
-            'is_active': 1,
-            'updated_at': DateTime.now().toIso8601String(),
-          },
-          where: 'id = ?',
-          whereArgs: [spareId],
-        );
-      } else {
-        spareId = await db.insert(TableConstants.spares, {
-          'name': name,
-          'code': values['code']!.isEmpty ? null : values['code'],
-          'category': values['category']!.isEmpty ? null : values['category'],
-          'is_active': 1,
-          'created_at': DateTime.now().toIso8601String(),
-          'updated_at': DateTime.now().toIso8601String(),
-        });
-      }
-
-      await _loadSpares();
-      if (!mounted) return;
-      setState(() {
-        final target = _items.indexWhere((item) => item.spareId == null);
-        if (target >= 0) {
-          _items[target].spareId = spareId;
-        }
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(AppLocalization.t(
-            wasExisting ? 'Spare already exists; existing spare selected.' : 'Spare added successfully.',
-          )),
-          backgroundColor: wasExisting
-              ? const Color(0xFF8A6D1D)
-              : const Color(0xFF00652C),
-        ),
-      );
-    } catch (e) {
-      _showError(e.toString().replaceFirst('Exception: ', ''));
-    }
   }
 
   // ============================================================
@@ -647,36 +602,33 @@ class _TransportServiceAddEditScreenState
       icon: Icons.inventory_2_outlined,
       child: Column(
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
             children: [
-              Text(
-                AppLocalization.t('Spare parts used during this service'),
-                style: const TextStyle(fontSize: 13, color: Color(0xFF68717D)),
-              ),
-              const SizedBox(height: 10),
-              Align(
-                alignment: Alignment.centerRight,
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  alignment: WrapAlignment.end,
-                  children: [
-                    OutlinedButton.icon(
-                      onPressed: _saving ? null : _addNewSpare,
-                      icon: const Icon(Icons.add_circle_outline, size: 18),
-                      label: Text(AppLocalization.t('Add New Spare')),
-                    ),
-                    OutlinedButton.icon(
-                      onPressed: _saving ? null : _addItem,
-                      icon: const Icon(Icons.add, size: 18),
-                      label: Text(AppLocalization.t('Add Spare')),
-                    ),
-                  ],
+              Expanded(
+                child: Text(
+                  AppLocalization.t('Spare parts used during this service'),
+                  style: TextStyle(fontSize: 13, color: Color(0xFF68717D)),
                 ),
+              ),
+
+              Wrap(
+                spacing: 8,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: _saving ? null : _addNewSpare,
+                    icon: const Icon(Icons.add_circle_outline, size: 18),
+                    label: Text(AppLocalization.t('Add New Spare')),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: _saving ? null : _addItem,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(AppLocalization.t('Add Spare')),
+                  ),
+                ],
               ),
             ],
           ),
+
           const SizedBox(height: 18),
 
           if (_items.isEmpty)
@@ -1031,7 +983,7 @@ class _TransportServiceAddEditScreenState
           ),
 
           Text(
-            _currency(_grandTotal),
+            _currency(_grandTotal + _airBlowerOilTotal),
             style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -1108,6 +1060,62 @@ class _TransportServiceAddEditScreenState
     );
   }
 
+  Future<void> _addNewSpare() async {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final codeController = TextEditingController();
+    final categoryController = TextEditingController();
+    final values = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppLocalization.t('Add New Spare')),
+        content: Form(
+          key: formKey,
+          child: SizedBox(
+            width: 420,
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              TextFormField(controller: nameController, autofocus: true,
+                decoration: InputDecoration(labelText: AppLocalization.t('Spare Name'), border: const OutlineInputBorder()),
+                validator: (value) => value == null || value.trim().isEmpty ? AppLocalization.t('Enter spare name') : null),
+              const SizedBox(height: 12),
+              TextFormField(controller: codeController, decoration: InputDecoration(labelText: AppLocalization.t('Spare Code (Optional)'), border: const OutlineInputBorder())),
+              const SizedBox(height: 12),
+              TextFormField(controller: categoryController, decoration: InputDecoration(labelText: AppLocalization.t('Category (Optional)'), border: const OutlineInputBorder())),
+            ]),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(AppLocalization.t('Cancel'))),
+          FilledButton(onPressed: () { if (!formKey.currentState!.validate()) return; Navigator.pop(dialogContext, {'name': nameController.text.trim(), 'code': codeController.text.trim(), 'category': categoryController.text.trim()}); }, child: Text(AppLocalization.t('Save'))),
+        ],
+      ),
+    );
+    nameController.dispose(); codeController.dispose(); categoryController.dispose();
+    if (values == null || !mounted) return;
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final name = values['name']!;
+      final existing = await db.query(TableConstants.spares, where: 'LOWER(TRIM(name)) = LOWER(?)', whereArgs: [name], limit: 1);
+      late final int spareId;
+      final wasExisting = existing.isNotEmpty;
+      if (wasExisting) {
+        spareId = (existing.first['id'] as num).toInt();
+        await db.update(TableConstants.spares, {'is_active': 1, 'updated_at': DateTime.now().toIso8601String()}, where: 'id = ?', whereArgs: [spareId]);
+      } else {
+        final now = DateTime.now().toIso8601String();
+        spareId = await db.insert(TableConstants.spares, {'name': name, 'code': values['code']!.isEmpty ? null : values['code'], 'category': values['category']!.isEmpty ? null : values['category'], 'is_active': 1, 'created_at': now, 'updated_at': now});
+      }
+      await _loadSpares();
+      if (!mounted) return;
+      setState(() {
+        final emptyIndex = _items.indexWhere((item) => item.spareId == null);
+        if (emptyIndex >= 0) { _items[emptyIndex].spareId = spareId; }
+        else { final draft = _ServiceItemDraft(spareId: spareId); _items.add(draft); }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalization.t(wasExisting ? 'Spare already exists; existing spare selected.' : 'Spare added successfully.'))));
+    } catch (e) { _showError(e.toString().replaceFirst('Exception: ', '')); }
+  }
+
   // ============================================================
   // ADD ITEM
   // ============================================================
@@ -1169,9 +1177,16 @@ class _TransportServiceAddEditScreenState
       return;
     }
 
+    final selectedSpareIds = <int>{};
+
     for (final item in _items) {
       if (item.spareId == null) {
         _showError('Please select a spare part.');
+        return;
+      }
+
+      if (!selectedSpareIds.add(item.spareId!)) {
+        _showError('The same spare part cannot be added twice.');
         return;
       }
     }
@@ -1190,6 +1205,10 @@ class _TransportServiceAddEditScreenState
         transportVehicleId: _selectedVehicleId!,
         serviceDate: _databaseDate(_serviceDate),
         currentKm: double.parse(_kmController.text.trim()),
+        airBlowerOilQuantity: _oilEntryMode == 'can'
+            ? (double.tryParse(_oilCanCountController.text.trim()) ?? 0) * (double.tryParse(_oilLitresPerCanController.text.trim()) ?? 0)
+            : double.parse(_airBlowerOilQuantityController.text.trim()),
+        airBlowerOilRate: double.parse(_airBlowerOilRateController.text.trim()),
         remarks: _remarksController.text.trim().isEmpty
             ? null
             : _remarksController.text.trim(),
@@ -1366,6 +1385,12 @@ class _TransportServiceAddEditScreenState
   // ============================================================
   // HELPERS
   // ============================================================
+
+  double get _airBlowerOilTotal =>
+      (_oilEntryMode == 'can'
+          ? (double.tryParse(_oilCanCountController.text) ?? 0) * (double.tryParse(_oilLitresPerCanController.text) ?? 0)
+          : (double.tryParse(_airBlowerOilQuantityController.text) ?? 0)) *
+      (double.tryParse(_airBlowerOilRateController.text) ?? 0);
 
   double get _grandTotal {
     var total = 0.0;

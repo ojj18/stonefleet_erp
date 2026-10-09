@@ -40,6 +40,8 @@ class RetreadingProvider extends ChangeNotifier {
     required String tyreSize,
     required String retreadingCompany,
     required String sentDate,
+    double? startingKm,
+    double? endingKm,
     String? remarks,
   }) async {
     try {
@@ -50,6 +52,9 @@ class RetreadingProvider extends ChangeNotifier {
         notifyListeners();
         return false;
       }
+      if (endingKm != null) {
+        await _repository.closePreviousCycle(serial: tyreSerialNumber, endingKm: endingKm);
+      }
       await _repository.insert(RetreadingRecord(
         transportVehicleId: transportVehicleId,
         registrationNumber: registrationNumber.trim(),
@@ -59,6 +64,10 @@ class RetreadingProvider extends ChangeNotifier {
         retreadingCompany: retreadingCompany.trim(),
         sentDate: sentDate,
         status: 'AT_RETREADING',
+        // Starting KM is captured when this retreading cycle returns and the tyre is fitted.
+        // Ending KM is applied to the previous completed cycle above.
+        startingKm: null,
+        endingKm: null,
         remarks: remarks,
         createdAt: DateTime.now().toIso8601String(),
       ));
@@ -87,8 +96,8 @@ class RetreadingProvider extends ChangeNotifier {
     required String returnDate,
     required double cost,
     String? billNumber,
-    String? guarantee,
     String? remarks,
+    double? startingKm,
   }) async {
     try {
       error = null;
@@ -97,8 +106,8 @@ class RetreadingProvider extends ChangeNotifier {
         returnDate: returnDate,
         cost: cost,
         billNumber: billNumber,
-        guarantee: guarantee,
         remarks: remarks,
+        startingKm: startingKm,
       );
       return true;
     } catch (e) {

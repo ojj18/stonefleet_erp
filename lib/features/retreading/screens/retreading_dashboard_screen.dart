@@ -49,9 +49,9 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
   Future<void> _returnRecord(RetreadingRecord r) async {
     final date = DateTime.now();
     final cost = TextEditingController();
+    final startingKm = TextEditingController();
     final bill = TextEditingController();
     final remarks = TextEditingController(text: r.remarks ?? '');
-    String? guarantee;
     DateTime returnDate = date;
     final result = await showDialog<bool>(
       context: context,
@@ -94,6 +94,17 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                   ),
                   const SizedBox(height: 12),
                   TextField(
+                    controller: startingKm,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Starting KM'),
+                      prefixIcon: const Icon(Icons.speed_outlined),
+                      border: const OutlineInputBorder(),
+                      helperText: AppLocalization.t('Odometer reading when tyre is fitted to the vehicle.'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
                     controller: cost,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
@@ -110,26 +121,6 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                       prefixIcon: const Icon(Icons.receipt_long_outlined),
                       border: const OutlineInputBorder(),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<String>(
-                    initialValue: guarantee,
-                    decoration: InputDecoration(
-                      labelText: AppLocalization.t('Guarantee'),
-                      prefixIcon: const Icon(Icons.verified_outlined),
-                      border: const OutlineInputBorder(),
-                    ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'Guarantee',
-                        child: Text(AppLocalization.t('Guarantee')),
-                      ),
-                      DropdownMenuItem(
-                        value: 'No Guarantee',
-                        child: Text(AppLocalization.t('No Guarantee')),
-                      ),
-                    ],
-                    onChanged: (v) => setDialog(() => guarantee = v),
                   ),
                   const SizedBox(height: 12),
                   TextField(
@@ -153,6 +144,7 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
             FilledButton(
               onPressed: () {
                 if ((double.tryParse(cost.text.trim()) ?? -1) < 0) return;
+                if (startingKm.text.trim().isNotEmpty && (double.tryParse(startingKm.text.trim()) == null || double.parse(startingKm.text.trim()) < 0)) return;
                 Navigator.pop(context, true);
               },
               style: FilledButton.styleFrom(
@@ -171,8 +163,8 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
       returnDate: DateFormat('yyyy-MM-dd').format(returnDate),
       cost: double.tryParse(cost.text.trim()) ?? 0,
       billNumber: bill.text,
-      guarantee: guarantee,
       remarks: remarks.text,
+      startingKm: startingKm.text.trim().isEmpty ? null : double.tryParse(startingKm.text.trim()),
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -247,8 +239,14 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                   ),
                 if ((r.billNumber ?? '').isNotEmpty)
                   _dialogInfo(AppLocalization.t('Bill Number'), r.billNumber!),
-                if ((r.guarantee ?? '').isNotEmpty)
-                  _dialogInfo(AppLocalization.t('Guarantee'), r.guarantee!),
+                if (r.startingKm != null)
+                  _dialogInfo(AppLocalization.t('Starting KM'), r.startingKm!.toStringAsFixed(1)),
+                if (r.endingKm != null)
+                  _dialogInfo(AppLocalization.t('Ending KM'), r.endingKm!.toStringAsFixed(1)),
+                if (r.startingKm != null && r.endingKm != null && r.endingKm! >= r.startingKm!) ...[
+                  _dialogInfo(AppLocalization.t('KM Run This Cycle'), '${(r.endingKm! - r.startingKm!).toStringAsFixed(1)} KM'),
+                  _dialogInfo(AppLocalization.t('Cost per KM'), '₹${(r.retreadingCost / (r.endingKm! - r.startingKm! == 0 ? 1 : r.endingKm! - r.startingKm!)).toStringAsFixed(2)}/KM'),
+                ],
                 if ((r.remarks ?? '').isNotEmpty)
                   _dialogInfo(AppLocalization.t('Remarks'), r.remarks!),
               ],

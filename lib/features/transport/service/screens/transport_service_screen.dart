@@ -769,8 +769,11 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
           _sd(AppLocalization.t('Service Date'), _formatDate(service.serviceDate)),
           _sd(AppLocalization.t('Vehicle'), vehicle?.registrationNumber),
           _sd(AppLocalization.t('Current KM'), _formatNumber(service.currentKm)),
+          _sd(AppLocalization.t('Air Blower Oil Quantity (L)'), _formatNumber(service.airBlowerOilQuantity)),
+          _sd(AppLocalization.t('Oil Cost per Litre'), _formatCurrency(service.airBlowerOilRate)),
+          _sd(AppLocalization.t('Air Blower Oil Total Cost'), _formatCurrency(service.airBlowerOilQuantity * service.airBlowerOilRate)),
           _sd(AppLocalization.t('Service Items'), summary.count.toString()),
-          _sd(AppLocalization.t('Total Service Cost'), _formatCurrency(summary.total)),
+          _sd(AppLocalization.t('Total Service Cost'), _formatCurrency(summary.total + service.airBlowerOilQuantity * service.airBlowerOilRate)),
           _sd(AppLocalization.t('Service Remarks'), service.remarks),
         ],
       ),
@@ -895,6 +898,8 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
       total += item.quantity * item.cost;
     }
 
+    final service = await repository.getById(serviceId);
+    total += (service?.airBlowerOilQuantity ?? 0) * (service?.airBlowerOilRate ?? 0);
     return _ItemSummary(count: items.length, total: total);
   }
 

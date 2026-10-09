@@ -109,7 +109,9 @@ class _RetreadingReportsScreenState extends State<RetreadingReportsScreen> {
         'Status',
         'Retreading Cost',
         'Bill Number',
-        'Guarantee',
+        'Starting KM',
+        'Ending KM',
+        'KM Run This Cycle',
         'Remarks',
       ]),
     );
@@ -126,7 +128,9 @@ class _RetreadingReportsScreenState extends State<RetreadingReportsScreen> {
           r.status == 'RETURNED' ? 'Returned' : 'At Retreading',
           r.retreadingCost,
           r.billNumber ?? '',
-          r.guarantee ?? '',
+          r.startingKm ?? '',
+          r.endingKm ?? '',
+          (r.startingKm != null && r.endingKm != null && r.endingKm! >= r.startingKm!) ? r.endingKm! - r.startingKm! : '',
           r.remarks ?? '',
         ]),
       );

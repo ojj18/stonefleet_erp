@@ -16,15 +16,48 @@ class DieselRepository {
 
   Future<DieselDashboardSummary> getSummary({DateTime? fromDate, DateTime? toDate}) async {
     final db = await _databaseHelper.database;
-    final currentStock = await getCurrentStock();
     final fill = _dateConditions('filling_date', fromDate, toDate);
     final receipt = _dateConditions('receipt_date', fromDate, toDate);
-    final fillingRow = (await db.rawQuery('SELECT COALESCE(SUM(quantity_litres),0) AS used, COALESCE(SUM(total_cost),0) AS cost FROM diesel_fillings ${fill.whereSql}', fill.args))[0];
-    final receiptRow = (await db.rawQuery('SELECT COALESCE(SUM(quantity_litres),0) AS received FROM diesel_receipts ${receipt.whereSql}', receipt.args))[0];
+    final fillingRow = (await db.rawQuery(
+      'SELECT COALESCE(SUM(quantity_litres),0) AS used, COALESCE(SUM(total_cost),0) AS cost FROM diesel_fillings ${fill.whereSql}',
+      fill.args,
+    )).first;
+    final receiptRow = (await db.rawQuery(
+      'SELECT COALESCE(SUM(quantity_litres),0) AS received FROM diesel_receipts ${receipt.whereSql}',
+      receipt.args,
+    )).first;
+
     final used = (fillingRow['used'] as num?)?.toDouble() ?? 0;
     final cost = (fillingRow['cost'] as num?)?.toDouble() ?? 0;
     final received = (receiptRow['received'] as num?)?.toDouble() ?? 0;
-    return DieselDashboardSummary(currentStock: currentStock, received: received, used: used, totalCost: cost, openingStock: currentStock - received + used);
+
+    // Opening stock is the closing balance immediately before the selected
+    // period starts. It is calculated from saved transactions, so it rolls
+    // forward automatically each day and remains correct after app restarts.
+    double openingStock = 0;
+    if (fromDate != null) {
+      final startDate = _dateOnly(fromDate);
+      final beforeReceipt = (await db.rawQuery(
+        'SELECT COALESCE(SUM(quantity_litres),0) AS qty FROM diesel_receipts WHERE date(receipt_date) < date(?)',
+        [startDate],
+      )).first['qty'] as num?;
+      final beforeFilling = (await db.rawQuery(
+        'SELECT COALESCE(SUM(quantity_litres),0) AS qty FROM diesel_fillings WHERE date(filling_date) < date(?)',
+        [startDate],
+      )).first['qty'] as num?;
+      openingStock = (beforeReceipt?.toDouble() ?? 0) - (beforeFilling?.toDouble() ?? 0);
+    }
+
+    // Current Stock reflects the closing balance at the end of the selected
+    // period (or the latest recorded balance when no end date is selected).
+    final closingStock = openingStock + received - used;
+    return DieselDashboardSummary(
+      currentStock: closingStock,
+      received: received,
+      used: used,
+      totalCost: cost,
+      openingStock: openingStock,
+    );
   }
 
   Future<List<DieselVehicleOption>> getVehicles() async {
