@@ -236,9 +236,7 @@ class DatabaseMigrations {
         FOREIGN KEY (spare_id)
           REFERENCES spares(id)
           ON DELETE RESTRICT
-          ON UPDATE CASCADE,
-
-        UNIQUE(service_id, spare_id)
+          ON UPDATE CASCADE
       )
     ''');
 
@@ -358,9 +356,7 @@ class DatabaseMigrations {
         FOREIGN KEY (spare_id)
           REFERENCES spares(id)
           ON DELETE RESTRICT
-          ON UPDATE CASCADE,
-
-        UNIQUE(service_id, spare_id)
+          ON UPDATE CASCADE
       )
     ''');
 
@@ -1535,6 +1531,67 @@ class DatabaseMigrations {
       log('Database migrated to version 11: tyre retreading management created.');
     }
 
+    // ============================================================
+    // VERSION 12
+    // ALLOW THE SAME SPARE TO BE RECORDED MORE THAN ONCE PER SERVICE
+    // ============================================================
+    if (oldVersion < 12) {
+      await db.execute('''
+        CREATE TABLE excavator_service_items_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          service_id INTEGER NOT NULL,
+          spare_id INTEGER NOT NULL,
+          quantity REAL NOT NULL DEFAULT 1,
+          cost REAL NOT NULL DEFAULT 0,
+          remark TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT,
+          FOREIGN KEY (service_id) REFERENCES excavator_service(id)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+          FOREIGN KEY (spare_id) REFERENCES spares(id)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      ''');
+      await db.execute('''
+        INSERT INTO excavator_service_items_new
+          (id, service_id, spare_id, quantity, cost, remark, created_at, updated_at)
+        SELECT id, service_id, spare_id, quantity, cost, remark, created_at, updated_at
+        FROM excavator_service_items
+      ''');
+      await db.execute('DROP TABLE excavator_service_items');
+      await db.execute(
+        'ALTER TABLE excavator_service_items_new RENAME TO excavator_service_items',
+      );
+
+      await db.execute('''
+        CREATE TABLE transport_service_items_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          service_id INTEGER NOT NULL,
+          spare_id INTEGER NOT NULL,
+          quantity REAL NOT NULL DEFAULT 1,
+          cost REAL NOT NULL DEFAULT 0,
+          remark TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT,
+          FOREIGN KEY (service_id) REFERENCES transport_service(id)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+          FOREIGN KEY (spare_id) REFERENCES spares(id)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+        )
+      ''');
+      await db.execute('''
+        INSERT INTO transport_service_items_new
+          (id, service_id, spare_id, quantity, cost, remark, created_at, updated_at)
+        SELECT id, service_id, spare_id, quantity, cost, remark, created_at, updated_at
+        FROM transport_service_items
+      ''');
+      await db.execute('DROP TABLE transport_service_items');
+      await db.execute(
+        'ALTER TABLE transport_service_items_new RENAME TO transport_service_items',
+      );
+
+      log('Database migrated to version 12: repeated spare items are supported.');
+    }
 
   }
 }

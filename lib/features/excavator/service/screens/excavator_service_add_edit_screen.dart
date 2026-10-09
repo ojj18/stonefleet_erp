@@ -816,6 +816,140 @@ class _ExcavatorServiceAddEditScreenState
     );
   }
 
+  Future<void> _addNewSpare() async {
+    final formKey = GlobalKey<FormState>();
+    final nameController = TextEditingController();
+    final codeController = TextEditingController();
+    final categoryController = TextEditingController();
+
+    final values = await showDialog<Map<String, String>>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(AppLocalization.t('Add New Spare')),
+        content: Form(
+          key: formKey,
+          child: SizedBox(
+            width: 420,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextFormField(
+                    controller: nameController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Spare Name'),
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (value) => value == null || value.trim().isEmpty
+                        ? AppLocalization.t('Enter spare name')
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: codeController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Spare Code (Optional)'),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextFormField(
+                    controller: categoryController,
+                    decoration: InputDecoration(
+                      labelText: AppLocalization.t('Category (Optional)'),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () {
+              if (!formKey.currentState!.validate()) return;
+              Navigator.of(dialogContext).pop({
+                'name': nameController.text.trim(),
+                'code': codeController.text.trim(),
+                'category': categoryController.text.trim(),
+              });
+            },
+            child: Text(AppLocalization.t('Save')),
+          ),
+        ],
+      ),
+    );
+
+    nameController.dispose();
+    codeController.dispose();
+    categoryController.dispose();
+
+    if (values == null || !mounted) return;
+
+    try {
+      final db = await DatabaseHelper.instance.database;
+      final name = values['name']!.trim();
+      final existing = await db.query(
+        TableConstants.spares,
+        where: 'LOWER(TRIM(name)) = LOWER(?)',
+        whereArgs: [name],
+        limit: 1,
+      );
+
+      int spareId;
+      final wasExisting = existing.isNotEmpty;
+      if (wasExisting) {
+        spareId = (existing.first['id'] as num).toInt();
+        await db.update(
+          TableConstants.spares,
+          {
+            'is_active': 1,
+            'updated_at': DateTime.now().toIso8601String(),
+          },
+          where: 'id = ?',
+          whereArgs: [spareId],
+        );
+      } else {
+        spareId = await db.insert(TableConstants.spares, {
+          'name': name,
+          'code': values['code']!.isEmpty ? null : values['code'],
+          'category': values['category']!.isEmpty ? null : values['category'],
+          'is_active': 1,
+          'created_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
+
+      await _loadSpares();
+      if (!mounted) return;
+      setState(() {
+        final target = _items.indexWhere((item) => item.spareId == null);
+        if (target >= 0) {
+          _items[target].spareId = spareId;
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalization.t(
+            wasExisting ? 'Spare already exists; existing spare selected.' : 'Spare added successfully.',
+          )),
+          backgroundColor: wasExisting
+              ? const Color(0xFF8A6D1D)
+              : const Color(0xFF00652C),
+        ),
+      );
+    } catch (e) {
+      _showError(e.toString().replaceFirst('Exception: ', ''));
+    }
+  }
+
   // ============================================================
   // SERVICE ITEMS
   // ============================================================
@@ -826,21 +960,33 @@ class _ExcavatorServiceAddEditScreenState
       icon: Icons.inventory_2_outlined,
       child: Column(
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  AppLocalization.t('Spare parts used during this service'),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF68717D),
-                  ),
-                ),
+              Text(
+                AppLocalization.t('Spare parts used during this service'),
+                style: const TextStyle(fontSize: 13, color: Color(0xFF68717D)),
               ),
-              OutlinedButton.icon(
-                onPressed: _saving ? null : _addItem,
-                icon: const Icon(Icons.add, size: 18),
-                label: Text(AppLocalization.t('Add Spare')),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  alignment: WrapAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      onPressed: _saving ? null : _addNewSpare,
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: Text(AppLocalization.t('Add New Spare')),
+                    ),
+                    OutlinedButton.icon(
+                      onPressed: _saving ? null : _addItem,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: Text(AppLocalization.t('Add Spare')),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -1260,23 +1406,11 @@ class _ExcavatorServiceAddEditScreenState
       return;
     }
 
-    final duplicateSpareIds = <int>{};
-    final selectedSpareIds = <int>{};
-
     for (final item in _items) {
       if (item.spareId == null) {
         _showError('Please select a spare part.');
         return;
       }
-
-      if (!selectedSpareIds.add(item.spareId!)) {
-        duplicateSpareIds.add(item.spareId!);
-      }
-    }
-
-    if (duplicateSpareIds.isNotEmpty) {
-      _showError('The same spare part cannot be added twice.');
-      return;
     }
 
     setState(() {
