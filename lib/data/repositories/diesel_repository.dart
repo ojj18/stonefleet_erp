@@ -1,4 +1,5 @@
 import '../../core/database/database_helper.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/diesel_models.dart';
 
 class DieselRepository {
@@ -58,6 +59,33 @@ class DieselRepository {
       totalCost: cost,
       openingStock: openingStock,
     );
+  }
+
+
+  Future<void> _ensureExternalDriversTable() async {
+    final db = await _databaseHelper.database;
+    await db.execute('''CREATE TABLE IF NOT EXISTS diesel_external_drivers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      created_at TEXT NOT NULL
+    )''');
+    await db.insert('diesel_external_drivers', {'name': 'Madhavan', 'created_at': DateTime.now().toIso8601String()}, conflictAlgorithm: ConflictAlgorithm.ignore);
+    await db.insert('diesel_external_drivers', {'name': 'Murugan', 'created_at': DateTime.now().toIso8601String()}, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<List<String>> getExternalDrivers() async {
+    await _ensureExternalDriversTable();
+    final db = await _databaseHelper.database;
+    final rows = await db.query('diesel_external_drivers', columns: ['name'], orderBy: 'name COLLATE NOCASE');
+    return rows.map((r) => r['name'].toString()).toList();
+  }
+
+  Future<void> addExternalDriver(String name) async {
+    final clean = name.trim();
+    if (clean.isEmpty) throw ArgumentError('Enter a driver name');
+    await _ensureExternalDriversTable();
+    final db = await _databaseHelper.database;
+    await db.insert('diesel_external_drivers', {'name': clean, 'created_at': DateTime.now().toIso8601String()}, conflictAlgorithm: ConflictAlgorithm.ignore);
   }
 
   Future<List<DieselVehicleOption>> getVehicles() async {

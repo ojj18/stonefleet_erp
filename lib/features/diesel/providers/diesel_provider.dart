@@ -11,6 +11,7 @@ class DieselProvider extends ChangeNotifier {
 
   DieselDashboardSummary summary = const DieselDashboardSummary();
   List<DieselVehicleOption> vehicles = [];
+  List<String> externalDrivers = [];
   List<DieselFillingRow> fillings = [];
   List<DieselReceiptRow> receipts = [];
   List<DieselStockMovementRow> movements = [];
@@ -26,6 +27,19 @@ class DieselProvider extends ChangeNotifier {
       fillings = await _repository.getFillings(fromDate: fromDate, toDate: toDate);
       consumption = await _repository.getConsumption(fromDate: fromDate, toDate: toDate);
     });
+  }
+
+  Future<void> loadExternalDrivers() async {
+    try {
+      externalDrivers = await _repository.getExternalDrivers();
+      notifyListeners();
+    } catch (e) { error = e.toString(); notifyListeners(); }
+  }
+
+  Future<void> addExternalDriver(String name) async {
+    await _repository.addExternalDriver(name);
+    externalDrivers = await _repository.getExternalDrivers();
+    notifyListeners();
   }
 
   Future<void> loadVehicles() async {

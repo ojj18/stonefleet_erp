@@ -96,15 +96,11 @@ class ExcavatorServiceRepository {
     }
 
     final db = await _databaseHelper.database;
-
-    final data = service.toMap()..remove('id');
-
-    return db.update(
-      TableConstants.excavatorService,
-      data,
-      where: 'id = ?',
-      whereArgs: [service.id],
-    );
+    return db.transaction<int>((txn) async {
+      final data = service.toMap()..remove('id');
+      final changed = await txn.update(TableConstants.excavatorService, data, where: 'id = ?', whereArgs: [service.id]);
+      return changed;
+    });
   }
 
   Future<int> deleteService(int serviceId) async {

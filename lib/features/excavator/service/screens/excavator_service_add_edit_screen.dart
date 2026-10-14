@@ -550,6 +550,7 @@ class _ExcavatorServiceAddEditScreenState
                         const SizedBox(height: 24),
                         _buildServiceDetails(),
                         const SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         _buildServiceItems(),
                         const SizedBox(height: 20),
                         _buildRemarks(),
@@ -949,6 +950,7 @@ class _ExcavatorServiceAddEditScreenState
       _showError(e.toString().replaceFirst('Exception: ', ''));
     }
   }
+
 
   // ============================================================
   // SERVICE ITEMS
@@ -1427,6 +1429,8 @@ class _ExcavatorServiceAddEditScreenState
         excavatorId: _selectedExcavatorId!,
         serviceDate: _databaseDate(_serviceDate),
         currentHourMeter: double.parse(_hourMeterController.text.trim()),
+        airBlowerOilQuantity: 0,
+        airBlowerOilRate: 0,
         remarks: _remarksController.text.trim().isEmpty
             ? null
             : _remarksController.text.trim(),

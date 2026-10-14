@@ -212,12 +212,10 @@ class TransportServiceRepository {
 
   Future<int> delete(int id) async {
     final db = await _databaseHelper.database;
-
-    return await db.delete(
-      'transport_service',
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return db.transaction((txn) async {
+      await txn.delete('transport_service_items', where: 'service_id = ?', whereArgs: [id]);
+      return txn.delete('transport_service', where: 'id = ?', whereArgs: [id]);
+    });
   }
 
   // ============================================================

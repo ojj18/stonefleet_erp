@@ -296,6 +296,7 @@ class _FillingDialogState extends State<_FillingDialog> {
   late DateTime date;
   late String type;
   int? vehicleId;
+  String? externalDriver;
   late TextEditingController qty, rate, meter, operator, shift, remarks;
   @override
   void initState() {
@@ -305,7 +306,18 @@ class _FillingDialogState extends State<_FillingDialog> {
         ? DateTime.now()
         : DateTime.tryParse(e.fillingDate) ?? DateTime.now();
     type = e?.vehicleType ?? 'Excavator';
+    if (type == 'External Lorry') {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await widget.provider.loadExternalDrivers();
+        if (mounted) setState(() {});
+      });
+    }
     vehicleId = e?.vehicleId;
+    externalDriver = e?.vehicleType == 'External Lorry'
+        ? (e!.vehicleRegistration.startsWith('External Lorry - ')
+              ? e.vehicleRegistration.substring('External Lorry - '.length)
+              : e.vehicleRegistration)
+        : null;
     qty = TextEditingController(
       text: e == null ? '' : e.quantityLitres.toString(),
     );
@@ -333,19 +345,30 @@ class _FillingDialogState extends State<_FillingDialog> {
         break;
       }
     }
-    if (v == null) {
+    if (type == 'External Lorry') {
+      if (externalDriver == null || externalDriver!.trim().isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalization.t('Select driver'))),
+        );
+        return;
+      }
+    } else if (v == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalization.t('Select vehicle'))),
       );
       return;
     }
+    final savedVehicleId = type == 'External Lorry' ? 0 : v!.id;
+    final savedRegistration = type == 'External Lorry'
+        ? 'External Lorry - ${externalDriver!.trim()}'
+        : v!.registrationNumber;
     try {
       if (widget.existing == null) {
         await widget.provider.addFilling(
           fillingDate: dieselDate(date),
           vehicleType: type,
-          vehicleId: v.id,
-          vehicleRegistration: v.registrationNumber,
+          vehicleId: savedVehicleId,
+          vehicleRegistration: savedRegistration,
           quantityLitres: double.parse(qty.text),
           rate: double.parse(rate.text),
           meterReading: double.tryParse(meter.text),
@@ -358,8 +381,8 @@ class _FillingDialogState extends State<_FillingDialog> {
           id: widget.existing!.id,
           fillingDate: dieselDate(date),
           vehicleType: type,
-          vehicleId: v.id,
-          vehicleRegistration: v.registrationNumber,
+          vehicleId: savedVehicleId,
+          vehicleRegistration: savedRegistration,
           quantityLitres: double.parse(qty.text),
           rate: double.parse(rate.text),
           meterReading: double.tryParse(meter.text),
@@ -425,39 +448,149 @@ class _FillingDialogState extends State<_FillingDialog> {
                     decoration: InputDecoration(
                       labelText: AppLocalization.t('Vehicle Type'),
                     ),
-                    items: const ['Excavator', 'Transport']
+                    items: const ['Excavator', 'Transport', 'External Lorry']
                         .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                         .toList(),
                     onChanged: (v) {
                       setState(() {
                         type = v!;
                         vehicleId = null;
+                        if (type == 'External Lorry') {
+                          externalDriver = null;
+                          widget.provider.loadExternalDrivers().then((_) {
+                            if (mounted) setState(() {});
+                          });
+                        }
                       });
                     },
                   ),
                 ),
-                SizedBox(
-                  width: 292,
-                  child: DropdownButtonFormField<int>(
-                    initialValue: options.any((x) => x.id == vehicleId)
-                        ? vehicleId
-                        : null,
-                    decoration: InputDecoration(
-                      labelText: AppLocalization.t('Vehicle'),
-                    ),
-                    items: options
-                        .map(
-                          (v) => DropdownMenuItem(
-                            value: v.id,
-                            child: Text(v.registrationNumber),
+                if (type == 'External Lorry')
+                  SizedBox(
+                    width: 292,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            initialValue:
+                                widget.provider.externalDrivers.contains(
+                                  externalDriver,
+                                )
+                                ? externalDriver
+                                : null,
+                            decoration: InputDecoration(
+                              labelText: AppLocalization.t(
+                                'External Driver Name',
+                              ),
+                            ),
+                            items: [
+                              ...widget.provider.externalDrivers.map(
+                                (name) => DropdownMenuItem(
+                                  value: name,
+                                  child: Text(name),
+                                ),
+                              ),
+                              DropdownMenuItem(
+                                value: '__add_driver__',
+                                child: Text(
+                                  AppLocalization.t('+ Add New Driver'),
+                                ),
+                              ),
+                            ],
+                            onChanged: (v) async {
+                              if (v == '__add_driver__') {
+                                final controller = TextEditingController();
+                                final name = await showDialog<String>(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: Text(
+                                      AppLocalization.t('Add New Driver'),
+                                    ),
+                                    content: TextField(
+                                      controller: controller,
+                                      autofocus: true,
+                                      decoration: InputDecoration(
+                                        labelText: AppLocalization.t(
+                                          'Driver Name',
+                                        ),
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: Text(
+                                          AppLocalization.t('Cancel'),
+                                        ),
+                                      ),
+                                      FilledButton(
+                                        onPressed: () => Navigator.pop(
+                                          ctx,
+                                          controller.text.trim(),
+                                        ),
+                                        child: Text(AppLocalization.t('Save')),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                controller.dispose();
+                                if (name != null && name.trim().isNotEmpty) {
+                                  try {
+                                    await widget.provider.addExternalDriver(
+                                      name,
+                                    );
+                                    if (mounted) {
+                                      setState(
+                                        () => externalDriver = name.trim(),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    }
+                                  }
+                                }
+                              } else {
+                                setState(() => externalDriver = v);
+                              }
+                            },
+                            validator: (v) =>
+                                type == 'External Lorry' &&
+                                    (v == null || v == '__add_driver__')
+                                ? AppLocalization.t('Select driver')
+                                : null,
                           ),
-                        )
-                        .toList(),
-                    onChanged: (v) => setState(() => vehicleId = v),
-                    validator: (v) =>
-                        v == null ? AppLocalization.t('Select vehicle') : null,
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  SizedBox(
+                    width: 292,
+                    child: DropdownButtonFormField<int>(
+                      initialValue: options.any((x) => x.id == vehicleId)
+                          ? vehicleId
+                          : null,
+                      decoration: InputDecoration(
+                        labelText: AppLocalization.t('Vehicle'),
+                      ),
+                      items: options
+                          .map(
+                            (v) => DropdownMenuItem(
+                              value: v.id,
+                              child: Text(v.registrationNumber),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setState(() => vehicleId = v),
+                      validator: (v) => v == null
+                          ? AppLocalization.t('Select vehicle')
+                          : null,
+                    ),
                   ),
-                ),
                 _field(qty, 'Diesel Quantity (Litres)', true),
                 _field(rate, 'Diesel Rate', true),
                 _field(meter, 'Meter Reading (Optional)', true),

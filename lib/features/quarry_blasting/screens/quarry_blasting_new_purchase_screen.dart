@@ -64,6 +64,7 @@ class _QuarryBlastingNewPurchaseScreenState
       _wire4Price,
       _edQty,
       _edPrice,
+      _salaryController,
     ]) {
       controller.addListener(_refresh);
     }
@@ -80,6 +81,7 @@ class _QuarryBlastingNewPurchaseScreenState
       _wire4Price,
       _edQty,
       _edPrice,
+      _salaryController,
     ]) {
       controller.dispose();
     }
@@ -145,7 +147,9 @@ class _QuarryBlastingNewPurchaseScreenState
   double get _wire3Total => _number(_wire3Qty) * _number(_wire3Price);
   double get _wire4Total => _number(_wire4Qty) * _number(_wire4Price);
   double get _edTotal => _number(_edQty) * _number(_edPrice);
-  double get _grandTotal => _bulletTotal + _wire3Total + _wire4Total + _edTotal;
+  double get _salaryTotal => _number(_salaryController);
+  double get _grandTotal =>
+      _bulletTotal + _wire3Total + _wire4Total + _edTotal + _salaryTotal;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -312,23 +316,6 @@ class _QuarryBlastingNewPurchaseScreenState
                              },
                            ),
                          ),
-                         const SizedBox(width: 12),
-                         Expanded(
-                           child: TextFormField(
-                             controller: _salaryController,
-                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                             decoration: InputDecoration(
-                               labelText: AppLocalization.t('Salary'),
-                               prefixText: '₹ ',
-                               border: const OutlineInputBorder(),
-                             ),
-                             validator: (value) {
-                               if (value == null || value.trim().isEmpty) return null;
-                               final n = double.tryParse(value.trim());
-                               return n == null || n < 0 ? AppLocalization.t('Invalid') : null;
-                             },
-                           ),
-                         ),
                        ],
                      ),
                   ),
@@ -360,6 +347,8 @@ class _QuarryBlastingNewPurchaseScreenState
                         ),
                         const SizedBox(height: 14),
                         _itemRow('ED', _edQty, _edPrice, _edTotal),
+                        const SizedBox(height: 14),
+                        _salaryRow(),
                       ],
                     ),
                   ),
@@ -437,6 +426,69 @@ class _QuarryBlastingNewPurchaseScreenState
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _salaryRow() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE1E5E9)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 180,
+            child: Text(
+              AppLocalization.t('Salary'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              controller: _salaryController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: AppLocalization.t('Salary'),
+                prefixText: '₹ ',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return null;
+                final amount = double.tryParse(value.trim());
+                return amount == null || amount < 0
+                    ? AppLocalization.t('Invalid')
+                    : null;
+              },
+            ),
+          ),
+          const SizedBox(width: 18),
+          SizedBox(
+            width: 145,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  AppLocalization.t('TOTAL'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF68717D),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  formatMoney(_salaryTotal),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

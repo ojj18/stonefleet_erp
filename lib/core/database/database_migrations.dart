@@ -715,6 +715,36 @@ class DatabaseMigrations {
       )
     ''');
 
+    // Air blower oil stock and audit history.
+    await db.execute("""
+      CREATE TABLE air_blower_oil_stock (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        quantity_litres REAL NOT NULL DEFAULT 0 CHECK (quantity_litres >= 0),
+        average_cost_per_litre REAL NOT NULL DEFAULT 0,
+        updated_at TEXT NOT NULL
+      )
+    """);
+    await db.insert('air_blower_oil_stock', {
+      'id': 1, 'quantity_litres': 0, 'average_cost_per_litre': 0,
+      'updated_at': DateTime.now().toIso8601String(),
+    });
+    await db.execute("""
+      CREATE TABLE air_blower_oil_movements (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        movement_type TEXT NOT NULL,
+        quantity_litres REAL NOT NULL,
+        unit_cost REAL NOT NULL DEFAULT 0,
+        service_type TEXT,
+        service_id INTEGER,
+        vehicle_id INTEGER,
+        meter_reading REAL,
+        movement_date TEXT NOT NULL,
+        note TEXT
+      )
+    """);
+    await db.execute("ALTER TABLE excavator_service ADD COLUMN air_blower_oil_quantity REAL NOT NULL DEFAULT 0");
+    await db.execute("ALTER TABLE excavator_service ADD COLUMN air_blower_oil_rate REAL NOT NULL DEFAULT 0");
+
     await DatabaseSeed.seed(db);
 
     log('All StoneFleet tables created successfully.');
@@ -1589,6 +1619,21 @@ class DatabaseMigrations {
       log('Database migrated to version 13: verified tyre KM columns.');
     }
 
+
+
+    // VERSION 15: Air blower oil stock and excavator usage fields.
+    if (oldVersion < 15) {
+      final tables = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='air_blower_oil_stock'");
+      if (tables.isEmpty) {
+        await db.execute("CREATE TABLE air_blower_oil_stock (id INTEGER PRIMARY KEY CHECK (id = 1), quantity_litres REAL NOT NULL DEFAULT 0 CHECK (quantity_litres >= 0), average_cost_per_litre REAL NOT NULL DEFAULT 0, updated_at TEXT NOT NULL)");
+        await db.insert('air_blower_oil_stock', {'id': 1, 'quantity_litres': 0, 'average_cost_per_litre': 0, 'updated_at': DateTime.now().toIso8601String()});
+      }
+      final movements = await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='air_blower_oil_movements'");
+      if (movements.isEmpty) await db.execute("CREATE TABLE air_blower_oil_movements (id INTEGER PRIMARY KEY AUTOINCREMENT, movement_type TEXT NOT NULL, quantity_litres REAL NOT NULL, unit_cost REAL NOT NULL DEFAULT 0, service_type TEXT, service_id INTEGER, vehicle_id INTEGER, meter_reading REAL, movement_date TEXT NOT NULL, note TEXT)");
+      if (!await _hasColumn(db, 'excavator_service', 'air_blower_oil_quantity')) await db.execute('ALTER TABLE excavator_service ADD COLUMN air_blower_oil_quantity REAL NOT NULL DEFAULT 0');
+      if (!await _hasColumn(db, 'excavator_service', 'air_blower_oil_rate')) await db.execute('ALTER TABLE excavator_service ADD COLUMN air_blower_oil_rate REAL NOT NULL DEFAULT 0');
+      log('Database migrated to version 15: air blower oil stock enabled.');
+    }
 
   }
 }

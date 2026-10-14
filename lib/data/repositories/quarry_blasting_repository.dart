@@ -92,7 +92,7 @@ class QuarryBlastingRepository {
     final wire3mTotal = wire3mQuantity * wire3mPrice;
     final wire4mTotal = wire4mQuantity * wire4mPrice;
     final edTotal = edQuantity * edPrice;
-    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal;
+    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary;
     final now = DateTime.now().toIso8601String();
 
     return db.insert('quarry_blasting_purchases', {
@@ -138,7 +138,7 @@ class QuarryBlastingRepository {
     final wire3mTotal = wire3mQuantity * wire3mPrice;
     final wire4mTotal = wire4mQuantity * wire4mPrice;
     final edTotal = edQuantity * edPrice;
-    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal;
+    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary;
     final now = DateTime.now().toIso8601String();
 
     return db.update(

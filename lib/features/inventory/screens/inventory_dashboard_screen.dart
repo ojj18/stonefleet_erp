@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../providers/inventory_provider.dart';
 import '../widgets/inventory_shell.dart';
+import 'air_blower_oil_stock_screen.dart';
 
 class InventoryDashboardScreen extends StatefulWidget {
   const InventoryDashboardScreen({super.key});
@@ -55,7 +56,16 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: OutlinedButton.icon(
+                        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AirBlowerOilStockScreen())),
+                        icon: const Icon(Icons.opacity_outlined),
+                        label: Text(AppLocalization.t('Air Blower Oil Stock')),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
                     Row(
                       children: [
                         Expanded(
