@@ -6,6 +6,29 @@ class ReportRepository {
   ReportRepository({DatabaseHelper? databaseHelper})
     : _databaseHelper = databaseHelper ?? DatabaseHelper.instance;
 
+
+  // ============================================================
+  // VEHICLE OPTIONS FOR REPORT FILTER
+  // ============================================================
+
+  Future<List<Map<String, dynamic>>> getExcavatorOptions() async {
+    final db = await _databaseHelper.database;
+    return db.query(
+      'excavators',
+      columns: ['id', 'registration_number'],
+      orderBy: 'registration_number COLLATE NOCASE ASC',
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getTransportVehicleOptions() async {
+    final db = await _databaseHelper.database;
+    return db.query(
+      'transport_vehicles',
+      columns: ['id', 'registration_number'],
+      orderBy: 'registration_number COLLATE NOCASE ASC',
+    );
+  }
+
   // ============================================================
   // EXCAVATOR MAINTENANCE REPORT
   // ============================================================

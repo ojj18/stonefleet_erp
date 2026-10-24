@@ -61,6 +61,18 @@ class RetreadingRepository {
     return rows.isEmpty ? null : RetreadingRecord.fromMap(rows.first);
   }
 
+  /// Returns whether this tyre serial has any retreading history in the database.
+  Future<bool> hasSerialHistory(String serial) async {
+    final value = serial.trim();
+    if (value.isEmpty) return false;
+    final db = await _dbHelper.database;
+    final rows = await db.rawQuery(
+      'SELECT 1 FROM tyre_retreading_records WHERE LOWER(TRIM(tyre_serial_number)) = ? LIMIT 1',
+      [value.toLowerCase()],
+    );
+    return rows.isNotEmpty;
+  }
+
   Future<RetreadingRecord?> getOpenBySerial(String serial) async {
     final db = await _dbHelper.database;
     final rows = await db.query(

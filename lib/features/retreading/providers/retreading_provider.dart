@@ -32,6 +32,26 @@ class RetreadingProvider extends ChangeNotifier {
     }
   }
 
+  Future<List<RetreadingRecord>> getSerialHistory(String serial) async {
+    try {
+      return await _repository.getRecords(tyreSerialNumber: serial);
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      return [];
+    }
+  }
+
+  Future<bool> hasSerialHistory(String serial) async {
+    try {
+      return await _repository.hasSerialHistory(serial);
+    } catch (e) {
+      error = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> save({
     required int transportVehicleId,
     required String registrationNumber,

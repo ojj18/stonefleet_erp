@@ -410,6 +410,8 @@ class ReportExcelService {
     sheet.appendRow([TextCellValue('3m Wire'), _cellValue(summary.wire3mQuantity), _cellValue(summary.wire3mCost)]);
     sheet.appendRow([TextCellValue('4m Wire'), _cellValue(summary.wire4mQuantity), _cellValue(summary.wire4mCost)]);
     sheet.appendRow([TextCellValue('ED'), _cellValue(summary.edQuantity), _cellValue(summary.edCost)]);
+    final salaryTotal = records.fold<double>(0, (total, record) => total + record.salary);
+    sheet.appendRow([TextCellValue('Salary'), TextCellValue(''), _cellValue(salaryTotal)]);
     sheet.appendRow([TextCellValue('Grand Total Cost'), TextCellValue(''), _cellValue(summary.totalCost)]);
 
     const widths = <int, double>{

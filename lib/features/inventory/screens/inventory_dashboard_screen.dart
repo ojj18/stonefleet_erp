@@ -62,7 +62,7 @@ class _InventoryDashboardScreenState extends State<InventoryDashboardScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AirBlowerOilStockScreen())),
                         icon: const Icon(Icons.opacity_outlined),
-                        label: Text(AppLocalization.t('Air Blower Oil Stock')),
+                        label: Text(AppLocalization.t('AdBlue Oil Stock')),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -180,6 +180,11 @@ class _PurchasePreview extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: DataTable(
+                            columnSpacing: 28,
+                            horizontalMargin: 16,
+                            headingRowHeight: 48,
+                            dataRowMinHeight: 56,
+                            dataRowMaxHeight: 76,
       columns: [
         DataColumn(label: Text(AppLocalization.t('DATE'))),
         DataColumn(label: Text(AppLocalization.t('BILL NUMBER'))),
@@ -213,6 +218,11 @@ class _UsagePreview extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     scrollDirection: Axis.horizontal,
     child: DataTable(
+                            columnSpacing: 28,
+                            horizontalMargin: 16,
+                            headingRowHeight: 48,
+                            dataRowMinHeight: 56,
+                            dataRowMaxHeight: 76,
       columns: [
         DataColumn(label: Text(AppLocalization.t('DATE'))),
         DataColumn(label: Text(AppLocalization.t('SPARE ITEM'))),

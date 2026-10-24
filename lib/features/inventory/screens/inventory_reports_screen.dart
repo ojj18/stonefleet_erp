@@ -351,6 +351,11 @@ class _InventoryReportsScreenState extends State<InventoryReportsScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: DataTable(
+                            columnSpacing: 28,
+                            horizontalMargin: 16,
+                            headingRowHeight: 48,
+                            dataRowMinHeight: 56,
+                            dataRowMaxHeight: 76,
                         columns: [
                           DataColumn(
                             label: Text(AppLocalization.t('SPARE ITEM')),

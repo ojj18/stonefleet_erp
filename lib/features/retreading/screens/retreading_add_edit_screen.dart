@@ -30,6 +30,8 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
   TransportModel? _vehicle;
   bool _saving = false;
   bool _returned = false;
+  bool _showEndingKm = false;
+  int _serialLookupVersion = 0;
   final _cost = TextEditingController(text: '0');
   final _bill = TextEditingController();
   final _startingKm = TextEditingController();
@@ -38,12 +40,14 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
   @override
   void initState() {
     super.initState();
+    _serial.addListener(_checkSerialHistory);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await context.read<TransportProvider>().loadActiveVehicles();
       if (widget.record != null) {
         final r = widget.record!;
         _brand.text = r.tyreBrand;
         _serial.text = r.tyreSerialNumber;
+        _showEndingKm = true;
         _size.text = r.tyreSize;
         _company.text = r.retreadingCompany;
         _remarks.text = r.remarks ?? '';
@@ -69,6 +73,7 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
   @override
   void dispose() {
     _brand.dispose();
+    _serial.removeListener(_checkSerialHistory);
     _serial.dispose();
     _size.dispose();
     _company.dispose();
@@ -78,6 +83,27 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
     _startingKm.dispose();
     _endingKm.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkSerialHistory() async {
+    if (widget.isEdit) return; // Existing records keep their current edit layout.
+    final serial = _serial.text.trim();
+    final version = ++_serialLookupVersion;
+    if (serial.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _showEndingKm = false;
+          _endingKm.clear();
+        });
+      }
+      return;
+    }
+    final exists = await context.read<RetreadingProvider>().hasSerialHistory(serial);
+    if (!mounted || version != _serialLookupVersion) return;
+    setState(() {
+      _showEndingKm = exists;
+      if (!exists) _endingKm.clear();
+    });
   }
 
   Future<void> _pickDate({required bool sent}) async {
@@ -465,7 +491,7 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
             );
           },
         ),
-        if (!widget.isEdit) ...[
+        if (!widget.isEdit && _showEndingKm) ...[
           _textField(
             _endingKm,
             AppLocalization.t('Ending KM'),

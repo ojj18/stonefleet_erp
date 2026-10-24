@@ -120,6 +120,10 @@ class _QuarryBlastingPurchaseReportsScreenState
         'wire3mCost': s.wire3mCost,
         'wire4mCost': s.wire4mCost,
         'edCost': s.edCost,
+        'salaryCost': provider.purchases.fold<double>(
+          0,
+          (total, purchase) => total + purchase.salary,
+        ),
         'totalCost': s.totalCost,
       },
     );
@@ -173,8 +177,9 @@ class _QuarryBlastingPurchaseReportsScreenState
                   children: [
                     QuarryPageHeader(
                       title: AppLocalization.t('Purchase Reports'),
-                      subtitle:
-                          AppLocalization.t('Generate daily, weekly, monthly and yearly blasting material reports.'),
+                      subtitle: AppLocalization.t(
+                        'Generate daily, weekly, monthly and yearly blasting material reports.',
+                      ),
                       action: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -232,14 +237,21 @@ class _QuarryBlastingPurchaseReportsScreenState
                                 labelText: AppLocalization.t('Report Period'),
                                 border: OutlineInputBorder(),
                               ),
-                              items: ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom Range']
-                                  .map(
-                                    (value) => DropdownMenuItem(
-                                      value: value,
-                                      child: Text(AppLocalization.t(value)),
-                                    ),
-                                  )
-                                  .toList(),
+                              items:
+                                  [
+                                        'Daily',
+                                        'Weekly',
+                                        'Monthly',
+                                        'Yearly',
+                                        'Custom Range',
+                                      ]
+                                      .map(
+                                        (value) => DropdownMenuItem(
+                                          value: value,
+                                          child: Text(AppLocalization.t(value)),
+                                        ),
+                                      )
+                                      .toList(),
                               onChanged: (value) {
                                 if (value == null) return;
                                 setState(() => _period = value);
@@ -275,7 +287,9 @@ class _QuarryBlastingPurchaseReportsScreenState
                               items: [
                                 DropdownMenuItem<String>(
                                   value: '',
-                                  child: Text(AppLocalization.t('All Operators')),
+                                  child: Text(
+                                    AppLocalization.t('All Operators'),
+                                  ),
                                 ),
                                 ..._operators.map(
                                   (name) => DropdownMenuItem<String>(
@@ -284,7 +298,8 @@ class _QuarryBlastingPurchaseReportsScreenState
                                   ),
                                 ),
                               ],
-                              onChanged: (value) => setState(() => _operator = value ?? ''),
+                              onChanged: (value) =>
+                                  setState(() => _operator = value ?? ''),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -419,8 +434,12 @@ class _QuarryBlastingPurchaseReportsScreenState
                                   DataColumn(
                                     label: Text(AppLocalization.t('Date')),
                                   ),
-                                  DataColumn(label: Text(AppLocalization.t('Operator'))),
-                                  DataColumn(label: Text(AppLocalization.t('Salary'))),
+                                  DataColumn(
+                                    label: Text(AppLocalization.t('Operator')),
+                                  ),
+                                  DataColumn(
+                                    label: Text(AppLocalization.t('Salary')),
+                                  ),
                                   DataColumn(
                                     label: Text(
                                       AppLocalization.t('Bullet Qty'),
@@ -449,7 +468,9 @@ class _QuarryBlastingPurchaseReportsScreenState
                                     .map(
                                       (p) => DataRow(
                                         cells: [
-                                          DataCell(Text(formatDate(p.purchaseDate))),
+                                          DataCell(
+                                            Text(formatDate(p.purchaseDate)),
+                                          ),
                                           DataCell(Text(p.operatorName)),
                                           DataCell(Text(formatMoney(p.salary))),
                                           DataCell(
@@ -494,7 +515,9 @@ class _QuarryBlastingPurchaseReportsScreenState
           suffixIcon: const Icon(Icons.calendar_today_outlined),
         ),
         child: Text(
-          value == null ? AppLocalization.t('Select date') : formatDate(value.toIso8601String()),
+          value == null
+              ? AppLocalization.t('Select date')
+              : formatDate(value.toIso8601String()),
         ),
       ),
     );

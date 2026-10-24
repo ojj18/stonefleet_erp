@@ -121,6 +121,62 @@ class InventoryProvider extends ChangeNotifier {
     });
   }
 
+
+
+  Future<void> updateStockItem({
+    required int itemId,
+    required String itemName,
+    String? unit,
+  }) async {
+    await _run(() async {
+      await _repository.updateStockItem(itemId: itemId, itemName: itemName, unit: unit);
+      stock = await _repository.getStock();
+      items = await _repository.getItems();
+      summary = await _repository.getSummary();
+    });
+  }
+
+  Future<void> deleteStockItem(int itemId) async {
+    await _run(() async {
+      await _repository.deleteStockItem(itemId);
+      stock = await _repository.getStock();
+      items = await _repository.getItems();
+      summary = await _repository.getSummary();
+    });
+  }
+
+  Future<void> updateUsage({
+    required int id,
+    required String itemName,
+    required double quantityUsed,
+    required String usageDate,
+    String? usedFor,
+    String? remarks,
+  }) async {
+    await _run(() async {
+      await _repository.updateUsage(
+        id: id,
+        itemName: itemName,
+        quantityUsed: quantityUsed,
+        usageDate: usageDate,
+        usedFor: usedFor,
+        remarks: remarks,
+      );
+      usage = await _repository.getUsage();
+      stock = await _repository.getStock();
+      summary = await _repository.getSummary();
+    });
+  }
+
+  Future<void> deleteUsage(int id) async {
+    await _run(() async {
+      await _repository.deleteUsage(id);
+      usage = await _repository.getUsage();
+      stock = await _repository.getStock();
+      summary = await _repository.getSummary();
+    });
+  }
+
   Future<void> _run(Future<void> Function() action) async {
     isLoading = true;
     error = null;

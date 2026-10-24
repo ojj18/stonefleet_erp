@@ -1,5 +1,5 @@
 class DatabaseConstants {
   static const databaseName = 'stonefleet.db';
 
-  static const databaseVersion = 15;
+  static const databaseVersion = 16;
 }

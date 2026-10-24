@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:stonefleet_erp/features/auth/providers/auth_provider.dart';
 
 import '../providers/inventory_provider.dart';
 import '../widgets/inventory_shell.dart';
@@ -151,6 +152,116 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
     remarks.dispose();
   }
 
+
+  Future<void> _viewUsage(dynamic row) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalization.t('Spare Usage Details')),
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detail(AppLocalization.t('Spare Item'), row.itemName),
+              _detail(AppLocalization.t('Quantity Used'), formatQty(row.quantityUsed)),
+              _detail(AppLocalization.t('Date'), formatDate(row.usageDate)),
+              _detail(AppLocalization.t('Used For'), row.usedFor ?? '-'),
+              _detail(AppLocalization.t('Remarks'), row.remarks ?? '-'),
+            ],
+          ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalization.t('Close')))],
+      ),
+    );
+  }
+
+  Widget _detail(String label, String value) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 7),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(width: 135, child: Text(label, style: const TextStyle(color: Color(0xFF657166)))),
+      Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600))),
+    ]),
+  );
+
+  Future<void> _editUsage(InventoryProvider provider, dynamic row) async {
+    String? item = row.itemName;
+    final qty = TextEditingController(text: row.quantityUsed.toString());
+    final usedFor = TextEditingController(text: row.usedFor ?? '');
+    final remarks = TextEditingController(text: row.remarks ?? '');
+    DateTime date = DateTime.tryParse(row.usageDate) ?? DateTime.now();
+    final formKey = GlobalKey<FormState>();
+    final saved = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: Text(AppLocalization.t('Edit Spare Usage')),
+          content: SizedBox(width: 520, child: SingleChildScrollView(
+            child: Form(key: formKey, child: Column(mainAxisSize: MainAxisSize.min, children: [
+              DropdownButtonFormField<String>(
+                initialValue: item,
+                decoration: InputDecoration(labelText: AppLocalization.t('Spare Item')),
+                items: provider.items.map((e) => DropdownMenuItem(value: e.itemName, child: Text(e.itemName))).toList(),
+                onChanged: (v) => setDialogState(() => item = v),
+                validator: (v) => v == null ? AppLocalization.t('Select a spare item') : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(controller: qty, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: InputDecoration(labelText: AppLocalization.t('Quantity Used')), validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0 ? AppLocalization.t('Enter quantity') : null),
+              const SizedBox(height: 12),
+              TextFormField(controller: usedFor, decoration: InputDecoration(labelText: AppLocalization.t('Used For (e.g. Excavator / Transport / Service)'))),
+              const SizedBox(height: 12),
+              TextFormField(controller: remarks, decoration: InputDecoration(labelText: AppLocalization.t('Remarks'))),
+              const SizedBox(height: 12),
+              Align(alignment: Alignment.centerLeft, child: OutlinedButton.icon(
+                onPressed: () async {
+                  final picked = await showDatePicker(context: ctx, initialDate: date, firstDate: DateTime(2000), lastDate: DateTime(2100));
+                  if (picked != null) setDialogState(() => date = picked);
+                },
+                icon: const Icon(Icons.calendar_month),
+                label: Text('${AppLocalization.t('Date')}: ${formatDate(date.toIso8601String())}'),
+              )),
+            ])),
+          )),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalization.t('Cancel'))),
+            FilledButton.icon(onPressed: () {
+              if (formKey.currentState?.validate() == true) Navigator.pop(ctx, true);
+            }, icon: const Icon(Icons.save_outlined), label: Text(AppLocalization.t('Update'))),
+          ],
+        ),
+      ),
+    );
+    if (saved == true && item != null) {
+      try {
+        await provider.updateUsage(id: row.id, itemName: item!, quantityUsed: double.parse(qty.text), usageDate: date.toIso8601String(), usedFor: usedFor.text.trim(), remarks: remarks.text.trim());
+        if (provider.error != null) throw Exception(provider.error);
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    }
+    qty.dispose(); usedFor.dispose(); remarks.dispose();
+  }
+
+  Future<void> _deleteUsage(InventoryProvider provider, dynamic row) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalization.t('Delete usage record?')),
+        content: Text(AppLocalization.t('This will return the quantity to available stock.')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalization.t('Cancel'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalization.t('Delete'))),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await provider.deleteUsage(row.id);
+    if (provider.error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.error!)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return InventoryShell(
@@ -235,6 +346,11 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                         SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
                           child: DataTable(
+                            columnSpacing: 28,
+                            horizontalMargin: 16,
+                            headingRowHeight: 48,
+                            dataRowMinHeight: 58,
+                            dataRowMaxHeight: 72,
                             columns: [
                               DataColumn(
                                 label: Text(AppLocalization.t('SPARE ITEM')),
@@ -251,6 +367,7 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                               DataColumn(
                                 label: Text(AppLocalization.t('REMARKS')),
                               ),
+                              DataColumn(label: Text(AppLocalization.t('ACTIONS'))),
                             ],
                             rows: provider.usage
                                 .map(
@@ -263,6 +380,12 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                                       DataCell(Text(formatDate(row.usageDate))),
                                       DataCell(Text(row.usedFor ?? '-')),
                                       DataCell(Text(row.remarks ?? '-')),
+                                      DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
+                                        IconButton(tooltip: AppLocalization.t('View'), onPressed: () => _viewUsage(row), icon: const Icon(Icons.visibility_outlined)),
+                                        IconButton(tooltip: AppLocalization.t('Edit'), onPressed: () => _editUsage(provider, row), icon: const Icon(Icons.edit_outlined)),
+                                        if (context.watch<AuthProvider>().isAdmin)
+                                          IconButton(tooltip: AppLocalization.t('Delete'), onPressed: () => _deleteUsage(provider, row), icon: const Icon(Icons.delete_outline, color: Color(0xFFBA1A1A))),
+                                      ])),
                                     ],
                                   ),
                                 )

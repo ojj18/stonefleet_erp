@@ -18,6 +18,10 @@ class ReportProvider extends ChangeNotifier {
 
   ReportType _reportType = ReportType.maintenance;
   EquipmentType _equipmentType = EquipmentType.all;
+  int? _selectedVehicleId;
+  List<Map<String, dynamic>> _excavatorOptions = [];
+  List<Map<String, dynamic>> _transportOptions = [];
+  bool _vehiclesLoading = false;
 
   DateTime? _fromDate;
   DateTime? _toDate;
@@ -36,6 +40,15 @@ class ReportProvider extends ChangeNotifier {
   ReportType get reportType => _reportType;
 
   EquipmentType get equipmentType => _equipmentType;
+
+  int? get selectedVehicleId => _selectedVehicleId;
+  List<Map<String, dynamic>> get vehicleOptions =>
+      _equipmentType == EquipmentType.excavator
+          ? List.unmodifiable(_excavatorOptions)
+          : _equipmentType == EquipmentType.transport
+              ? List.unmodifiable(_transportOptions)
+              : const [];
+  bool get vehiclesLoading => _vehiclesLoading;
 
   DateTime? get fromDate => _fromDate;
 
@@ -67,10 +80,37 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> loadVehicleOptions() async {
+    _vehiclesLoading = true;
+    notifyListeners();
+    try {
+      final results = await Future.wait([
+        _repository.getExcavatorOptions(),
+        _repository.getTransportVehicleOptions(),
+      ]);
+      _excavatorOptions = results[0];
+      _transportOptions = results[1];
+    } catch (_) {
+      // Keep report screen usable if vehicle options cannot be loaded.
+    } finally {
+      _vehiclesLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void setSelectedVehicleId(int? id) {
+    if (_selectedVehicleId == id) return;
+    _selectedVehicleId = id;
+    _reportData = [];
+    _clearError();
+    notifyListeners();
+  }
+
   void setEquipmentType(EquipmentType type) {
     if (_equipmentType == type) return;
 
     _equipmentType = type;
+    _selectedVehicleId = null;
     _reportData = [];
     _clearError();
 
@@ -100,6 +140,7 @@ class ReportProvider extends ChangeNotifier {
 
   void clearFilters() {
     _equipmentType = EquipmentType.all;
+    _selectedVehicleId = null;
     _fromDate = null;
     _toDate = null;
     _search = '';
@@ -136,6 +177,7 @@ class ReportProvider extends ChangeNotifier {
           final excavatorData = await _repository.getExcavatorMaintenanceReport(
             fromDate: _fromDate,
             toDate: _toDate,
+            excavatorId: _selectedVehicleId,
             search: _search,
           );
 
@@ -149,6 +191,7 @@ class ReportProvider extends ChangeNotifier {
           final transportData = await _repository.getTransportMaintenanceReport(
             fromDate: _fromDate,
             toDate: _toDate,
+            transportVehicleId: _selectedVehicleId,
             search: _search,
           );
 
@@ -168,6 +211,7 @@ class ReportProvider extends ChangeNotifier {
           final excavatorData = await _repository.getExcavatorServiceReport(
             fromDate: _fromDate,
             toDate: _toDate,
+            excavatorId: _selectedVehicleId,
             search: _search,
           );
 
@@ -181,6 +225,7 @@ class ReportProvider extends ChangeNotifier {
           final transportData = await _repository.getTransportServiceReport(
             fromDate: _fromDate,
             toDate: _toDate,
+            transportVehicleId: _selectedVehicleId,
             search: _search,
           );
 

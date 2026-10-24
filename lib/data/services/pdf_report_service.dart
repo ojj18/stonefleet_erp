@@ -148,6 +148,7 @@ class PdfReportService {
     final wire4mCost = _toDouble(summary['wire4mCost']);
     final edCost = _toDouble(summary['edCost']);
     final totalCost = _toDouble(summary['totalCost']);
+    final salaryCost = _toDouble(summary['salaryCost']);
     final purchaseCount =
         (summary['purchaseCount'] as num?)?.toInt() ?? records.length;
 
@@ -181,6 +182,7 @@ class PdfReportService {
             wire4mCost: wire4mCost,
             edQty: edQty,
             edCost: edCost,
+            salaryCost: salaryCost,
             totalCost: totalCost,
           ),
           pw.SizedBox(height: 16),
@@ -314,6 +316,7 @@ class PdfReportService {
     required double wire4mCost,
     required double edQty,
     required double edCost,
+    required double salaryCost,
     required double totalCost,
   }) {
     final rows = [
@@ -321,6 +324,7 @@ class PdfReportService {
       ['3m Wire', _number(wire3mQty), _currency(wire3mCost)],
       ['4m Wire', _number(wire4mQty), _currency(wire4mCost)],
       ['ED', _number(edQty), _currency(edCost)],
+      ['Salary', '', _currency(salaryCost)],
       ['Grand Total', '', _currency(totalCost)],
     ];
 

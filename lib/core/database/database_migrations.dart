@@ -545,6 +545,38 @@ class DatabaseMigrations {
     ''');
 
     await db.execute('''
+      CREATE TABLE IF NOT EXISTS quarry_driller_records (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        record_date TEXT NOT NULL,
+        driller_name TEXT NOT NULL,
+        feet REAL NOT NULL DEFAULT 0,
+        rate_per_foot REAL NOT NULL DEFAULT 0,
+        total_amount REAL NOT NULL DEFAULT 0,
+        remarks TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS quarry_drillers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT NOT NULL
+      )
+    ''');
+
+    final drillerSeedNow = DateTime.now().toIso8601String();
+    for (final name in ['Company', 'Madhavan', 'Murugan']) {
+      await db.insert(
+        'quarry_drillers',
+        {'name': name, 'is_active': 1, 'created_at': drillerSeedNow},
+        conflictAlgorithm: ConflictAlgorithm.ignore,
+      );
+    }
+
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS quarry_boulder_trips (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         trip_date TEXT NOT NULL,
@@ -1633,6 +1665,37 @@ class DatabaseMigrations {
       if (!await _hasColumn(db, 'excavator_service', 'air_blower_oil_quantity')) await db.execute('ALTER TABLE excavator_service ADD COLUMN air_blower_oil_quantity REAL NOT NULL DEFAULT 0');
       if (!await _hasColumn(db, 'excavator_service', 'air_blower_oil_rate')) await db.execute('ALTER TABLE excavator_service ADD COLUMN air_blower_oil_rate REAL NOT NULL DEFAULT 0');
       log('Database migrated to version 15: air blower oil stock enabled.');
+    }
+
+
+    // VERSION 16: Quarry driller records and master names.
+    if (oldVersion < 16) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quarry_driller_records (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          record_date TEXT NOT NULL,
+          driller_name TEXT NOT NULL,
+          feet REAL NOT NULL DEFAULT 0,
+          rate_per_foot REAL NOT NULL DEFAULT 0,
+          total_amount REAL NOT NULL DEFAULT 0,
+          remarks TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT
+        )
+      ''');
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS quarry_drillers (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL COLLATE NOCASE UNIQUE,
+          is_active INTEGER NOT NULL DEFAULT 1,
+          created_at TEXT NOT NULL
+        )
+      ''');
+      final seedNow = DateTime.now().toIso8601String();
+      for (final name in ['Company', 'Madhavan', 'Murugan']) {
+        await db.insert('quarry_drillers', {'name': name, 'is_active': 1, 'created_at': seedNow}, conflictAlgorithm: ConflictAlgorithm.ignore);
+      }
+      log('Database migrated to version 16: Quarry Driller enabled.');
     }
 
   }

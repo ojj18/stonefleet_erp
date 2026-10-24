@@ -34,7 +34,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      context.read<ReportProvider>().generateReport();
+      final provider = context.read<ReportProvider>();
+      provider.loadVehicleOptions();
+      provider.generateReport();
     });
 
     _searchController.addListener(() {
@@ -378,6 +380,45 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       },
                     ),
                   ),
+                  if (provider.equipmentType != EquipmentType.all) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DropdownButtonFormField<int?>(
+                        key: ValueKey('vehicle-filter-${provider.equipmentType}-${provider.selectedVehicleId}'),
+                        initialValue: provider.selectedVehicleId,
+                        decoration: InputDecoration(
+                          labelText: AppLocalization.t('Vehicle Number'),
+                          filled: true,
+                          fillColor: const Color(0xFFF8F9FB),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                          ),
+                        ),
+                        hint: Text(AppLocalization.t('All Vehicles')),
+                        items: [
+                          DropdownMenuItem<int?>(
+                            value: null,
+                            child: Text(AppLocalization.t('All Vehicles')),
+                          ),
+                          ...provider.vehicleOptions.map((vehicle) {
+                            final id = (vehicle['id'] as num).toInt();
+                            final registration = (vehicle['registration_number'] ?? '').toString();
+                            return DropdownMenuItem<int?>(
+                              value: id,
+                              child: Text(registration.isEmpty ? 'ID $id' : registration),
+                            );
+                          }),
+                        ],
+                        onChanged: (value) => provider.setSelectedVehicleId(value),
+                      ),
+                    ),
+                  ],
+
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildDateField(

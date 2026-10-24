@@ -95,12 +95,16 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: startingKm,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     decoration: InputDecoration(
                       labelText: AppLocalization.t('Starting KM'),
                       prefixIcon: const Icon(Icons.speed_outlined),
                       border: const OutlineInputBorder(),
-                      helperText: AppLocalization.t('Odometer reading when tyre is fitted to the vehicle.'),
+                      helperText: AppLocalization.t(
+                        'Odometer reading when tyre is fitted to the vehicle.',
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -144,7 +148,11 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
             FilledButton(
               onPressed: () {
                 if ((double.tryParse(cost.text.trim()) ?? -1) < 0) return;
-                if (startingKm.text.trim().isNotEmpty && (double.tryParse(startingKm.text.trim()) == null || double.parse(startingKm.text.trim()) < 0)) return;
+                if (startingKm.text.trim().isNotEmpty &&
+                    (double.tryParse(startingKm.text.trim()) == null ||
+                        double.parse(startingKm.text.trim()) < 0)) {
+                  return;
+                }
                 Navigator.pop(context, true);
               },
               style: FilledButton.styleFrom(
@@ -164,7 +172,9 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
       cost: double.tryParse(cost.text.trim()) ?? 0,
       billNumber: bill.text,
       remarks: remarks.text,
-      startingKm: startingKm.text.trim().isEmpty ? null : double.tryParse(startingKm.text.trim()),
+      startingKm: startingKm.text.trim().isEmpty
+          ? null
+          : double.tryParse(startingKm.text.trim()),
     );
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -188,6 +198,307 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
         Expanded(
           child: Text(label, style: const TextStyle(color: Color(0xFF68717D))),
         ),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ],
+    ),
+  );
+
+  Future<void> _viewHistory(RetreadingRecord selected) async {
+    final history = await context.read<RetreadingProvider>().getSerialHistory(
+      selected.tyreSerialNumber,
+    );
+    if (!mounted) return;
+    final ordered = List<RetreadingRecord>.from(history)
+      ..sort((a, b) {
+        final dateCompare = a.sentDate.compareTo(b.sentDate);
+        return dateCompare != 0
+            ? dateCompare
+            : (a.id ?? 0).compareTo(b.id ?? 0);
+      });
+    final totalCost = ordered
+        .where((record) => record.status == 'RETURNED')
+        .fold<double>(0, (sum, record) => sum + record.retreadingCost);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900, maxHeight: 720),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.history,
+                      color: Color(0xFF00652C),
+                      size: 30,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            AppLocalization.t('Tyre Retreading History'),
+                            style: Theme.of(dialogContext).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '${AppLocalization.t('Tyre Serial Number')}: ${selected.tyreSerialNumber}',
+                            style: Theme.of(dialogContext).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _historySummaryCard(
+                      dialogContext,
+                      AppLocalization.t('Total Cycles'),
+                      '${ordered.length}',
+                      Icons.repeat,
+                    ),
+                    _historySummaryCard(
+                      dialogContext,
+                      AppLocalization.t('Total Retreading Cost'),
+                      _money(totalCost),
+                      Icons.currency_rupee,
+                    ),
+                    _historySummaryCard(
+                      dialogContext,
+                      AppLocalization.t('Current Status'),
+                      ordered.isEmpty
+                          ? '-'
+                          : (ordered.last.status == 'RETURNED'
+                                ? AppLocalization.t('Returned')
+                                : AppLocalization.t('At Retreading')),
+                      Icons.info_outline,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Expanded(
+                  child: ordered.isEmpty
+                      ? Center(
+                          child: Text(
+                            AppLocalization.t('No retreading history found.'),
+                          ),
+                        )
+                      : ListView.separated(
+                          itemCount: ordered.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final record = ordered[index];
+                            final cycle = index + 1;
+                            final returned = record.status == 'RETURNED';
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: const Color(0xFFCBD5CB),
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        width: 38,
+                                        height: 38,
+                                        alignment: Alignment.center,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFE7F4EA),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Text(
+                                          '$cycle',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Color(0xFF00652C),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              '${AppLocalization.t('Cycle')} $cycle',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${record.tyreBrand.isEmpty ? '-' : record.tyreBrand} · ${record.tyreSize.isEmpty ? '-' : record.tyreSize}',
+                                              style: const TextStyle(
+                                                color: Color(0xFF68717D),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      _statusChip(record.status),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 14),
+                                  Wrap(
+                                    spacing: 24,
+                                    runSpacing: 12,
+                                    children: [
+                                      _historyField(
+                                        AppLocalization.t('Sent Date'),
+                                        _date(record.sentDate),
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Return Date'),
+                                        record.returnDate == null
+                                            ? '-'
+                                            : _date(record.returnDate!),
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Retreading Company'),
+                                        record.retreadingCompany.isEmpty
+                                            ? '-'
+                                            : record.retreadingCompany,
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Vehicle'),
+                                        record.registrationNumber.isEmpty
+                                            ? '-'
+                                            : record.registrationNumber,
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Retreading Cost'),
+                                        returned
+                                            ? _money(record.retreadingCost)
+                                            : '-',
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Bill Number'),
+                                        (record.billNumber ?? '').isEmpty
+                                            ? '-'
+                                            : record.billNumber!,
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Starting KM'),
+                                        record.startingKm == null
+                                            ? '-'
+                                            : record.startingKm!
+                                                  .toStringAsFixed(0),
+                                      ),
+                                      _historyField(
+                                        AppLocalization.t('Ending KM'),
+                                        record.endingKm == null
+                                            ? '-'
+                                            : record.endingKm!.toStringAsFixed(
+                                                0,
+                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                  if ((record.remarks ?? '')
+                                      .trim()
+                                      .isNotEmpty) ...[
+                                    const SizedBox(height: 10),
+                                    Text(
+                                      '${AppLocalization.t('Remarks')}: ${record.remarks}',
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text(AppLocalization.t('Close')),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _historySummaryCard(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
+    return Container(
+      width: 200,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF3F7F4),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: const Color(0xFF00652C)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF68717D),
+                  ),
+                  maxLines: 2,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _historyField(String label, String value) => SizedBox(
+    width: 190,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Color(0xFF68717D)),
+        ),
+        const SizedBox(height: 3),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
     ),
@@ -240,12 +551,26 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                 if ((r.billNumber ?? '').isNotEmpty)
                   _dialogInfo(AppLocalization.t('Bill Number'), r.billNumber!),
                 if (r.startingKm != null)
-                  _dialogInfo(AppLocalization.t('Starting KM'), r.startingKm!.toStringAsFixed(1)),
+                  _dialogInfo(
+                    AppLocalization.t('Starting KM'),
+                    r.startingKm!.toStringAsFixed(1),
+                  ),
                 if (r.endingKm != null)
-                  _dialogInfo(AppLocalization.t('Ending KM'), r.endingKm!.toStringAsFixed(1)),
-                if (r.startingKm != null && r.endingKm != null && r.endingKm! >= r.startingKm!) ...[
-                  _dialogInfo(AppLocalization.t('KM Run This Cycle'), '${(r.endingKm! - r.startingKm!).toStringAsFixed(1)} KM'),
-                  _dialogInfo(AppLocalization.t('Cost per KM'), '₹${(r.retreadingCost / (r.endingKm! - r.startingKm! == 0 ? 1 : r.endingKm! - r.startingKm!)).toStringAsFixed(2)}/KM'),
+                  _dialogInfo(
+                    AppLocalization.t('Ending KM'),
+                    r.endingKm!.toStringAsFixed(1),
+                  ),
+                if (r.startingKm != null &&
+                    r.endingKm != null &&
+                    r.endingKm! >= r.startingKm!) ...[
+                  _dialogInfo(
+                    AppLocalization.t('KM Run This Cycle'),
+                    '${(r.endingKm! - r.startingKm!).toStringAsFixed(1)} KM',
+                  ),
+                  _dialogInfo(
+                    AppLocalization.t('Cost per KM'),
+                    '₹${(r.retreadingCost / (r.endingKm! - r.startingKm! == 0 ? 1 : r.endingKm! - r.startingKm!)).toStringAsFixed(2)}/KM',
+                  ),
                 ],
                 if ((r.remarks ?? '').isNotEmpty)
                   _dialogInfo(AppLocalization.t('Remarks'), r.remarks!),
@@ -602,7 +927,19 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                     cells: [
                       DataCell(Text(_date(r.sentDate))),
                       DataCell(Text(r.registrationNumber)),
-                      DataCell(Text(r.tyreSerialNumber)),
+                      DataCell(
+                        InkWell(
+                          onTap: () => _viewHistory(r),
+                          child: Text(
+                            r.tyreSerialNumber,
+                            style: const TextStyle(
+                              color: Color(0xFF00652C),
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ),
                       DataCell(Text(r.tyreSize)),
                       DataCell(Text(r.retreadingCompany)),
                       DataCell(
@@ -626,6 +963,17 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                               icon: const Icon(
                                 Icons.visibility_outlined,
                                 size: 18,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: AppLocalization.t(
+                                'Tyre Retreading History',
+                              ),
+                              onPressed: () => _viewHistory(r),
+                              icon: const Icon(
+                                Icons.history,
+                                size: 18,
+                                color: Color(0xFF00652C),
                               ),
                             ),
                             IconButton(

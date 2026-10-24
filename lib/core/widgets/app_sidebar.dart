@@ -18,6 +18,7 @@ import '../../features/excavator/maintenance/screens/excavator_maintenance_scree
 import '../../features/excavator/master/screens/excavator_master_screen.dart';
 import '../../features/excavator/service/screens/excavator_service_screen.dart';
 import '../../features/inventory/screens/inventory_dashboard_screen.dart';
+import '../../features/inventory/screens/air_blower_oil_stock_screen.dart';
 import '../../features/inventory/screens/inventory_reports_screen.dart';
 import '../../features/inventory/screens/spare_purchase_ocr_screen.dart';
 import '../../features/inventory/screens/spare_stock_screen.dart';
@@ -26,6 +27,7 @@ import '../../features/quarry_blasting/screens/quarry_blasting_dashboard_screen.
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_history_screen.dart';
 import '../../features/quarry_blasting/screens/quarry_blasting_purchase_reports_screen.dart';
 import '../../features/quarry_boulders/screens/quarry_boulders_dashboard_screen.dart';
+import '../../features/quarry_driller/screens/quarry_driller_dashboard_screen.dart';
 import '../../features/retreading/screens/retreading_dashboard_screen.dart';
 import '../../features/retreading/screens/retreading_reports_screen.dart';
 import '../../features/report/screens/reports_screen.dart';
@@ -169,6 +171,12 @@ class AppSidebar extends StatelessWidget {
                     title: AppLocalization.t('Inventory Reports'),
                     index: 14,
                   ),
+
+                  _menuItem(
+                    icon: Icons.opacity_outlined,
+                    title: AppLocalization.t('AdBlue Oil'),
+                    index: 26,
+                  ),
                   Padding(
                     padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
                     child: Align(
@@ -218,6 +226,12 @@ class AppSidebar extends StatelessWidget {
                     icon: Icons.local_shipping_outlined,
                     title: AppLocalization.t('Quarry Boulders'),
                     index: 18,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.construction_outlined,
+                    title: AppLocalization.t('Quarry Driller'),
+                    index: 27,
                   ),
 
                   Padding(
@@ -564,6 +578,12 @@ void handleMenuTap(int index, {required BuildContext? context}) {
         MaterialPageRoute(builder: (_) => const InventoryReportsScreen()),
       );
       break;
+    case 26:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const AirBlowerOilStockScreen()),
+      );
+      break;
     case 15:
       Navigator.pushReplacement(
         context!,
@@ -638,6 +658,12 @@ void handleMenuTap(int index, {required BuildContext? context}) {
       Navigator.pushReplacement(
         context!,
         MaterialPageRoute(builder: (_) => const RetreadingReportsScreen()),
+      );
+      break;
+    case 27:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const QuarryDrillerDashboardScreen()),
       );
       break;
   }

@@ -170,6 +170,14 @@ class _TransportServiceAddEditScreenState
       _items.add(
         _ServiceItemDraft(
           spareId: item.spareId,
+          spareName:
+              _spares.where((spare) => spare['id'] == item.spareId).isEmpty
+              ? ''
+              : (_spares.firstWhere(
+                          (spare) => spare['id'] == item.spareId,
+                        )['name']
+                        as String? ??
+                    ''),
           quantity: item.quantity,
           cost: item.cost,
           remark: item.remark,
@@ -537,11 +545,6 @@ class _TransportServiceAddEditScreenState
                 spacing: 8,
                 children: [
                   OutlinedButton.icon(
-                    onPressed: _saving ? null : _addNewSpare,
-                    icon: const Icon(Icons.add_circle_outline, size: 18),
-                    label: Text(AppLocalization.t('Add New Spare')),
-                  ),
-                  OutlinedButton.icon(
                     onPressed: _saving ? null : _addItem,
                     icon: const Icon(Icons.add, size: 18),
                     label: Text(AppLocalization.t('Add Spare')),
@@ -709,53 +712,58 @@ class _TransportServiceAddEditScreenState
   // ============================================================
 
   Widget _buildSpareDropdown(_ServiceItemDraft item) {
-    final validSpareIds = _spares.map((spare) => spare['id'] as int).toSet();
-
-    final selectedValue = validSpareIds.contains(item.spareId)
-        ? item.spareId
-        : null;
-
-    return DropdownButtonFormField<int>(
-      initialValue: selectedValue,
-      isExpanded: true,
-      decoration: _inputDecoration(
-        label: AppLocalization.t('Spare Part'),
-        icon: Icons.settings_outlined,
-      ),
-      items: _spares.map((spare) {
-        final id = spare['id'] as int;
-
-        final name = spare['name'] as String? ?? '';
-
-        final code = spare['code'] as String?;
-
-        final displayName = code == null || code.trim().isEmpty ? name : name;
-
-        return DropdownMenuItem<int>(
-          value: id,
-          child: Text(displayName, overflow: TextOverflow.ellipsis),
+    final names = _spares
+        .map((spare) => (spare['name'] as String? ?? '').trim())
+        .where((name) => name.isNotEmpty)
+        .toList();
+    return Autocomplete<String>(
+      initialValue: TextEditingValue(text: item.spareNameController.text),
+      optionsBuilder: (value) {
+        final query = value.text.trim().toLowerCase();
+        if (query.isEmpty) return names;
+        return names.where((name) => name.toLowerCase().contains(query));
+      },
+      displayStringForOption: (name) => name,
+      onSelected: (name) {
+        item.spareNameController.text = name;
+        final match = _spares.where(
+          (spare) =>
+              (spare['name'] as String? ?? '').trim().toLowerCase() ==
+              name.trim().toLowerCase(),
         );
-      }).toList(),
-      onChanged: _saving
-          ? null
-          : (value) {
-              setState(() {
-                item.spareId = value;
-              });
-            },
-      validator: (value) {
-        if (value == null) {
-          return AppLocalization.t('Select spare');
+        setState(
+          () => item.spareId = match.isEmpty ? null : match.first['id'] as int,
+        );
+      },
+      fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+        if (controller.text != item.spareNameController.text) {
+          controller.value = item.spareNameController.value;
         }
-
-        return null;
+        return TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          enabled: !_saving,
+          decoration: _inputDecoration(
+            label: AppLocalization.t('Spare Part'),
+            icon: Icons.settings_outlined,
+          ),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? AppLocalization.t('Enter spare name')
+              : null,
+          onChanged: (value) {
+            item.spareNameController.value = controller.value;
+            final match = _spares.where(
+              (spare) =>
+                  (spare['name'] as String? ?? '').trim().toLowerCase() ==
+                  value.trim().toLowerCase(),
+            );
+            item.spareId = match.isEmpty ? null : match.first['id'] as int;
+          },
+          onFieldSubmitted: (_) => onFieldSubmitted(),
+        );
       },
     );
   }
-
-  // ============================================================
-  // QUANTITY
-  // ============================================================
 
   Widget _buildQuantityField(_ServiceItemDraft item) {
     return TextFormField(
@@ -982,147 +990,138 @@ class _TransportServiceAddEditScreenState
     );
   }
 
-  Future<void> _addNewSpare() async {
-    final formKey = GlobalKey<FormState>();
-    final nameController = TextEditingController();
-    final codeController = TextEditingController();
-    final categoryController = TextEditingController();
-    final values = await showDialog<Map<String, String>>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(AppLocalization.t('Add New Spare')),
-        content: Form(
-          key: formKey,
-          child: SizedBox(
-            width: 420,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    labelText: AppLocalization.t('Spare Name'),
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? AppLocalization.t('Enter spare name')
-                      : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: codeController,
-                  decoration: InputDecoration(
-                    labelText: AppLocalization.t('Spare Code (Optional)'),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: categoryController,
-                  decoration: InputDecoration(
-                    labelText: AppLocalization.t('Category (Optional)'),
-                    border: const OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(AppLocalization.t('Cancel')),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (!formKey.currentState!.validate()) return;
-              Navigator.pop(dialogContext, {
-                'name': nameController.text.trim(),
-                'code': codeController.text.trim(),
-                'category': categoryController.text.trim(),
-              });
-            },
-            child: Text(AppLocalization.t('Save')),
-          ),
-        ],
-      ),
-    );
-    nameController.dispose();
-    codeController.dispose();
-    categoryController.dispose();
-    if (values == null || !mounted) return;
-    try {
-      final db = await DatabaseHelper.instance.database;
-      final name = values['name']!;
-      final existing = await db.query(
-        TableConstants.spares,
-        where: 'LOWER(TRIM(name)) = LOWER(?)',
-        whereArgs: [name],
-        limit: 1,
-      );
-      late final int spareId;
-      final wasExisting = existing.isNotEmpty;
-      if (wasExisting) {
-        spareId = (existing.first['id'] as num).toInt();
-        await db.update(
-          TableConstants.spares,
-          {'is_active': 1, 'updated_at': DateTime.now().toIso8601String()},
-          where: 'id = ?',
-          whereArgs: [spareId],
-        );
-      } else {
-        final now = DateTime.now().toIso8601String();
-        spareId = await db.insert(TableConstants.spares, {
-          'name': name,
-          'code': values['code']!.isEmpty ? null : values['code'],
-          'category': values['category']!.isEmpty ? null : values['category'],
-          'is_active': 1,
-          'created_at': now,
-          'updated_at': now,
-        });
-      }
-      await _loadSpares();
-      if (!mounted) return;
-      setState(() {
-        final emptyIndex = _items.indexWhere((item) => item.spareId == null);
-        if (emptyIndex >= 0) {
-          _items[emptyIndex].spareId = spareId;
-        } else {
-          final draft = _ServiceItemDraft(spareId: spareId);
-          _items.add(draft);
-        }
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalization.t(
-              wasExisting
-                  ? 'Spare already exists; existing spare selected.'
-                  : 'Spare added successfully.',
-            ),
-          ),
-        ),
-      );
-    } catch (e) {
-      _showError(e.toString().replaceFirst('Exception: ', ''));
-    }
-  }
+  // Future<void> _addNewSpare() async {
+  //   final formKey = GlobalKey<FormState>();
+  //   final nameController = TextEditingController();
+  //   final codeController = TextEditingController();
+  //   final categoryController = TextEditingController();
+  //   final values = await showDialog<Map<String, String>>(
+  //     context: context,
+  //     builder: (dialogContext) => AlertDialog(
+  //       title: Text(AppLocalization.t('Add New Spare')),
+  //       content: Form(
+  //         key: formKey,
+  //         child: SizedBox(
+  //           width: 420,
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               TextFormField(
+  //                 controller: nameController,
+  //                 autofocus: true,
+  //                 decoration: InputDecoration(
+  //                   labelText: AppLocalization.t('Spare Name'),
+  //                   border: const OutlineInputBorder(),
+  //                 ),
+  //                 validator: (value) => value == null || value.trim().isEmpty
+  //                     ? AppLocalization.t('Enter spare name')
+  //                     : null,
+  //               ),
+  //               const SizedBox(height: 12),
+  //               TextFormField(
+  //                 controller: codeController,
+  //                 decoration: InputDecoration(
+  //                   labelText: AppLocalization.t('Spare Code (Optional)'),
+  //                   border: const OutlineInputBorder(),
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 12),
+  //               TextFormField(
+  //                 controller: categoryController,
+  //                 decoration: InputDecoration(
+  //                   labelText: AppLocalization.t('Category (Optional)'),
+  //                   border: const OutlineInputBorder(),
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ),
+  //       actions: [
+  //         TextButton(
+  //           onPressed: () => Navigator.pop(dialogContext),
+  //           child: Text(AppLocalization.t('Cancel')),
+  //         ),
+  //         FilledButton(
+  //           onPressed: () {
+  //             if (!formKey.currentState!.validate()) return;
+  //             Navigator.pop(dialogContext, {
+  //               'name': nameController.text.trim(),
+  //               'code': codeController.text.trim(),
+  //               'category': categoryController.text.trim(),
+  //             });
+  //           },
+  //           child: Text(AppLocalization.t('Save')),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  //   nameController.dispose();
+  //   codeController.dispose();
+  //   categoryController.dispose();
+  //   if (values == null || !mounted) return;
+  //   try {
+  //     final db = await DatabaseHelper.instance.database;
+  //     final name = values['name']!;
+  //     final existing = await db.query(
+  //       TableConstants.spares,
+  //       where: 'LOWER(TRIM(name)) = LOWER(?)',
+  //       whereArgs: [name],
+  //       limit: 1,
+  //     );
+  //     late final int spareId;
+  //     final wasExisting = existing.isNotEmpty;
+  //     if (wasExisting) {
+  //       spareId = (existing.first['id'] as num).toInt();
+  //       await db.update(
+  //         TableConstants.spares,
+  //         {'is_active': 1, 'updated_at': DateTime.now().toIso8601String()},
+  //         where: 'id = ?',
+  //         whereArgs: [spareId],
+  //       );
+  //     } else {
+  //       final now = DateTime.now().toIso8601String();
+  //       spareId = await db.insert(TableConstants.spares, {
+  //         'name': name,
+  //         'code': values['code']!.isEmpty ? null : values['code'],
+  //         'category': values['category']!.isEmpty ? null : values['category'],
+  //         'is_active': 1,
+  //         'created_at': now,
+  //         'updated_at': now,
+  //       });
+  //     }
+  //     await _loadSpares();
+  //     if (!mounted) return;
+  //     setState(() {
+  //       final emptyIndex = _items.indexWhere((item) => item.spareId == null);
+  //       if (emptyIndex >= 0) {
+  //         _items[emptyIndex].spareId = spareId;
+  //       } else {
+  //         final draft = _ServiceItemDraft(spareId: spareId);
+  //         _items.add(draft);
+  //       }
+  //     });
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(
+  //           AppLocalization.t(
+  //             wasExisting
+  //                 ? 'Spare already exists; existing spare selected.'
+  //                 : 'Spare added successfully.',
+  //           ),
+  //         ),
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     _showError(e.toString().replaceFirst('Exception: ', ''));
+  //   }
+  // }
 
   // ============================================================
   // ADD ITEM
   // ============================================================
 
   void _addItem() {
-    if (_spares.isEmpty) {
-      _showError(
-        AppLocalization.t(
-          'No active spare parts found. Please add spares first.',
-        ),
-      );
-      return;
-    }
-
     setState(() {
       _items.add(_ServiceItemDraft());
     });
@@ -1170,15 +1169,14 @@ class _TransportServiceAddEditScreenState
       return;
     }
 
-    final selectedSpareIds = <int>{};
-
+    final selectedSpareNames = <String>{};
     for (final item in _items) {
-      if (item.spareId == null) {
-        _showError('Please select a spare part.');
+      final name = item.spareNameController.text.trim().toLowerCase();
+      if (name.isEmpty) {
+        _showError('Please enter a spare name.');
         return;
       }
-
-      if (!selectedSpareIds.add(item.spareId!)) {
+      if (!selectedSpareNames.add(name)) {
         _showError('The same spare part cannot be added twice.');
         return;
       }
@@ -1188,8 +1186,10 @@ class _TransportServiceAddEditScreenState
       _saving = true;
     });
 
+    final provider = context.read<TransportServiceProvider>();
+
     try {
-      final provider = context.read<TransportServiceProvider>();
+      await _resolveSpareNamesBeforeSave();
 
       final now = DateTime.now().toIso8601String();
 
@@ -1264,6 +1264,48 @@ class _TransportServiceAddEditScreenState
   // ============================================================
   // BUILD ITEMS
   // ============================================================
+
+  Future<void> _resolveSpareNamesBeforeSave() async {
+    final db = await DatabaseHelper.instance.database;
+    final now = DateTime.now().toIso8601String();
+    final resolvedIds = <int>{};
+    for (final item in _items) {
+      final name = item.spareNameController.text.trim();
+      if (name.isEmpty) throw Exception('Please enter a spare name.');
+      final existing = await db.query(
+        TableConstants.spares,
+        where: 'LOWER(TRIM(name)) = LOWER(?)',
+        whereArgs: [name],
+        limit: 1,
+      );
+      int id;
+      if (existing.isNotEmpty) {
+        id = (existing.first['id'] as num).toInt();
+        if ((existing.first['is_active'] as num?)?.toInt() != 1) {
+          await db.update(
+            TableConstants.spares,
+            {'is_active': 1, 'updated_at': now},
+            where: 'id = ?',
+            whereArgs: [id],
+          );
+        }
+      } else {
+        id = await db.insert(TableConstants.spares, {
+          'name': name,
+          'code': null,
+          'category': 'General',
+          'is_active': 1,
+          'created_at': now,
+          'updated_at': now,
+        });
+      }
+      if (!resolvedIds.add(id)) {
+        throw Exception('The same spare part cannot be added twice.');
+      }
+      item.spareId = id;
+    }
+    await _loadSpares();
+  }
 
   List<TransportServiceItemModel> _buildItems({
     required int serviceId,
@@ -1785,6 +1827,7 @@ class _TransportServiceAddEditScreenState
 
 class _ServiceItemDraft {
   int? spareId;
+  final TextEditingController spareNameController;
 
   final TextEditingController quantityController;
 
@@ -1794,16 +1837,19 @@ class _ServiceItemDraft {
 
   _ServiceItemDraft({
     this.spareId,
+    String? spareName,
     double quantity = 1,
     double cost = 0,
     String? remark,
-  }) : quantityController = TextEditingController(
+  }) : spareNameController = TextEditingController(text: spareName ?? ''),
+       quantityController = TextEditingController(
          text: _numberString(quantity),
        ),
        costController = TextEditingController(text: _numberString(cost)),
        remarkController = TextEditingController(text: remark ?? '');
 
   void dispose() {
+    spareNameController.dispose();
     quantityController.dispose();
 
     costController.dispose();

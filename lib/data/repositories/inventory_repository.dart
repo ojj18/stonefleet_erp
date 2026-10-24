@@ -122,6 +122,49 @@ class InventoryRepository {
     }).toList();
   }
 
+
+  Future<void> updateStockItem({
+    required int itemId,
+    required String itemName,
+    String? unit,
+  }) async {
+    final db = await _databaseHelper.database;
+    final name = itemName.trim();
+    if (name.isEmpty) throw Exception('Spare item name is required.');
+    final duplicate = await db.query(
+      'inventory_items',
+      columns: ['id'],
+      where: 'LOWER(item_name) = LOWER(?) AND id != ?',
+      whereArgs: [name, itemId],
+      limit: 1,
+    );
+    if (duplicate.isNotEmpty) throw Exception('A spare item with this name already exists.');
+    await db.update(
+      'inventory_items',
+      {'item_name': name, 'unit': (unit ?? '').trim().isEmpty ? null : unit!.trim(), 'updated_at': DateTime.now().toIso8601String()},
+      where: 'id = ?',
+      whereArgs: [itemId],
+    );
+  }
+
+  Future<void> deleteStockItem(int itemId) async {
+    final db = await _databaseHelper.database;
+    final purchases = await db.rawQuery(
+      'SELECT COUNT(*) AS count FROM inventory_purchase_items WHERE item_id = ?',
+      [itemId],
+    );
+    final usages = await db.rawQuery(
+      'SELECT COUNT(*) AS count FROM inventory_usage WHERE item_id = ?',
+      [itemId],
+    );
+    final purchaseCount = (purchases.first['count'] as num).toInt();
+    final usageCount = (usages.first['count'] as num).toInt();
+    if (purchaseCount > 0 || usageCount > 0) {
+      throw Exception('Cannot delete this item because purchase or usage history is linked to it. Delete or correct those records first.');
+    }
+    await db.delete('inventory_items', where: 'id = ?', whereArgs: [itemId]);
+  }
+
   Future<List<InventoryUsageRow>> getUsage({String? search}) async {
     final db = await _databaseHelper.database;
     final conditions = <String>[];
@@ -251,6 +294,53 @@ class InventoryRepository {
 
       return purchaseId;
     });
+  }
+
+
+  Future<void> updateUsage({
+    required int id,
+    required String itemName,
+    required double quantityUsed,
+    required String usageDate,
+    String? usedFor,
+    String? remarks,
+  }) async {
+    final db = await _databaseHelper.database;
+    final item = await db.query(
+      'inventory_items',
+      columns: ['id'],
+      where: 'LOWER(item_name) = LOWER(?)',
+      whereArgs: [itemName.trim()],
+      limit: 1,
+    );
+    if (item.isEmpty) throw Exception('Spare item not found.');
+    final itemId = (item.first['id'] as num).toInt();
+    final stock = (await db.rawQuery('''
+      SELECT
+        COALESCE((SELECT SUM(quantity) FROM inventory_purchase_items WHERE item_id = ?), 0) AS purchased,
+        COALESCE((SELECT SUM(quantity_used) FROM inventory_usage WHERE item_id = ? AND id != ?), 0) AS used
+    ''', [itemId, itemId, id])).first;
+    final purchased = (stock['purchased'] as num?)?.toDouble() ?? 0;
+    final used = (stock['used'] as num?)?.toDouble() ?? 0;
+    if (quantityUsed <= 0) throw Exception('Quantity must be greater than zero.');
+    if (quantityUsed > purchased - used) throw Exception('Usage quantity exceeds available stock.');
+    await db.update(
+      'inventory_usage',
+      {
+        'item_id': itemId,
+        'quantity_used': quantityUsed,
+        'usage_date': usageDate,
+        'used_for': usedFor,
+        'remarks': remarks,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<void> deleteUsage(int id) async {
+    final db = await _databaseHelper.database;
+    await db.delete('inventory_usage', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<int> createUsage({
