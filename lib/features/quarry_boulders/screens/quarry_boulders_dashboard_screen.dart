@@ -6,7 +6,6 @@ import '../../../core/widgets/app_sidebar.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
-import '../../../data/repositories/driver_repository.dart';
 import '../providers/quarry_boulder_provider.dart';
 import 'quarry_boulders_reports_screen.dart';
 import 'quarry_boulders_trip_add_edit_screen.dart';
@@ -23,8 +22,8 @@ class _QuarryBouldersDashboardScreenState
   DateTime? _from;
   DateTime? _to;
   final _search = TextEditingController();
-  String _driver = '';
-  List<String> _drivers = [];
+  String _producer = '';
+  List<String> _producers = [];
   int _page = 1;
   int _rows = 10;
 
@@ -32,7 +31,7 @@ class _QuarryBouldersDashboardScreenState
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _drivers = await DriverRepository().getDrivers();
+      _producers = await context.read<QuarryBoulderProvider>().getProducers();
       if (mounted) setState(() {});
       await _load();
     });
@@ -48,7 +47,7 @@ class _QuarryBouldersDashboardScreenState
     fromDate: _from,
     toDate: _to,
     registrationNumber: _search.text,
-    driverName: _driver,
+    producerName: _producer,
   );
 
   Future<void> _pick(bool from) async {
@@ -440,9 +439,9 @@ class _QuarryBouldersDashboardScreenState
         const SizedBox(width: 12),
         Expanded(
           child: DropdownButtonFormField<String>(
-            initialValue: _driver.isEmpty ? '' : _driver,
+            initialValue: _producer.isEmpty ? '' : _producer,
             decoration: InputDecoration(
-              labelText: AppLocalization.t('Driver Name'),
+              labelText: AppLocalization.t('Boulder Producer'),
               prefixIcon: const Icon(Icons.person_outline),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8),
@@ -451,9 +450,9 @@ class _QuarryBouldersDashboardScreenState
             items: [
               DropdownMenuItem<String>(
                 value: '',
-                child: Text(AppLocalization.t('All Drivers')),
+                child: Text(AppLocalization.t('All Producers')),
               ),
-              ..._drivers.map(
+              ..._producers.map(
                 (name) => DropdownMenuItem<String>(
                   value: name,
                   child: Text(name),
@@ -462,7 +461,7 @@ class _QuarryBouldersDashboardScreenState
             ],
             onChanged: (v) {
               setState(() {
-                _driver = v ?? '';
+                _producer = v ?? '';
                 _page = 1;
               });
               _load();
@@ -479,7 +478,7 @@ class _QuarryBouldersDashboardScreenState
             _from = null;
             _to = null;
             _search.clear();
-            _driver = '';
+            _producer = '';
             setState(() {
               _page = 1;
             });

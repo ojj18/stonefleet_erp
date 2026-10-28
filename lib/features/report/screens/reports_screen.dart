@@ -82,7 +82,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     padding: const EdgeInsets.all(32),
                     child: Center(
                       child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1200),
+                        constraints: const BoxConstraints(maxWidth: 1500),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -360,10 +360,6 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       value: provider.equipmentType,
                       items: [
                         DropdownMenuItem(
-                          value: EquipmentType.all,
-                          child: Text(AppLocalization.t('All Equipment')),
-                        ),
-                        DropdownMenuItem(
                           value: EquipmentType.excavator,
                           child: Text(AppLocalization.t('Excavator')),
                         ),
@@ -380,44 +376,52 @@ class _ReportsScreenState extends State<ReportsScreen> {
                       },
                     ),
                   ),
-                  if (provider.equipmentType != EquipmentType.all) ...[
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: DropdownButtonFormField<int?>(
-                        key: ValueKey('vehicle-filter-${provider.equipmentType}-${provider.selectedVehicleId}'),
-                        initialValue: provider.selectedVehicleId,
-                        decoration: InputDecoration(
-                          labelText: AppLocalization.t('Vehicle Number'),
-                          filled: true,
-                          fillColor: const Color(0xFFF8F9FB),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: const BorderSide(color: Color(0xFFD1D5DB)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: DropdownButtonFormField<int?>(
+                      key: ValueKey(
+                        'vehicle-filter-${provider.equipmentType}-${provider.selectedVehicleId}',
+                      ),
+                      initialValue: provider.selectedVehicleId,
+                      decoration: InputDecoration(
+                        labelText: AppLocalization.t('Vehicle Number'),
+                        filled: true,
+                        fillColor: const Color(0xFFF8F9FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFD1D5DB),
                           ),
                         ),
-                        hint: Text(AppLocalization.t('All Vehicles')),
-                        items: [
-                          DropdownMenuItem<int?>(
-                            value: null,
-                            child: Text(AppLocalization.t('All Vehicles')),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFD1D5DB),
                           ),
-                          ...provider.vehicleOptions.map((vehicle) {
-                            final id = (vehicle['id'] as num).toInt();
-                            final registration = (vehicle['registration_number'] ?? '').toString();
-                            return DropdownMenuItem<int?>(
-                              value: id,
-                              child: Text(registration.isEmpty ? 'ID $id' : registration),
-                            );
-                          }),
-                        ],
-                        onChanged: (value) => provider.setSelectedVehicleId(value),
+                        ),
                       ),
+                      hint: Text(AppLocalization.t('All Vehicles')),
+                      items: [
+                        DropdownMenuItem<int?>(
+                          value: null,
+                          child: Text(AppLocalization.t('All Vehicles')),
+                        ),
+                        ...provider.vehicleOptions.map((vehicle) {
+                          final id = (vehicle['id'] as num).toInt();
+                          final registration =
+                              (vehicle['registration_number'] ?? '').toString();
+                          return DropdownMenuItem<int?>(
+                            value: id,
+                            child: Text(
+                              registration.isEmpty ? 'ID $id' : registration,
+                            ),
+                          );
+                        }),
+                      ],
+                      onChanged: (value) =>
+                          provider.setSelectedVehicleId(value),
                     ),
-                  ],
+                  ),
 
                   const SizedBox(width: 12),
                   Expanded(
@@ -569,7 +573,9 @@ class _ReportsScreenState extends State<ReportsScreen> {
           suffixIcon: const Icon(Icons.calendar_today_outlined, size: 19),
         ),
         child: Text(
-          date == null ? 'Select date' : _formatDateTime(date),
+          date == null
+              ? AppLocalization.t('Select date')
+              : _formatDateTime(date),
           style: TextStyle(
             fontSize: 14,
             color: date == null
@@ -646,130 +652,176 @@ class _ReportsScreenState extends State<ReportsScreen> {
     );
   }
 
+  List<String> _reportHeaders(ReportType type, EquipmentType equipment) {
+    final isTransport = equipment == EquipmentType.transport;
+    if (type == ReportType.service) {
+      return [
+        'REGISTRATION',
+        'SERVICE DATE',
+        isTransport ? 'METER VALUE (KM)' : 'METER VALUE (HOURS)',
+        'QUANTITY',
+        'COST',
+        'REMARKS',
+      ];
+    }
+    return isTransport
+        ? [
+            'DATE',
+            'VEHICLE',
+            'DRIVER',
+            'KM',
+            'LOADS',
+            'DIESEL',
+            'EXPENSE',
+            'ROUTE',
+            'REMARKS',
+          ]
+        : [
+            'DATE',
+            'EXCAVATOR',
+            'OPERATOR',
+            'SHIFT',
+            'HOURS',
+            'LOADS',
+            'DIESEL',
+            'EXPENSE',
+            'REMARKS',
+          ];
+  }
+
+  List<int> _reportColumnFlexes(ReportType type, EquipmentType equipment) {
+    final isTransport = equipment == EquipmentType.transport;
+    if (type == ReportType.service) return [2, 2, 2, 1, 2, 3];
+    return isTransport
+        ? [2, 2, 2, 1, 1, 1, 2, 3, 3]
+        : [2, 2, 2, 1, 1, 1, 1, 2, 3];
+  }
+
   Widget _buildTableHeader(ReportType type) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    final provider = context.read<ReportProvider>();
+    final headers = _reportHeaders(type, provider.equipmentType);
+    final flexes = _reportColumnFlexes(type, provider.equipmentType);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+      decoration: const BoxDecoration(
+        color: Color(0xFFF1F3F5),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+      ),
       child: Row(
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(AppLocalization.t('EQUIPMENT'), style: _headerStyle),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Text(AppLocalization.t('REGISTRATION'), style: _headerStyle),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Text(AppLocalization.t('DATE'), style: _headerStyle),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Text(
-              type == ReportType.service
-                  ? AppLocalization.t('METER')
-                  : AppLocalization.t('DETAILS'),
-              style: _headerStyle,
+          for (var i = 0; i < headers.length; i++)
+            Expanded(
+              flex: flexes[i],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  AppLocalization.t(headers[i]),
+                  style: _headerStyle,
+                  textAlign: (headers[i] == 'EXPENSE' || headers[i] == 'COST')
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Text(
-              AppLocalization.t('COST'),
-              style: _headerStyle,
-              textAlign: TextAlign.right,
-            ),
-          ),
         ],
       ),
     );
   }
 
   Widget _buildReportRow(Map<String, dynamic> record, ReportType type) {
-    final equipmentType = record['equipment_type']?.toString() ?? '';
-
-    final registration = record['registration_number']?.toString() ?? 'Unknown';
-
-    final date = type == ReportType.service
-        ? record['service_date']?.toString() ?? ''
-        : record['created_at']?.toString() ?? '';
-
-    final meter = type == ReportType.service
-        ? _formatNumber(
-            _toDouble(record['current_hour_meter'] ?? record['current_km']),
-          )
-        : _maintenanceDetails(record);
-
-    final cost = type == ReportType.service
-        ? _toDouble(record['item_cost'])
-        : _toDouble(record['diesel_expense']);
-
+    final provider = context.read<ReportProvider>();
+    final isTransport = provider.equipmentType == EquipmentType.transport;
+    final isService = type == ReportType.service;
+    final date = isService
+        ? record['service_date']
+        : (record['maintenance_date'] ?? record['created_at']);
+    final registration = (record['registration_number'] ?? 'Unknown')
+        .toString();
+    final cost = _toDouble(
+      isService
+          ? (record['total_cost'] ??
+                record['item_cost'] ??
+                record['spare_cost'] ??
+                0)
+          : record['diesel_expense'],
+    );
+    final remarks = (record['service_remarks'] ?? record['remarks'] ?? '')
+        .toString()
+        .trim();
+    final List<String> cells;
+    if (isService) {
+      final meter = isTransport
+          ? record['current_km']
+          : record['current_hour_meter'];
+      cells = [
+        registration,
+        _formatDate(date?.toString() ?? ''),
+        _formatNumber(_toDouble(meter)),
+        _formatNumber(_toDouble(record['quantity'])),
+        _formatCurrency(cost),
+        remarks.isEmpty ? '-' : remarks,
+      ];
+    } else if (isTransport) {
+      final route =
+          '${record['loading_site'] ?? ''} → ${record['unloading_site'] ?? ''}'
+              .trim();
+      cells = [
+        _formatDate(date?.toString() ?? ''),
+        registration,
+        (record['driver_name'] ?? '-').toString(),
+        '${_formatNumber(_toDouble(record['total_km']))} KM',
+        _formatNumber(_toDouble(record['number_of_loads'])),
+        '${_formatNumber(_toDouble(record['diesel_filled']))} L',
+        _formatCurrency(cost),
+        route == '→' ? '-' : route,
+        remarks.isEmpty ? '-' : remarks,
+      ];
+    } else {
+      cells = [
+        _formatDate(date?.toString() ?? ''),
+        registration,
+        (record['operator_name'] ?? '-').toString(),
+        (record['shift'] ?? '-').toString(),
+        '${_formatNumber(_toDouble(record['total_working_hour'] ?? record['total_running_hour']))} h',
+        _formatNumber(_toDouble(record['number_of_loads'])),
+        '${_formatNumber(_toDouble(record['diesel_filled']))} L',
+        _formatCurrency(cost),
+        remarks.isEmpty ? '-' : remarks,
+      ];
+    }
+    final flexes = _reportColumnFlexes(type, provider.equipmentType);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: Color(0xFFE9ECEF))),
       ),
       child: Row(
         children: [
-          Expanded(
-            flex: 2,
-            child: Row(
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE8F5E9),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    equipmentType.toLowerCase() == 'excavator'
-                        ? Icons.construction_outlined
-                        : Icons.local_shipping_outlined,
-                    color: const Color(0xFF00652C),
-                    size: 19,
-                  ),
+          for (var i = 0; i < cells.length; i++)
+            Expanded(
+              flex: flexes[i],
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  cells[i],
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  textAlign:
+                      (isService && i == 4) ||
+                          (!isService && i == (isTransport ? 6 : 7))
+                      ? TextAlign.right
+                      : TextAlign.left,
+                  style:
+                      ((!isService && i == (isTransport ? 6 : 7)) ||
+                          (isService && i == 4))
+                      ? const TextStyle(fontWeight: FontWeight.w700)
+                      : null,
                 ),
-
-                const SizedBox(width: 10),
-
-                Expanded(
-                  child: Text(
-                    _capitalize(equipmentType),
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Text(registration, overflow: TextOverflow.ellipsis),
-          ),
-
-          Expanded(flex: 2, child: Text(_formatDate(date))),
-
-          Expanded(
-            flex: 2,
-            child: Text(meter, overflow: TextOverflow.ellipsis),
-          ),
-
-          Expanded(
-            flex: 2,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                _formatCurrency(cost),
-                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -831,9 +883,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             : 'maintenance',
         equipmentType: provider.equipmentType == EquipmentType.excavator
             ? 'excavator'
-            : provider.equipmentType == EquipmentType.transport
-            ? 'transport'
-            : 'all',
+            : 'transport',
       );
 
       if (!mounted) return;
@@ -870,9 +920,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           : 'maintenance',
       equipmentType: provider.equipmentType == EquipmentType.excavator
           ? 'excavator'
-          : provider.equipmentType == EquipmentType.transport
-          ? 'transport'
-          : 'all',
+          : 'transport',
       fromDate: provider.fromDate,
       toDate: provider.toDate,
     );
@@ -1058,21 +1106,21 @@ class _ReportsScreenState extends State<ReportsScreen> {
   // HELPERS
   // ============================================================
 
-  String _maintenanceDetails(Map<String, dynamic> record) {
-    final remarks = record['remarks']?.toString();
+  // String _maintenanceDetails(Map<String, dynamic> record) {
+  //   final remarks = record['remarks']?.toString();
 
-    if (remarks != null && remarks.trim().isNotEmpty) {
-      return remarks;
-    }
+  //   if (remarks != null && remarks.trim().isNotEmpty) {
+  //     return remarks;
+  //   }
 
-    final loads = record['number_of_loads'];
+  //   final loads = record['number_of_loads'];
 
-    if (loads != null) {
-      return AppLocalization.t('Loads: $loads');
-    }
+  //   if (loads != null) {
+  //     return AppLocalization.t('Loads: $loads');
+  //   }
 
-    return '-';
-  }
+  //   return '-';
+  // }
 
   double _toDouble(dynamic value) {
     if (value == null) return 0;
@@ -1114,11 +1162,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
         '${date.year}';
   }
 
-  String _capitalize(String value) {
-    if (value.isEmpty) return value;
+  // String _capitalize(String value) {
+  //   if (value.isEmpty) return value;
 
-    return value[0].toUpperCase() + value.substring(1);
-  }
+  //   return value[0].toUpperCase() + value.substring(1);
+  // }
 }
 
 // ============================================================

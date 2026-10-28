@@ -516,7 +516,7 @@ class _QuarryBouldersTripAddEditScreenState
     },
   );
   Widget _loadField() => InputDecorator(
-    decoration: _dec(AppLocalization.t('Total Load'), Icons.scale_outlined),
+    decoration: _dec(AppLocalization.t('Total Unit'), Icons.scale_outlined),
     child: Text(
       _vehicle == null ? '—' : _num(_load),
       style: const TextStyle(

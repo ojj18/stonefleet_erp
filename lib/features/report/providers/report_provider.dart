@@ -17,7 +17,7 @@ class ReportProvider extends ChangeNotifier {
   // ============================================================
 
   ReportType _reportType = ReportType.maintenance;
-  EquipmentType _equipmentType = EquipmentType.all;
+  EquipmentType _equipmentType = EquipmentType.transport;
   int? _selectedVehicleId;
   List<Map<String, dynamic>> _excavatorOptions = [];
   List<Map<String, dynamic>> _transportOptions = [];
@@ -139,7 +139,7 @@ class ReportProvider extends ChangeNotifier {
   }
 
   void clearFilters() {
-    _equipmentType = EquipmentType.all;
+    _equipmentType = EquipmentType.transport;
     _selectedVehicleId = null;
     _fromDate = null;
     _toDate = null;

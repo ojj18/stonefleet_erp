@@ -60,6 +60,18 @@ class QuarryBoulderRepository {
     return rows.map(QuarryBoulderTrip.fromMap).toList();
   }
 
+
+  Future<List<String>> getProducers() async {
+    final db = await _dbHelper.database;
+    final rows = await db.rawQuery("""
+      SELECT DISTINCT TRIM(producer_name) AS producer_name
+      FROM quarry_boulder_trips
+      WHERE producer_name IS NOT NULL AND TRIM(producer_name) != ''
+      ORDER BY producer_name COLLATE NOCASE
+    """);
+    return rows.map((row) => (row['producer_name'] ?? '').toString()).where((name) => name.isNotEmpty).toList();
+  }
+
   Future<QuarryBoulderTrip?> getById(int id) async {
     final db = await _dbHelper.database;
     final rows = await db.query('quarry_boulder_trips', where: 'id = ?', whereArgs: [id], limit: 1);
@@ -84,13 +96,14 @@ class QuarryBoulderRepository {
     return db.delete('quarry_boulder_trips', where: 'id = ?', whereArgs: [id]);
   }
 
-  Future<QuarryBoulderSummary> getSummary({DateTime? fromDate, DateTime? toDate, String? driverName}) async {
+  Future<QuarryBoulderSummary> getSummary({DateTime? fromDate, DateTime? toDate, String? driverName, String? producerName}) async {
     final db = await _dbHelper.database;
     final where = <String>[];
     final args = <Object?>[];
     if (fromDate != null) { where.add('trip_date >= ?'); args.add(_dateOnly(fromDate)); }
     if (toDate != null) { where.add('trip_date <= ?'); args.add(_dateOnly(toDate)); }
     if (driverName != null && driverName.trim().isNotEmpty) { where.add('LOWER(driver_name) = ?'); args.add(driverName.trim().toLowerCase()); }
+    if (producerName != null && producerName.trim().isNotEmpty) { where.add('LOWER(producer_name) = ?'); args.add(producerName.trim().toLowerCase()); }
     final clause = where.isEmpty ? '' : ' WHERE ${where.join(' AND ')}';
     final row = (await db.rawQuery('''
       SELECT COUNT(*) records,

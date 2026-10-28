@@ -40,7 +40,7 @@ class PdfReportService {
                 : 'Maintenance Records',
           ),
           pw.SizedBox(height: 18),
-          _maintenanceServiceTable(records, reportType),
+          _maintenanceServiceTable(records, reportType, equipmentType),
         ],
       ),
     );
@@ -517,53 +517,101 @@ class PdfReportService {
   pw.Widget _maintenanceServiceTable(
     List<Map<String, dynamic>> records,
     String type,
+    String equipmentType,
   ) {
+    final isService = type == 'service';
+    final isTransport = equipmentType == 'transport';
+    final headers = isService
+        ? [
+            'Registration',
+            'Service Date',
+            isTransport ? 'Meter Value (KM)' : 'Meter Value (Hours)',
+            'Quantity',
+            'Cost',
+            'Remarks',
+          ]
+        : isTransport
+        ? [
+            'Date',
+            'Vehicle',
+            'Driver',
+            'KM',
+            'Loads',
+            'Diesel (L)',
+            'Expense',
+            'Route',
+            'Remarks',
+          ]
+        : [
+            'Date',
+            'Excavator',
+            'Operator',
+            'Shift',
+            'Hours',
+            'Loads',
+            'Diesel (L)',
+            'Expense',
+            'Remarks',
+          ];
     final rows = records.map((record) {
-      final date = type == 'service'
-          ? record['service_date']?.toString() ?? '-'
-          : record['created_at']?.toString() ?? '-';
-      final detail = type == 'service'
-          ? _number(record['current_hour_meter'] ?? record['current_km'])
-          : _maintenanceDetails(record);
-      final cost = type == 'service'
-          ? _currency(record['item_cost'])
-          : _currency(record['diesel_expense']);
-
+      final date = isService
+          ? record['service_date']?.toString()
+          : (record['maintenance_date'] ?? record['created_at'])?.toString();
+      if (isService) {
+        return [
+          _value(record['registration_number']),
+          _formatDateString(date),
+          _number(
+            isTransport ? record['current_km'] : record['current_hour_meter'],
+          ),
+          _number(record['quantity']),
+          _currency(
+            record['total_cost'] ??
+                record['item_cost'] ??
+                record['spare_cost'] ??
+                0,
+          ),
+          _value(record['service_remarks'] ?? record['remarks']),
+        ];
+      }
+      if (isTransport) {
+        return [
+          _formatDateString(date),
+          _value(record['registration_number']),
+          _value(record['driver_name']),
+          '${_number(record['total_km'])} KM',
+          _number(record['number_of_loads']),
+          '${_number(record['diesel_filled'])} L',
+          _currency(record['diesel_expense']),
+          '${_value(record['loading_site'])} → ${_value(record['unloading_site'])}',
+          _value(record['remarks']),
+        ];
+      }
       return [
-        _value(record['equipment_type']),
-        _value(record['registration_number'], fallback: 'Unknown'),
         _formatDateString(date),
-        detail,
-        cost,
+        _value(record['registration_number']),
+        _value(record['operator_name']),
+        _value(record['shift']),
+        '${_number(record['total_working_hour'] ?? record['total_running_hour'])} h',
+        _number(record['number_of_loads']),
+        '${_number(record['diesel_filled'])} L',
+        _currency(record['diesel_expense']),
+        _value(record['remarks']),
       ];
     }).toList();
-
     return pw.TableHelper.fromTextArray(
-      headers: const [
-        'Equipment',
-        'Registration',
-        'Date',
-        'Details / Meter',
-        'Cost',
-      ],
+      headers: headers,
       data: rows,
       headerStyle: pw.TextStyle(
-        fontSize: 8,
+        fontSize: 7.5,
         fontWeight: pw.FontWeight.bold,
         color: PdfColors.white,
       ),
       headerDecoration: const pw.BoxDecoration(color: _green),
-      cellStyle: const pw.TextStyle(fontSize: 8, color: _text),
-      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 7, vertical: 6),
+      cellStyle: const pw.TextStyle(fontSize: 7.2, color: _text),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 6),
       border: pw.TableBorder.all(color: _border, width: .5),
       cellAlignment: pw.Alignment.centerLeft,
-      headerAlignments: const {
-        0: pw.Alignment.centerLeft,
-        1: pw.Alignment.centerLeft,
-        2: pw.Alignment.centerLeft,
-        3: pw.Alignment.centerLeft,
-        4: pw.Alignment.centerRight,
-      },
     );
   }
 
@@ -654,13 +702,13 @@ class PdfReportService {
     );
   }
 
-  String _maintenanceDetails(Map<String, dynamic> record) {
-    final remarks = record['remarks']?.toString();
-    if (remarks != null && remarks.trim().isNotEmpty) return remarks.trim();
-    final loads = record['number_of_loads'];
-    if (loads != null) return 'Loads: $loads';
-    return '-';
-  }
+  // String _maintenanceDetails(Map<String, dynamic> record) {
+  //   final remarks = record['remarks']?.toString();
+  //   if (remarks != null && remarks.trim().isNotEmpty) return remarks.trim();
+  //   final loads = record['number_of_loads'];
+  //   if (loads != null) return 'Loads: $loads';
+  //   return '-';
+  // }
 
   String _value(dynamic value, {String fallback = '-'}) {
     if (value == null) return fallback;

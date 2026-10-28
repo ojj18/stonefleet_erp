@@ -282,14 +282,50 @@ class ReportRepository {
         es.current_hour_meter,
         es.remarks AS service_remarks,
 
-        esi.id AS service_item_id,
-        esi.spare_id,
-        s.name AS spare_name,
-        s.code AS spare_code,
-
-        esi.quantity,
-        esi.cost AS spare_cost,
-        esi.remark AS spare_remark,
+        COALESCE((
+          SELECT SUM(esi_qty.quantity)
+          FROM excavator_service_items esi_qty
+          WHERE esi_qty.service_id = es.id
+        ), 0) AS quantity,
+        COALESCE((
+          SELECT SUM(
+            esi_cost.quantity * COALESCE(
+              NULLIF(esi_cost.cost, 0),
+              (
+                SELECT COALESCE(
+                  NULLIF(ipi.unit_price, 0),
+                  CASE WHEN ipi.quantity > 0 THEN ipi.total_cost / ipi.quantity ELSE 0 END
+                )
+                FROM spares spare_cost
+                INNER JOIN inventory_items ii_cost
+                  ON (
+                    LOWER(TRIM(ii_cost.item_name)) = LOWER(TRIM(spare_cost.name))
+                    OR LOWER(TRIM(ii_cost.item_name)) LIKE '%' || LOWER(TRIM(spare_cost.name)) || '%'
+                    OR LOWER(TRIM(spare_cost.name)) LIKE '%' || LOWER(TRIM(ii_cost.item_name)) || '%'
+                  )
+                INNER JOIN inventory_purchase_items ipi
+                  ON ipi.item_id = ii_cost.id
+                INNER JOIN inventory_purchases ip
+                  ON ip.id = ipi.purchase_id
+                WHERE spare_cost.id = esi_cost.spare_id
+                  AND COALESCE(
+                    NULLIF(ipi.unit_price, 0),
+                    CASE WHEN ipi.quantity > 0 THEN ipi.total_cost / ipi.quantity ELSE 0 END,
+                    0
+                  ) > 0
+                ORDER BY
+                  CASE WHEN LOWER(TRIM(ii_cost.item_name)) = LOWER(TRIM(spare_cost.name)) THEN 0 ELSE 1 END,
+                  ip.purchase_date DESC,
+                  ip.id DESC,
+                  ipi.id DESC
+                LIMIT 1
+              ),
+              0
+            )
+          )
+          FROM excavator_service_items esi_cost
+          WHERE esi_cost.service_id = es.id
+        ), 0) AS total_cost,
 
         es.created_at,
         es.updated_at
@@ -306,8 +342,9 @@ class ReportRepository {
         ON s.id = esi.spare_id
 
       $whereClause
+      GROUP BY es.id
 
-      ORDER BY es.service_date DESC, es.id DESC, esi.id ASC
+      ORDER BY es.service_date DESC, es.id DESC
       ''', args);
   }
 
@@ -375,14 +412,50 @@ class ReportRepository {
         ts.current_km,
         ts.remarks AS service_remarks,
 
-        tsi.id AS service_item_id,
-        tsi.spare_id,
-        s.name AS spare_name,
-        s.code AS spare_code,
-
-        tsi.quantity,
-        tsi.cost AS spare_cost,
-        tsi.remark AS spare_remark,
+        COALESCE((
+          SELECT SUM(tsi_qty.quantity)
+          FROM transport_service_items tsi_qty
+          WHERE tsi_qty.service_id = ts.id
+        ), 0) AS quantity,
+        COALESCE((
+          SELECT SUM(
+            tsi_cost.quantity * COALESCE(
+              NULLIF(tsi_cost.cost, 0),
+              (
+                SELECT COALESCE(
+                  NULLIF(ipi.unit_price, 0),
+                  CASE WHEN ipi.quantity > 0 THEN ipi.total_cost / ipi.quantity ELSE 0 END
+                )
+                FROM spares spare_cost
+                INNER JOIN inventory_items ii_cost
+                  ON (
+                    LOWER(TRIM(ii_cost.item_name)) = LOWER(TRIM(spare_cost.name))
+                    OR LOWER(TRIM(ii_cost.item_name)) LIKE '%' || LOWER(TRIM(spare_cost.name)) || '%'
+                    OR LOWER(TRIM(spare_cost.name)) LIKE '%' || LOWER(TRIM(ii_cost.item_name)) || '%'
+                  )
+                INNER JOIN inventory_purchase_items ipi
+                  ON ipi.item_id = ii_cost.id
+                INNER JOIN inventory_purchases ip
+                  ON ip.id = ipi.purchase_id
+                WHERE spare_cost.id = tsi_cost.spare_id
+                  AND COALESCE(
+                    NULLIF(ipi.unit_price, 0),
+                    CASE WHEN ipi.quantity > 0 THEN ipi.total_cost / ipi.quantity ELSE 0 END,
+                    0
+                  ) > 0
+                ORDER BY
+                  CASE WHEN LOWER(TRIM(ii_cost.item_name)) = LOWER(TRIM(spare_cost.name)) THEN 0 ELSE 1 END,
+                  ip.purchase_date DESC,
+                  ip.id DESC,
+                  ipi.id DESC
+                LIMIT 1
+              ),
+              0
+            )
+          )
+          FROM transport_service_items tsi_cost
+          WHERE tsi_cost.service_id = ts.id
+        ), 0) AS total_cost,
 
         ts.created_at,
         ts.updated_at
@@ -399,8 +472,9 @@ class ReportRepository {
         ON s.id = tsi.spare_id
 
       $whereClause
+      GROUP BY ts.id
 
-      ORDER BY ts.service_date DESC, ts.id DESC, tsi.id ASC
+      ORDER BY ts.service_date DESC, ts.id DESC
       ''', args);
   }
 

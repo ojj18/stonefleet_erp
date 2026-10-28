@@ -8,7 +8,6 @@ import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import '../../../core/localization/app_localization.dart';
 import '../../../core/widgets/app_sidebar.dart';
-import '../../../data/repositories/driver_repository.dart';
 import '../providers/quarry_boulder_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -24,13 +23,13 @@ class _QuarryBouldersReportsScreenState
   String _period = 'Monthly';
   DateTime? _from;
   DateTime? _to;
-  String _driver = '';
-  List<String> _drivers = [];
+  String _producer = '';
+  List<String> _producers = [];
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      _drivers = await DriverRepository().getDrivers();
+      _producers = await context.read<QuarryBoulderProvider>().getProducers();
       if (mounted) setState(() {});
       await _load();
     });
@@ -59,7 +58,7 @@ class _QuarryBouldersReportsScreenState
     await context.read<QuarryBoulderProvider>().loadReports(
       fromDate: f,
       toDate: t,
-      driverName: _driver.isEmpty ? null : _driver,
+      producerName: _producer.isEmpty ? null : _producer,
     );
   }
 
@@ -235,24 +234,24 @@ class _QuarryBouldersReportsScreenState
         const SizedBox(width: 12),
         Expanded(
           child: DropdownButtonFormField<String>(
-            initialValue: _driver,
+            initialValue: _producer,
             decoration: InputDecoration(
-              labelText: AppLocalization.t('Driver'),
+              labelText: AppLocalization.t('Boulder Producer'),
               border: const OutlineInputBorder(),
             ),
             items: [
               DropdownMenuItem<String>(
                 value: '',
-                child: Text(AppLocalization.t('All Drivers')),
+                child: Text(AppLocalization.t('All Producers')),
               ),
-              ..._drivers.map(
+              ..._producers.map(
                 (name) => DropdownMenuItem<String>(
                   value: name,
                   child: Text(name),
                 ),
               ),
             ],
-            onChanged: (value) => setState(() => _driver = value ?? ''),
+            onChanged: (value) => setState(() => _producer = value ?? ''),
           ),
         ),
         if (_period == 'Custom') ...[

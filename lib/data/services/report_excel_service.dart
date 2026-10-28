@@ -31,68 +31,98 @@ class ReportExcelService {
     // HEADER
     // ------------------------------------------------------------
 
-    sheet.appendRow([
-      TextCellValue('Equipment'),
-      TextCellValue('Registration'),
-      TextCellValue('Date'),
-      TextCellValue(reportType == 'service' ? 'Meter' : 'Details'),
-      TextCellValue(reportType == 'service' ? 'Spare' : 'Operator / Driver'),
-      TextCellValue(reportType == 'service' ? 'Quantity' : 'Loads'),
-      TextCellValue(reportType == 'service' ? 'Item Cost' : 'Diesel Filled'),
-      TextCellValue('Cost'),
-      TextCellValue('Remarks'),
-    ]);
-
-    // ------------------------------------------------------------
-    // DATA
-    // ------------------------------------------------------------
+    final isService = reportType == 'service';
+    final isTransport = equipmentType == 'transport';
+    final headers = isService
+        ? [
+            'Registration',
+            'Service Date',
+            isTransport ? 'Meter Value (KM)' : 'Meter Value (Hours)',
+            'Quantity',
+            'Cost',
+            'Remarks',
+          ]
+        : isTransport
+        ? [
+            'Date',
+            'Vehicle',
+            'Driver',
+            'KM',
+            'Loads',
+            'Diesel (L)',
+            'Expense',
+            'Route',
+            'Remarks',
+          ]
+        : [
+            'Date',
+            'Excavator',
+            'Operator',
+            'Shift',
+            'Hours',
+            'Loads',
+            'Diesel (L)',
+            'Expense',
+            'Remarks',
+          ];
+    sheet.appendRow(headers.map((v) => TextCellValue(v)).toList());
 
     for (final record in records) {
-      final isService = reportType == 'service';
-
-      final equipment = record['equipment_type']?.toString() ?? '';
-
-      final registration = record['registration_number']?.toString() ?? '';
-
       final date = isService
           ? record['service_date']?.toString() ?? ''
-          : record['created_at']?.toString() ?? '';
-
-      final meter = isService
-          ? record['current_hour_meter'] ?? record['current_km'] ?? ''
-          : '';
-
-      final person = isService
-          ? record['spare_name']?.toString() ?? ''
-          : record['operator_name']?.toString() ??
-                record['driver_name']?.toString() ??
+          : (record['maintenance_date'] ?? record['created_at'])?.toString() ??
                 '';
-
-      final quantity = isService
-          ? record['quantity'] ?? ''
-          : record['number_of_loads'] ?? '';
-
-      final extraCost = isService
-          ? record['item_cost'] ?? ''
-          : record['diesel_filled'] ?? '';
-
-      final cost = isService
-          ? record['item_cost'] ?? 0
-          : record['diesel_expense'] ?? 0;
-
-      final remarks = record['remarks']?.toString() ?? '';
-
-      sheet.appendRow([
-        TextCellValue(_capitalize(equipment)),
-        TextCellValue(registration),
-        TextCellValue(_formatDate(date)),
-        _cellValue(meter),
-        TextCellValue(person),
-        _cellValue(quantity),
-        _cellValue(extraCost),
-        _cellValue(cost),
-        TextCellValue(remarks),
-      ]);
+      final remarks =
+          record['remarks']?.toString() ??
+          record['service_remarks']?.toString() ??
+          '';
+      if (isService) {
+        sheet.appendRow([
+          TextCellValue(record['registration_number']?.toString() ?? ''),
+          TextCellValue(_formatDate(date)),
+          _cellValue(
+            isTransport
+                ? (record['current_km'] ?? '')
+                : (record['current_hour_meter'] ?? ''),
+          ),
+          _cellValue(record['quantity'] ?? 0),
+          _cellValue(
+            record['total_cost'] ??
+                record['item_cost'] ??
+                record['spare_cost'] ??
+                0,
+          ),
+          TextCellValue(remarks),
+        ]);
+      } else if (isTransport) {
+        sheet.appendRow([
+          TextCellValue(_formatDate(date)),
+          TextCellValue(record['registration_number']?.toString() ?? ''),
+          TextCellValue(record['driver_name']?.toString() ?? ''),
+          _cellValue(record['total_km'] ?? ''),
+          _cellValue(record['number_of_loads'] ?? ''),
+          _cellValue(record['diesel_filled'] ?? ''),
+          _cellValue(record['diesel_expense'] ?? 0),
+          TextCellValue(
+            '${record['loading_site'] ?? ''} → ${record['unloading_site'] ?? ''}',
+          ),
+          TextCellValue(remarks),
+        ]);
+      } else {
+        sheet.appendRow([
+          TextCellValue(_formatDate(date)),
+          TextCellValue(record['registration_number']?.toString() ?? ''),
+          TextCellValue(record['operator_name']?.toString() ?? ''),
+          TextCellValue(record['shift']?.toString() ?? ''),
+          _cellValue(
+            record['total_working_hour'] ?? record['total_running_hour'] ?? '',
+          ),
+          _cellValue(record['number_of_loads'] ?? ''),
+          _cellValue(record['diesel_filled'] ?? ''),
+          _cellValue(record['diesel_expense'] ?? 0),
+          TextCellValue(remarks),
+        ]);
+      }
     }
 
     // ------------------------------------------------------------
@@ -100,15 +130,15 @@ class ReportExcelService {
     // ------------------------------------------------------------
 
     final widths = <int, double>{
-      0: 15,
+      0: 14,
       1: 18,
-      2: 14,
-      3: 18,
-      4: 25,
+      2: 18,
+      3: 14,
+      4: 18,
       5: 12,
       6: 15,
-      7: 15,
-      8: 35,
+      7: 24,
+      8: 30,
     };
 
     for (final entry in widths.entries) {
@@ -343,9 +373,12 @@ class ReportExcelService {
     }
 
     final timestamp = _fileTimestamp();
-    final filePath = '${reportsDirectory.path}/inventory_${period.toLowerCase()}_$timestamp.xlsx';
+    final filePath =
+        '${reportsDirectory.path}/inventory_${period.toLowerCase()}_$timestamp.xlsx';
     final bytes = excel.save();
-    if (bytes == null) throw Exception('Unable to create Inventory Excel file.');
+    if (bytes == null) {
+      throw Exception('Unable to create Inventory Excel file.');
+    }
     await File(filePath).writeAsBytes(bytes);
     return filePath;
   }
@@ -405,14 +438,45 @@ class ReportExcelService {
 
     sheet.appendRow([]);
     sheet.appendRow([TextCellValue('Period Summary')]);
-    sheet.appendRow([TextCellValue('Item'), TextCellValue('Total Quantity'), TextCellValue('Total Cost')]);
-    sheet.appendRow([TextCellValue('Bullet'), _cellValue(summary.bulletQuantity), _cellValue(summary.bulletCost)]);
-    sheet.appendRow([TextCellValue('3m Wire'), _cellValue(summary.wire3mQuantity), _cellValue(summary.wire3mCost)]);
-    sheet.appendRow([TextCellValue('4m Wire'), _cellValue(summary.wire4mQuantity), _cellValue(summary.wire4mCost)]);
-    sheet.appendRow([TextCellValue('ED'), _cellValue(summary.edQuantity), _cellValue(summary.edCost)]);
-    final salaryTotal = records.fold<double>(0, (total, record) => total + record.salary);
-    sheet.appendRow([TextCellValue('Salary'), TextCellValue(''), _cellValue(salaryTotal)]);
-    sheet.appendRow([TextCellValue('Grand Total Cost'), TextCellValue(''), _cellValue(summary.totalCost)]);
+    sheet.appendRow([
+      TextCellValue('Item'),
+      TextCellValue('Total Quantity'),
+      TextCellValue('Total Cost'),
+    ]);
+    sheet.appendRow([
+      TextCellValue('Bullet'),
+      _cellValue(summary.bulletQuantity),
+      _cellValue(summary.bulletCost),
+    ]);
+    sheet.appendRow([
+      TextCellValue('3m Wire'),
+      _cellValue(summary.wire3mQuantity),
+      _cellValue(summary.wire3mCost),
+    ]);
+    sheet.appendRow([
+      TextCellValue('4m Wire'),
+      _cellValue(summary.wire4mQuantity),
+      _cellValue(summary.wire4mCost),
+    ]);
+    sheet.appendRow([
+      TextCellValue('ED'),
+      _cellValue(summary.edQuantity),
+      _cellValue(summary.edCost),
+    ]);
+    final salaryTotal = records.fold<double>(
+      0,
+      (total, record) => total + record.salary,
+    );
+    sheet.appendRow([
+      TextCellValue('Salary'),
+      TextCellValue(''),
+      _cellValue(salaryTotal),
+    ]);
+    sheet.appendRow([
+      TextCellValue('Grand Total Cost'),
+      TextCellValue(''),
+      _cellValue(summary.totalCost),
+    ]);
 
     const widths = <int, double>{
       0: 14,
@@ -442,9 +506,12 @@ class ReportExcelService {
     }
 
     final timestamp = _fileTimestamp();
-    final filePath = '${reportsDirectory.path}/quarry_blasting_${period.toLowerCase().replaceAll(' ', '_')}_$timestamp.xlsx';
+    final filePath =
+        '${reportsDirectory.path}/quarry_blasting_${period.toLowerCase().replaceAll(' ', '_')}_$timestamp.xlsx';
     final bytes = excel.save();
-    if (bytes == null) throw Exception('Unable to create Quarry Blasting Excel file.');
+    if (bytes == null) {
+      throw Exception('Unable to create Quarry Blasting Excel file.');
+    }
     await File(filePath).writeAsBytes(bytes);
     return filePath;
   }
@@ -511,11 +578,11 @@ class ReportExcelService {
     }
   }
 
-  String _capitalize(String value) {
-    if (value.isEmpty) return value;
+  // String _capitalize(String value) {
+  //   if (value.isEmpty) return value;
 
-    return value[0].toUpperCase() + value.substring(1);
-  }
+  //   return value[0].toUpperCase() + value.substring(1);
+  // }
 
   String _fileTimestamp() {
     final now = DateTime.now();

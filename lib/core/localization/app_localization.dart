@@ -19,6 +19,7 @@ class AppLocalization {
     'Stock Item Details': 'கையிருப்பு பொருள் விவரங்கள்',
     'Spare Item': 'உதிரிபாகம்',
     'Unit': 'அலகு',
+    'Total Unit': 'மொத்த அலகுகள்',
     'Purchased': 'வாங்கிய அளவு',
     'Used': 'பயன்படுத்திய அளவு',
     'Remaining': 'மீதமுள்ள அளவு',

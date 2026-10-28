@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:stonefleet_erp/features/auth/providers/auth_provider.dart';
 import '../../../core/localization/app_localization.dart';
 import '../../../core/widgets/app_sidebar.dart';
 import '../models/retreading_model.dart';
@@ -589,6 +590,7 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
   }
 
   Future<void> _delete(RetreadingRecord r) async {
+    if (!context.read<AuthProvider>().isAdmin) return;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
@@ -999,11 +1001,12 @@ class _RetreadingDashboardScreenState extends State<RetreadingDashboardScreen> {
                                   size: 18,
                                 ),
                               ),
-                            IconButton(
-                              tooltip: AppLocalization.t('Delete'),
-                              onPressed: () => _delete(r),
-                              icon: const Icon(Icons.delete_outline, size: 18),
-                            ),
+                            if (context.watch<AuthProvider>().isAdmin)
+                              IconButton(
+                                tooltip: AppLocalization.t('Delete'),
+                                onPressed: () => _delete(r),
+                                icon: const Icon(Icons.delete_outline, size: 18),
+                              ),
                           ],
                         ),
                       ),

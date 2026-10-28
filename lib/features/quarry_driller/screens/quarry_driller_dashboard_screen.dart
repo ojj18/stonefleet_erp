@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../../core/widgets/app_sidebar.dart';
 
+import '../../auth/providers/auth_provider.dart';
 import '../quarry_driller_repository.dart';
 import 'quarry_driller_reports_screen.dart';
 
@@ -523,61 +525,65 @@ class _QuarryDrillerDashboardScreenState
                                                                   size: 19,
                                                                 ),
                                                               ),
-                                                              IconButton(
-                                                                tooltip:
-                                                                    'Delete',
-                                                                onPressed: () async {
-                                                                  final ok = await showDialog<bool>(
-                                                                    context:
-                                                                        context,
-                                                                    builder: (ctx) => AlertDialog(
-                                                                      title: const Text(
-                                                                        'Delete record?',
+                                                              if (context
+                                                                  .watch<
+                                                                    AuthProvider
+                                                                  >()
+                                                                  .isAdmin)
+                                                                IconButton(
+                                                                  tooltip:
+                                                                      'Delete',
+                                                                  onPressed: () async {
+                                                                    final ok = await showDialog<bool>(
+                                                                      context:
+                                                                          context,
+                                                                      builder: (ctx) => AlertDialog(
+                                                                        title: const Text(
+                                                                          'Delete record?',
+                                                                        ),
+                                                                        content:
+                                                                            const Text(
+                                                                              'This record will be permanently deleted.',
+                                                                            ),
+                                                                        actions: [
+                                                                          TextButton(
+                                                                            onPressed: () => Navigator.pop(
+                                                                              ctx,
+                                                                              false,
+                                                                            ),
+                                                                            child: const Text(
+                                                                              'Cancel',
+                                                                            ),
+                                                                          ),
+                                                                          FilledButton(
+                                                                            onPressed: () => Navigator.pop(
+                                                                              ctx,
+                                                                              true,
+                                                                            ),
+                                                                            child: const Text(
+                                                                              'Delete',
+                                                                            ),
+                                                                          ),
+                                                                        ],
                                                                       ),
-                                                                      content:
-                                                                          const Text(
-                                                                            'This record will be permanently deleted.',
-                                                                          ),
-                                                                      actions: [
-                                                                        TextButton(
-                                                                          onPressed: () => Navigator.pop(
-                                                                            ctx,
-                                                                            false,
-                                                                          ),
-                                                                          child: const Text(
-                                                                            'Cancel',
-                                                                          ),
-                                                                        ),
-                                                                        FilledButton(
-                                                                          onPressed: () => Navigator.pop(
-                                                                            ctx,
-                                                                            true,
-                                                                          ),
-                                                                          child: const Text(
-                                                                            'Delete',
-                                                                          ),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  );
-                                                                  if (ok ==
-                                                                      true) {
-                                                                    await _repo
-                                                                        .delete(
-                                                                          r['id']
-                                                                              as int,
-                                                                        );
-                                                                    await _load();
-                                                                  }
-                                                                },
-                                                                icon: const Icon(
-                                                                  Icons
-                                                                      .delete_outline,
-                                                                  color: Colors
-                                                                      .red,
-                                                                  size: 19,
+                                                                    );
+                                                                    if (ok ==
+                                                                        true) {
+                                                                      await _repo.delete(
+                                                                        r['id']
+                                                                            as int,
+                                                                      );
+                                                                      await _load();
+                                                                    }
+                                                                  },
+                                                                  icon: const Icon(
+                                                                    Icons
+                                                                        .delete_outline,
+                                                                    color: Colors
+                                                                        .red,
+                                                                    size: 19,
+                                                                  ),
                                                                 ),
-                                                              ),
                                                             ],
                                                           ),
                                                         ),

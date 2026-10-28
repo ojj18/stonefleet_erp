@@ -13,19 +13,21 @@ class QuarryBoulderProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  Future<void> loadTrips({DateTime? fromDate, DateTime? toDate, String? registrationNumber, String? driverName}) async {
+  Future<List<String>> getProducers() => _repository.getProducers();
+
+  Future<void> loadTrips({DateTime? fromDate, DateTime? toDate, String? registrationNumber, String? driverName, String? producerName}) async {
     await _run(() async {
-      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, registrationNumber: registrationNumber, driverName: driverName);
-      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName);
+      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, registrationNumber: registrationNumber, driverName: driverName, producerName: producerName);
+      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName, producerName: producerName);
     });
   }
 
-  Future<void> loadReports({DateTime? fromDate, DateTime? toDate, String? driverName}) async {
+  Future<void> loadReports({DateTime? fromDate, DateTime? toDate, String? driverName, String? producerName}) async {
     await _run(() async {
-      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName);
+      summary = await _repository.getSummary(fromDate: fromDate, toDate: toDate, driverName: driverName, producerName: producerName);
       driverSummary = await _repository.getDriverSummary(fromDate: fromDate, toDate: toDate);
       lorrySummary = await _repository.getLorrySummary(fromDate: fromDate, toDate: toDate);
-      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, driverName: driverName);
+      trips = await _repository.getTrips(fromDate: fromDate, toDate: toDate, driverName: driverName, producerName: producerName);
     });
   }
 
