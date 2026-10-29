@@ -521,6 +521,7 @@ class DatabaseMigrations {
         purchase_date TEXT NOT NULL,
         operator_name TEXT NOT NULL DEFAULT 'Company',
         salary REAL NOT NULL DEFAULT 0,
+        advance_amount REAL NOT NULL DEFAULT 0,
 
         bullet_quantity REAL NOT NULL DEFAULT 0,
         bullet_price REAL NOT NULL DEFAULT 0,
@@ -587,6 +588,8 @@ class DatabaseMigrations {
         unit REAL NOT NULL DEFAULT 0,
         trips INTEGER NOT NULL DEFAULT 0,
         total_load REAL NOT NULL DEFAULT 0,
+        unit_price REAL NOT NULL DEFAULT 0,
+        total_value REAL NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL,
         updated_at TEXT,
         FOREIGN KEY (transport_vehicle_id) REFERENCES transport_vehicles(id)
@@ -777,6 +780,18 @@ class DatabaseMigrations {
     await db.execute("ALTER TABLE excavator_service ADD COLUMN air_blower_oil_quantity REAL NOT NULL DEFAULT 0");
     await db.execute("ALTER TABLE excavator_service ADD COLUMN air_blower_oil_rate REAL NOT NULL DEFAULT 0");
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS excavator_diesel_shifts (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ shift_date TEXT NOT NULL, excavator_number TEXT NOT NULL, driver_name TEXT NOT NULL,
+ shift TEXT NOT NULL CHECK (shift IN ('Day', 'Night')),
+ starting_meter REAL NOT NULL DEFAULT 0, closing_meter REAL NOT NULL DEFAULT 0,
+ meter_difference REAL NOT NULL DEFAULT 0, diesel_litres REAL NOT NULL DEFAULT 0,
+ diesel_lph REAL NOT NULL DEFAULT 0, loads REAL NOT NULL DEFAULT 0, units REAL NOT NULL DEFAULT 0,
+ remarks TEXT, created_at TEXT NOT NULL
+)
+    ''');
+
     await DatabaseSeed.seed(db);
 
     log('All StoneFleet tables created successfully.');
@@ -797,6 +812,20 @@ class DatabaseMigrations {
     int oldVersion,
     int newVersion,
   ) async {
+    if (oldVersion < 17) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS excavator_diesel_shifts (
+ id INTEGER PRIMARY KEY AUTOINCREMENT,
+ shift_date TEXT NOT NULL, excavator_number TEXT NOT NULL, driver_name TEXT NOT NULL,
+ shift TEXT NOT NULL CHECK (shift IN ('Day', 'Night')),
+ starting_meter REAL NOT NULL DEFAULT 0, closing_meter REAL NOT NULL DEFAULT 0,
+ meter_difference REAL NOT NULL DEFAULT 0, diesel_litres REAL NOT NULL DEFAULT 0,
+ diesel_lph REAL NOT NULL DEFAULT 0, loads REAL NOT NULL DEFAULT 0, units REAL NOT NULL DEFAULT 0,
+ remarks TEXT, created_at TEXT NOT NULL
+)
+      ''');
+    }
+
     if (oldVersion < 2) {
       final tables = ['excavators', 'transport_vehicles'];
       final columns = [
@@ -1567,6 +1596,13 @@ class DatabaseMigrations {
           "ALTER TABLE quarry_boulder_trips ADD COLUMN producer_name TEXT NOT NULL DEFAULT 'Company'",
         );
       }
+      if (!await _hasColumn(db, 'quarry_boulder_trips', 'unit_price')) {
+        await db.execute("ALTER TABLE quarry_boulder_trips ADD COLUMN unit_price REAL NOT NULL DEFAULT 0");
+      }
+      if (!await _hasColumn(db, 'quarry_boulder_trips', 'total_value')) {
+        await db.execute("ALTER TABLE quarry_boulder_trips ADD COLUMN total_value REAL NOT NULL DEFAULT 0");
+      }
+      await db.execute("UPDATE quarry_boulder_trips SET total_value = total_load * unit_price WHERE total_value = 0 AND unit_price > 0");
 
       log('Database migrated to version 10: quarry boulder producer created.');
     }
@@ -1698,5 +1734,32 @@ class DatabaseMigrations {
       log('Database migrated to version 16: Quarry Driller enabled.');
     }
 
+    // Ensure the Quarry Boulders pricing fields exist for databases created by
+    // earlier app versions, even when their schema version is already current.
+    final boulderTable = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='quarry_boulder_trips'",
+    );
+    // Ensure advance amount is available for existing and newly created blasting purchases.
+    final blastingTable = await db.rawQuery(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='quarry_blasting_purchases'",
+    );
+    if (blastingTable.isNotEmpty &&
+        !await _hasColumn(db, 'quarry_blasting_purchases', 'advance_amount')) {
+      await db.execute(
+        'ALTER TABLE quarry_blasting_purchases ADD COLUMN advance_amount REAL NOT NULL DEFAULT 0',
+      );
+    }
+
+    if (boulderTable.isNotEmpty) {
+      if (!await _hasColumn(db, 'quarry_boulder_trips', 'unit_price')) {
+        await db.execute("ALTER TABLE quarry_boulder_trips ADD COLUMN unit_price REAL NOT NULL DEFAULT 0");
+      }
+      if (!await _hasColumn(db, 'quarry_boulder_trips', 'total_value')) {
+        await db.execute("ALTER TABLE quarry_boulder_trips ADD COLUMN total_value REAL NOT NULL DEFAULT 0");
+      }
+      await db.execute(
+        "UPDATE quarry_boulder_trips SET total_value = total_load * unit_price WHERE total_value = 0 AND unit_price > 0",
+      );
+    }
   }
 }

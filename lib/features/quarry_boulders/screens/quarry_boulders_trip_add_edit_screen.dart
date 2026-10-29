@@ -31,6 +31,7 @@ class _QuarryBouldersTripAddEditScreenState
   List<String> _producers = [];
   String? _selectedProducer;
   final _trip = TextEditingController();
+  final _unitPrice = TextEditingController();
   DateTime _date = DateTime.now();
   TransportModel? _vehicle;
   String? _selectedRegistration;
@@ -56,6 +57,7 @@ class _QuarryBouldersTripAddEditScreenState
           _drivers = [..._drivers, t.driverName];
         }
         _trip.text = '${t.trips}';
+        _unitPrice.text = t.unitPrice == 0 ? '' : t.unitPrice.toStringAsFixed(2).replaceAll(RegExp(r'\\.00$'), '');
         if (mounted) {
           _vehicle = await context
               .read<TransportProvider>()
@@ -72,6 +74,7 @@ class _QuarryBouldersTripAddEditScreenState
   void dispose() {
     _driver.dispose();
     _trip.dispose();
+    _unitPrice.dispose();
     super.dispose();
   }
 
@@ -106,6 +109,7 @@ class _QuarryBouldersTripAddEditScreenState
             producerName: (_selectedProducer ?? 'Company').trim(),
             unit: _unit,
             tripsCount: count,
+            unitPrice: double.tryParse(_unitPrice.text.trim()) ?? 0,
           )
         : await p.saveTrip(
             tripDate: DateFormat('yyyy-MM-dd').format(_date),
@@ -115,6 +119,7 @@ class _QuarryBouldersTripAddEditScreenState
             producerName: (_selectedProducer ?? 'Company').trim(),
             unit: _unit,
             tripsCount: count,
+            unitPrice: double.tryParse(_unitPrice.text.trim()) ?? 0,
           );
     if (!mounted) return;
     setState(() => _saving = false);
@@ -295,6 +300,14 @@ class _QuarryBouldersTripAddEditScreenState
         Row(
           children: [
             Expanded(child: _loadField()),
+            const SizedBox(width: 20),
+            Expanded(child: _unitPriceField()),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(child: _totalValueField()),
             const SizedBox(width: 20),
             const Expanded(child: SizedBox()),
           ],
@@ -514,6 +527,26 @@ class _QuarryBouldersTripAddEditScreenState
           ? AppLocalization.t('Enter valid trip count')
           : null;
     },
+  );
+  Widget _unitPriceField() => TextFormField(
+    controller: _unitPrice,
+    enabled: !_saving,
+    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+    onChanged: (_) => setState(() {}),
+    decoration: _dec(AppLocalization.t('Per Unit Price'), Icons.currency_rupee),
+    validator: (v) {
+      final price = double.tryParse((v ?? '').trim());
+      return price == null || price < 0
+          ? AppLocalization.t('Enter a valid per unit price')
+          : null;
+    },
+  );
+  Widget _totalValueField() => InputDecorator(
+    decoration: _dec(AppLocalization.t('Total Value'), Icons.payments_outlined),
+    child: Text(
+      '₹${NumberFormat('#,##,##0.00').format(_load * (double.tryParse(_unitPrice.text.trim()) ?? 0))}',
+      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Color(0xFF00652C)),
+    ),
   );
   Widget _loadField() => InputDecorator(
     decoration: _dec(AppLocalization.t('Total Unit'), Icons.scale_outlined),

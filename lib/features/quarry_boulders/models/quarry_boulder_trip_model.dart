@@ -8,6 +8,8 @@ class QuarryBoulderTrip {
   final double unit;
   final int trips;
   final double totalLoad;
+  final double unitPrice;
+  final double totalValue;
   final String createdAt;
   final String? updatedAt;
 
@@ -21,6 +23,8 @@ class QuarryBoulderTrip {
     required this.unit,
     required this.trips,
     required this.totalLoad,
+    this.unitPrice = 0,
+    this.totalValue = 0,
     required this.createdAt,
     this.updatedAt,
   });
@@ -36,6 +40,8 @@ class QuarryBoulderTrip {
       unit: (map['unit'] as num).toDouble(),
       trips: (map['trips'] as num).toInt(),
       totalLoad: (map['total_load'] as num).toDouble(),
+      unitPrice: (map['unit_price'] as num?)?.toDouble() ?? 0,
+      totalValue: (map['total_value'] as num?)?.toDouble() ?? (((map['total_load'] as num?)?.toDouble() ?? 0) * ((map['unit_price'] as num?)?.toDouble() ?? 0)),
       createdAt: map['created_at'] as String,
       updatedAt: map['updated_at'] as String?,
     );
@@ -51,6 +57,8 @@ class QuarryBoulderTrip {
         'unit': unit,
         'trips': trips,
         'total_load': totalLoad,
+        'unit_price': unitPrice,
+        'total_value': totalValue,
         'created_at': createdAt,
         'updated_at': updatedAt,
       };

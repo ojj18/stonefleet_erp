@@ -3,6 +3,7 @@ class QuarryBlastingPurchase {
   final String purchaseDate;
   final String operatorName;
   final double salary;
+  final double advanceAmount;
   final double bulletQuantity;
   final double bulletPrice;
   final double bulletTotal;
@@ -24,6 +25,7 @@ class QuarryBlastingPurchase {
     required this.purchaseDate,
     this.operatorName = 'Company',
     this.salary = 0,
+    this.advanceAmount = 0,
     this.bulletQuantity = 0,
     this.bulletPrice = 0,
     this.bulletTotal = 0,
@@ -49,6 +51,7 @@ class QuarryBlastingPurchase {
       purchaseDate: map['purchase_date']?.toString() ?? '',
       operatorName: map['operator_name']?.toString() ?? 'Company',
       salary: number('salary'),
+      advanceAmount: number('advance_amount'),
       bulletQuantity: number('bullet_quantity'),
       bulletPrice: number('bullet_price'),
       bulletTotal: number('bullet_total'),

@@ -15,6 +15,7 @@ import '../../features/diesel/screens/diesel_filling_screen.dart';
 import '../../features/diesel/screens/diesel_consumption_screen.dart';
 import '../../features/diesel/screens/diesel_reports_screen.dart';
 import '../../features/excavator/maintenance/screens/excavator_maintenance_screen.dart';
+import '../../features/excavator/diesel_management/screens/excavator_diesel_management_screen.dart';
 import '../../features/excavator/master/screens/excavator_master_screen.dart';
 import '../../features/excavator/service/screens/excavator_service_screen.dart';
 import '../../features/inventory/screens/inventory_dashboard_screen.dart';
@@ -71,6 +72,12 @@ class AppSidebar extends StatelessWidget {
                     icon: Icons.build_outlined,
                     title: AppLocalization.t('Excavator Maintenance'),
                     index: 2,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.local_gas_station_outlined,
+                    title: AppLocalization.t('Excavator Diesel Management'),
+                    index: 28,
                   ),
 
                   _menuItem(
@@ -492,6 +499,13 @@ void handleMenuTap(int index, {required BuildContext? context}) {
       Navigator.pushReplacement(
         context!,
         MaterialPageRoute(builder: (_) => const ExcavatorMaintenanceScreen()),
+      );
+      break;
+
+    case 28:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const ExcavatorDieselManagementScreen()),
       );
       break;
 

@@ -108,11 +108,9 @@ class _QuarryBouldersDashboardScreenState
               _detail(AppLocalization.t('Boulder Producer'), trip.producerName),
               _detail(AppLocalization.t('Unit'), _num(trip.unit)),
               _detail(AppLocalization.t('Trip'), '${trip.trips}'),
-              _detail(
-                AppLocalization.t('Total Load'),
-                _num(trip.totalLoad),
-                bold: true,
-              ),
+              _detail(AppLocalization.t('Total Unit'), _num(trip.totalLoad), bold: true),
+              _detail(AppLocalization.t('Per Unit Price'), '₹${_num(trip.unitPrice)}'),
+              _detail(AppLocalization.t('Total Value'), '₹${NumberFormat('#,##,##0.00').format(trip.totalValue)}', bold: true),
             ],
           ),
         ),
@@ -526,99 +524,71 @@ class _QuarryBouldersDashboardScreenState
         if (items.isEmpty)
           Padding(
             padding: const EdgeInsets.all(50),
-            child: Text(
-              AppLocalization.t('No quarry boulder trip records found.'),
-            ),
+            child: Text(AppLocalization.t('No quarry boulder trip records found.')),
           )
         else
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: 1320,
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(
-                  const Color(0xFFF3F4F6),
-                ),
-                columns: [
-                  DataColumn(label: Text(AppLocalization.t('Date'))),
-                  DataColumn(
-                    label: Text(AppLocalization.t('Lorry Registration No')),
-                  ),
-                  DataColumn(label: Text(AppLocalization.t('Driver Name'))),
-                  DataColumn(label: Text(AppLocalization.t('Boulder Producer'))),
-                  DataColumn(label: Text(AppLocalization.t('Unit'))),
-                  DataColumn(label: Text(AppLocalization.t('Trip'))),
-                  DataColumn(label: Text(AppLocalization.t('Total Load'))),
-                  DataColumn(label: Text(AppLocalization.t('Actions'))),
-                ],
-                rows: items
-                    .map(
-                      (t) => DataRow(
-                        cells: [
-                          DataCell(Text(_date(t.tripDate))),
-                          DataCell(
-                            Text(
-                              t.registrationNumber,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          DataCell(Text(t.driverName)),
-                          DataCell(Text(t.producerName)),
-                          DataCell(Text(_num(t.unit))),
-                          DataCell(Text('${t.trips}')),
-                          DataCell(
-                            Text(
-                              _num(t.totalLoad),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          DataCell(
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  tooltip: AppLocalization.t('View'),
-                                  onPressed: () => _view(t),
-                                  icon: const Icon(
-                                    Icons.visibility_outlined,
-                                    size: 18,
-                                  ),
-                                ),
-                                IconButton(
-                                  tooltip: AppLocalization.t('Edit'),
-                                  onPressed: () => _openEdit(t),
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 18,
-                                  ),
-                                ),
-                                if (context.watch<AuthProvider>().isAdmin)
-                                  IconButton(
-                                    tooltip: AppLocalization.t('Delete'),
-                                    onPressed: () => _delete(t),
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      size: 18,
-                                      color: Color(0xFFBA1A1A),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    .toList(),
-              ),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
+              // Keep the table schema and every row in sync: exactly 10 columns/cells.
+              columns: _tripTableColumns(),
+              rows: items.map(_tripTableRow).toList(growable: false),
             ),
           ),
         _pagination(total),
       ],
     ),
+  );
+
+  List<DataColumn> _tripTableColumns() => [
+    DataColumn(label: Text(AppLocalization.t('Date'))),
+    DataColumn(label: Text(AppLocalization.t('Lorry Registration No'))),
+    DataColumn(label: Text(AppLocalization.t('Driver Name'))),
+    DataColumn(label: Text(AppLocalization.t('Boulder Producer'))),
+    DataColumn(label: Text(AppLocalization.t('Unit'))),
+    DataColumn(label: Text(AppLocalization.t('Trip'))),
+    DataColumn(label: Text(AppLocalization.t('Total Unit'))),
+    DataColumn(label: Text(AppLocalization.t('Per Unit Price'))),
+    DataColumn(label: Text(AppLocalization.t('Total Value'))),
+    DataColumn(label: Text(AppLocalization.t('Actions'))),
+  ];
+
+  DataRow _tripTableRow(QuarryBoulderTrip t) => DataRow(
+    cells: <DataCell>[
+      DataCell(Text(_date(t.tripDate))),
+      DataCell(Text(t.registrationNumber, style: const TextStyle(fontWeight: FontWeight.w600))),
+      DataCell(Text(t.driverName)),
+      DataCell(Text(t.producerName)),
+      DataCell(Text(_num(t.unit))),
+      DataCell(Text('${t.trips}')),
+      DataCell(Text(_num(t.totalLoad), style: const TextStyle(fontWeight: FontWeight.w700))),
+      DataCell(Text('₹${_num(t.unitPrice)}')),
+      DataCell(Text('₹${NumberFormat('#,##,##0.00').format(t.totalValue)}', style: const TextStyle(fontWeight: FontWeight.w700))),
+      DataCell(
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: AppLocalization.t('View'),
+              onPressed: () => _view(t),
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+            ),
+            IconButton(
+              tooltip: AppLocalization.t('Edit'),
+              onPressed: () => _openEdit(t),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+            ),
+            if (context.read<AuthProvider>().isAdmin)
+              IconButton(
+                tooltip: AppLocalization.t('Delete'),
+                onPressed: () => _delete(t),
+                icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFBA1A1A)),
+              ),
+          ],
+        ),
+      ),
+    ],
   );
 
   Widget _pagination(int total) {

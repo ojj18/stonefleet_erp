@@ -91,6 +91,7 @@ class _QuarryBlastingPurchaseReportsScreenState
               'purchaseDate': p.purchaseDate,
               'operatorName': p.operatorName,
               'salary': p.salary,
+              'advanceAmount': p.advanceAmount,
               'bulletQuantity': p.bulletQuantity,
               'bulletPrice': p.bulletPrice,
               'bulletTotal': p.bulletTotal,
@@ -123,6 +124,10 @@ class _QuarryBlastingPurchaseReportsScreenState
         'salaryCost': provider.purchases.fold<double>(
           0,
           (total, purchase) => total + purchase.salary,
+        ),
+        'advanceCost': provider.purchases.fold<double>(
+          0,
+          (total, purchase) => total + purchase.advanceAmount,
         ),
         'totalCost': s.totalCost,
       },
@@ -438,7 +443,10 @@ class _QuarryBlastingPurchaseReportsScreenState
                                     label: Text(AppLocalization.t('Operator')),
                                   ),
                                   DataColumn(
-                                    label: Text(AppLocalization.t('Salary')),
+                                    label: Text(AppLocalization.t('Padi')),
+                                  ),
+                                  DataColumn(
+                                    label: Text(AppLocalization.t('Advance Amount')),
                                   ),
                                   DataColumn(
                                     label: Text(
@@ -473,6 +481,7 @@ class _QuarryBlastingPurchaseReportsScreenState
                                           ),
                                           DataCell(Text(p.operatorName)),
                                           DataCell(Text(formatMoney(p.salary))),
+                  DataCell(Text(formatMoney(p.advanceAmount))),
                                           DataCell(
                                             Text(formatQty(p.bulletQuantity)),
                                           ),

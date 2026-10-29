@@ -399,7 +399,8 @@ class ReportExcelService {
     sheet.appendRow([
       TextCellValue('Date'),
       TextCellValue('Operator'),
-      TextCellValue('Salary'),
+      TextCellValue('Padi'),
+      TextCellValue('Advance Amount'),
       TextCellValue('Bullet Qty'),
       TextCellValue('Bullet Unit Price'),
       TextCellValue('Bullet Total'),
@@ -420,6 +421,7 @@ class ReportExcelService {
         TextCellValue(_formatDate(record.purchaseDate)),
         TextCellValue(record.operatorName),
         _cellValue(record.salary),
+        _cellValue(record.advanceAmount),
         _cellValue(record.bulletQuantity),
         _cellValue(record.bulletPrice),
         _cellValue(record.bulletTotal),
@@ -468,10 +470,12 @@ class ReportExcelService {
       (total, record) => total + record.salary,
     );
     sheet.appendRow([
-      TextCellValue('Salary'),
+      TextCellValue('Padi'),
       TextCellValue(''),
       _cellValue(salaryTotal),
     ]);
+    final advanceTotal = records.fold<double>(0, (total, record) => total + record.advanceAmount);
+    sheet.appendRow([TextCellValue('Advance Amount'), TextCellValue(''), _cellValue(advanceTotal)]);
     sheet.appendRow([
       TextCellValue('Grand Total Cost'),
       TextCellValue(''),

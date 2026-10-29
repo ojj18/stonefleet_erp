@@ -23,6 +23,7 @@ class _QuarryBlastingNewPurchaseScreenState
     extends State<QuarryBlastingNewPurchaseScreen> {
   DateTime _date = DateTime.now();
   final _salaryController = TextEditingController();
+  final _advanceAmountController = TextEditingController();
   final BlastingOperatorRepository _operatorRepository = BlastingOperatorRepository();
   List<String> _operators = [];
   String _selectedOperator = 'Company';
@@ -54,6 +55,7 @@ class _QuarryBlastingNewPurchaseScreenState
       _edPrice.text = _valueText(p.edPrice);
       _selectedOperator = p.operatorName.isEmpty ? 'Company' : p.operatorName;
       _salaryController.text = _valueText(p.salary);
+      _advanceAmountController.text = _valueText(p.advanceAmount);
     }
     for (final controller in [
       _bulletQty,
@@ -65,6 +67,7 @@ class _QuarryBlastingNewPurchaseScreenState
       _edQty,
       _edPrice,
       _salaryController,
+      _advanceAmountController,
     ]) {
       controller.addListener(_refresh);
     }
@@ -82,6 +85,7 @@ class _QuarryBlastingNewPurchaseScreenState
       _edQty,
       _edPrice,
       _salaryController,
+      _advanceAmountController,
     ]) {
       controller.dispose();
     }
@@ -148,8 +152,9 @@ class _QuarryBlastingNewPurchaseScreenState
   double get _wire4Total => _number(_wire4Qty) * _number(_wire4Price);
   double get _edTotal => _number(_edQty) * _number(_edPrice);
   double get _salaryTotal => _number(_salaryController);
+  double get _advanceTotal => _number(_advanceAmountController);
   double get _grandTotal =>
-      _bulletTotal + _wire3Total + _wire4Total + _edTotal + _salaryTotal;
+      _bulletTotal + _wire3Total + _wire4Total + _edTotal + _salaryTotal + _advanceTotal;
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -196,6 +201,7 @@ class _QuarryBlastingNewPurchaseScreenState
         purchaseDate: _date.toIso8601String(),
         operatorName: _selectedOperator,
         salary: double.tryParse(_salaryController.text.trim()) ?? 0,
+        advanceAmount: double.tryParse(_advanceAmountController.text.trim()) ?? 0,
         bulletQuantity: quantities[0],
         bulletPrice: prices[0],
         wire3mQuantity: quantities[1],
@@ -210,6 +216,7 @@ class _QuarryBlastingNewPurchaseScreenState
         purchaseDate: _date.toIso8601String(),
         operatorName: _selectedOperator,
         salary: double.tryParse(_salaryController.text.trim()) ?? 0,
+        advanceAmount: double.tryParse(_advanceAmountController.text.trim()) ?? 0,
         bulletQuantity: quantities[0],
         bulletPrice: prices[0],
         wire3mQuantity: quantities[1],
@@ -349,6 +356,8 @@ class _QuarryBlastingNewPurchaseScreenState
                         _itemRow('ED', _edQty, _edPrice, _edTotal),
                         const SizedBox(height: 14),
                         _salaryRow(),
+                        const SizedBox(height: 14),
+                        _advanceAmountRow(),
                       ],
                     ),
                   ),
@@ -443,7 +452,7 @@ class _QuarryBlastingNewPurchaseScreenState
           SizedBox(
             width: 180,
             child: Text(
-              AppLocalization.t('Salary'),
+              AppLocalization.t('Padi'),
               style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
             ),
           ),
@@ -453,7 +462,7 @@ class _QuarryBlastingNewPurchaseScreenState
               controller: _salaryController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: AppLocalization.t('Salary'),
+                labelText: AppLocalization.t('Padi'),
                 prefixText: '₹ ',
                 border: const OutlineInputBorder(),
               ),
@@ -483,6 +492,69 @@ class _QuarryBlastingNewPurchaseScreenState
                 const SizedBox(height: 4),
                 Text(
                   formatMoney(_salaryTotal),
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _advanceAmountRow() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FB),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE1E5E9)),
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 180,
+            child: Text(
+              AppLocalization.t('Advance Amount'),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: TextFormField(
+              controller: _advanceAmountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: AppLocalization.t('Advance Amount'),
+                prefixText: '₹ ',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (value) {
+                if (value == null || value.trim().isEmpty) return null;
+                final amount = double.tryParse(value.trim());
+                return amount == null || amount < 0
+                    ? AppLocalization.t('Invalid')
+                    : null;
+              },
+            ),
+          ),
+          const SizedBox(width: 18),
+          SizedBox(
+            width: 145,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  AppLocalization.t('TOTAL'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF68717D),
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  formatMoney(_advanceTotal),
                   style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
                 ),
               ],

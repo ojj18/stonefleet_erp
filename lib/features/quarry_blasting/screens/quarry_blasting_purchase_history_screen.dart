@@ -98,7 +98,8 @@ class _QuarryBlastingPurchaseHistoryScreenState
             children: [
               _detailRow('Purchase Date', formatDate(purchase.purchaseDate)),
               _detailRow('Operator', purchase.operatorName),
-              _detailRow('Salary', formatMoney(purchase.salary)),
+              _detailRow('Padi', formatMoney(purchase.salary)),
+              _detailRow('Advance Amount', formatMoney(purchase.advanceAmount)),
               _detailRow(
                 'Bullet',
                 '${formatQty(purchase.bulletQuantity)} × ${formatMoney(purchase.bulletPrice)}',
@@ -409,7 +410,8 @@ class _QuarryBlastingPurchaseHistoryScreenState
         columns: [
           DataColumn(label: Text(AppLocalization.t('Date'))),
           DataColumn(label: Text(AppLocalization.t('Operator'))),
-          DataColumn(label: Text(AppLocalization.t('Salary'))),
+          DataColumn(label: Text(AppLocalization.t('Padi'))),
+          DataColumn(label: Text(AppLocalization.t('Advance Amount'))),
           DataColumn(label: Text(AppLocalization.t('Bullet Qty'))),
           DataColumn(label: Text(AppLocalization.t('Bullet Price'))),
           DataColumn(label: Text(AppLocalization.t('3m Wire Qty'))),
@@ -428,6 +430,7 @@ class _QuarryBlastingPurchaseHistoryScreenState
                   DataCell(Text(formatDate(p.purchaseDate))),
                   DataCell(Text(p.operatorName)),
                   DataCell(Text(formatMoney(p.salary))),
+                  DataCell(Text(formatMoney(p.advanceAmount))),
                   DataCell(Text(formatQty(p.bulletQuantity))),
                   DataCell(Text(formatMoney(p.bulletPrice))),
                   DataCell(Text(formatQty(p.wire3mQuantity))),

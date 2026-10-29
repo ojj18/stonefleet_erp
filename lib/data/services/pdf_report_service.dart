@@ -149,6 +149,7 @@ class PdfReportService {
     final edCost = _toDouble(summary['edCost']);
     final totalCost = _toDouble(summary['totalCost']);
     final salaryCost = _toDouble(summary['salaryCost']);
+    final advanceCost = _toDouble(summary['advanceCost']);
     final purchaseCount =
         (summary['purchaseCount'] as num?)?.toInt() ?? records.length;
 
@@ -183,6 +184,7 @@ class PdfReportService {
             edQty: edQty,
             edCost: edCost,
             salaryCost: salaryCost,
+            advanceCost: advanceCost,
             totalCost: totalCost,
           ),
           pw.SizedBox(height: 16),
@@ -317,6 +319,7 @@ class PdfReportService {
     required double edQty,
     required double edCost,
     required double salaryCost,
+    required double advanceCost,
     required double totalCost,
   }) {
     final rows = [
@@ -324,7 +327,8 @@ class PdfReportService {
       ['3m Wire', _number(wire3mQty), _currency(wire3mCost)],
       ['4m Wire', _number(wire4mQty), _currency(wire4mCost)],
       ['ED', _number(edQty), _currency(edCost)],
-      ['Salary', '', _currency(salaryCost)],
+      ['Padi', '', _currency(salaryCost)],
+      ['Advance Amount', '', _currency(advanceCost)],
       ['Grand Total', '', _currency(totalCost)],
     ];
 
@@ -350,6 +354,7 @@ class PdfReportService {
             _formatDateString(row['purchaseDate']?.toString()),
             _value(row['operatorName']),
             _currency(row['salary']),
+            _currency(row['advanceAmount']),
             _number(row['bulletQuantity']),
             _currency(row['bulletPrice']),
             _currency(row['bulletTotal']),
@@ -371,7 +376,8 @@ class PdfReportService {
       headers: const [
         'Date',
         'Operator',
-        'Salary',
+        'Padi',
+        'Advance Amount',
         'Bullet Qty',
         'Bullet Price',
         'Bullet Total',

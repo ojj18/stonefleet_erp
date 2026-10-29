@@ -77,6 +77,7 @@ class QuarryBlastingRepository {
     required String purchaseDate,
     required String operatorName,
     required double salary,
+    required double advanceAmount,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -92,13 +93,14 @@ class QuarryBlastingRepository {
     final wire3mTotal = wire3mQuantity * wire3mPrice;
     final wire4mTotal = wire4mQuantity * wire4mPrice;
     final edTotal = edQuantity * edPrice;
-    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary;
+    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary + advanceAmount;
     final now = DateTime.now().toIso8601String();
 
     return db.insert('quarry_blasting_purchases', {
       'purchase_date': purchaseDate,
       'operator_name': operatorName,
       'salary': salary,
+      'advance_amount': advanceAmount,
       'bullet_quantity': bulletQuantity,
       'bullet_price': bulletPrice,
       'bullet_total': bulletTotal,
@@ -123,6 +125,7 @@ class QuarryBlastingRepository {
     required String purchaseDate,
     required String operatorName,
     required double salary,
+    required double advanceAmount,
     required double bulletQuantity,
     required double bulletPrice,
     required double wire3mQuantity,
@@ -138,7 +141,7 @@ class QuarryBlastingRepository {
     final wire3mTotal = wire3mQuantity * wire3mPrice;
     final wire4mTotal = wire4mQuantity * wire4mPrice;
     final edTotal = edQuantity * edPrice;
-    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary;
+    final totalCost = bulletTotal + wire3mTotal + wire4mTotal + edTotal + salary + advanceAmount;
     final now = DateTime.now().toIso8601String();
 
     return db.update(
@@ -147,6 +150,7 @@ class QuarryBlastingRepository {
         'purchase_date': purchaseDate,
         'operator_name': operatorName,
         'salary': salary,
+      'advance_amount': advanceAmount,
         'bullet_quantity': bulletQuantity,
         'bullet_price': bulletPrice,
         'bullet_total': bulletTotal,

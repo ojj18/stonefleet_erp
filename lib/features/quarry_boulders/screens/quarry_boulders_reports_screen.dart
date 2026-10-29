@@ -430,7 +430,9 @@ class _QuarryBouldersReportsScreenState
       TextCellValue('Boulder Producer'),
       TextCellValue('Unit'),
       TextCellValue('Trip'),
-      TextCellValue('Total Load'),
+      TextCellValue('Total Unit'),
+      TextCellValue('Per Unit Price'),
+      TextCellValue('Total Value'),
     ]);
     for (final t in p.trips) {
       sheet.appendRow([
@@ -443,6 +445,8 @@ class _QuarryBouldersReportsScreenState
         DoubleCellValue(t.unit),
         IntCellValue(t.trips),
         DoubleCellValue(t.totalLoad),
+        DoubleCellValue(t.unitPrice),
+        DoubleCellValue(t.totalValue),
       ]);
     }
     final bytes = excel.encode();
@@ -477,7 +481,7 @@ class _QuarryBouldersReportsScreenState
           pw.Text('Period: ${_periodLabel()}'),
           pw.SizedBox(height: 16),
           pw.TableHelper.fromTextArray(
-            headers: ['Date', 'Lorry', 'Driver', 'Boulder Producer', 'Unit', 'Trips', 'Load'],
+            headers: ['Date', 'Lorry', 'Driver', 'Boulder Producer', 'Unit', 'Trips', 'Total Unit', 'Per Unit Price', 'Total Value'],
             data: p.trips
                 .map(
                   (t) => [
@@ -488,6 +492,8 @@ class _QuarryBouldersReportsScreenState
                     _n(t.unit),
                     '${t.trips}',
                     _n(t.totalLoad),
+                    '₹${_n(t.unitPrice)}',
+                    '₹${NumberFormat('#,##,##0.00').format(t.totalValue)}',
                   ],
                 )
                 .toList(),
