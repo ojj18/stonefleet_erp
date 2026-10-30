@@ -6,7 +6,6 @@ import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/excavator_model.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/excavator_provider.dart';
 import 'excavator_master_add_edit_screen.dart';
@@ -337,18 +336,17 @@ class _ExcavatorMasterScreenState extends State<ExcavatorMasterScreen> {
                                           _editExcavator(excavator.id!);
                                         },
                                       ),
-                                      if (context.watch<AuthProvider>().isAdmin)
-                                        IconButton(
-                                          tooltip: AppLocalization.t('Delete'),
-                                          icon: const Icon(
-                                            Icons.delete_outline,
-                                            size: 18,
-                                          ),
-                                          color: const Color(0xFFBA1A1A),
-                                          onPressed: () {
-                                            _deleteExcavator(excavator.id!);
-                                          },
+                                      IconButton(
+                                        tooltip: AppLocalization.t('Delete'),
+                                        icon: const Icon(
+                                          Icons.delete_outline,
+                                          size: 18,
                                         ),
+                                        color: const Color(0xFFBA1A1A),
+                                        onPressed: () {
+                                          _deleteExcavator(excavator.id!);
+                                        },
+                                      ),
                                     ],
                                   ),
                                 ),

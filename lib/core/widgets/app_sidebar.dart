@@ -32,6 +32,7 @@ import '../../features/quarry_driller/screens/quarry_driller_dashboard_screen.da
 import '../../features/retreading/screens/retreading_dashboard_screen.dart';
 import '../../features/retreading/screens/retreading_reports_screen.dart';
 import '../../features/report/screens/reports_screen.dart';
+import '../../features/report/screens/overall_operator_report_screen.dart';
 
 class AppSidebar extends StatelessWidget {
   final int selectedIndex;
@@ -128,6 +129,11 @@ class AppSidebar extends StatelessWidget {
                     icon: Icons.assessment_outlined,
                     title: AppLocalization.t('Reports'),
                     index: 8,
+                  ),
+                  _menuItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: AppLocalization.t('Overall Report'),
+                    index: 29,
                   ),
                   _menuItem(
                     icon: Icons.verified_outlined,
@@ -554,6 +560,13 @@ void handleMenuTap(int index, {required BuildContext? context}) {
         MaterialPageRoute(builder: (_) => const ReportsScreen()),
       );
       break;
+    case 29:
+      Navigator.pushReplacement(
+        context!,
+        MaterialPageRoute(builder: (_) => const OverallOperatorReportScreen()),
+      );
+      break;
+
     case 9:
       // Compliance
       Navigator.pushReplacement(

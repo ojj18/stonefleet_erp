@@ -7,7 +7,6 @@ import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/excavator_maintenance_list_model.dart';
 import '../../../../data/models/excavator_maintenance_model.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_maintenance_provider.dart';
@@ -705,13 +704,12 @@ class _ExcavatorMaintenanceScreenState
                     icon: const Icon(Icons.edit_outlined, size: 19),
                     color: const Color(0xFF00652C),
                   ),
-                  if (context.watch<AuthProvider>().isAdmin)
-                    IconButton(
-                      tooltip: AppLocalization.t('Delete'),
-                      onPressed: () => _confirmDelete(record),
-                      icon: const Icon(Icons.delete_outline, size: 19),
-                      color: const Color(0xFFBA1A1A),
-                    ),
+                  IconButton(
+                    tooltip: AppLocalization.t('Delete'),
+                    onPressed: () => _confirmDelete(record),
+                    icon: const Icon(Icons.delete_outline, size: 19),
+                    color: const Color(0xFFBA1A1A),
+                  ),
                 ],
               ),
             ),

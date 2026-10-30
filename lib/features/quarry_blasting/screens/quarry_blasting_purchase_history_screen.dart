@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../data/models/quarry_blasting_purchase_model.dart';
 import '../../../data/repositories/blasting_operator_repository.dart';
-import '../../auth/providers/auth_provider.dart';
 
 import '../providers/quarry_blasting_provider.dart';
 import '../widgets/quarry_blasting_shell.dart';
@@ -206,9 +205,9 @@ class _QuarryBlastingPurchaseHistoryScreenState
     await provider.deletePurchase(purchase.id!);
     if (!mounted) return;
     if (provider.error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppLocalization.t(provider.error!))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalization.t(provider.error!))),
+      );
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
@@ -236,8 +235,9 @@ class _QuarryBlastingPurchaseHistoryScreenState
                   children: [
                     QuarryPageHeader(
                       title: AppLocalization.t('Purchase History'),
-                      subtitle:
-                          AppLocalization.t('View and filter all quarry blasting material purchase records.'),
+                      subtitle: AppLocalization.t(
+                        'View and filter all quarry blasting material purchase records.',
+                      ),
                       action: FilledButton.icon(
                         onPressed: _openNew,
                         icon: const Icon(Icons.add, size: 20),
@@ -283,7 +283,9 @@ class _QuarryBlastingPurchaseHistoryScreenState
                               items: [
                                 DropdownMenuItem<String>(
                                   value: '',
-                                  child: Text(AppLocalization.t('All Operators')),
+                                  child: Text(
+                                    AppLocalization.t('All Operators'),
+                                  ),
                                 ),
                                 ..._operators.map(
                                   (name) => DropdownMenuItem<String>(
@@ -395,7 +397,9 @@ class _QuarryBlastingPurchaseHistoryScreenState
           suffixIcon: const Icon(Icons.calendar_today_outlined),
         ),
         child: Text(
-          value == null ? AppLocalization.t('Select date') : formatDate(value.toIso8601String()),
+          value == null
+              ? AppLocalization.t('Select date')
+              : formatDate(value.toIso8601String()),
         ),
       ),
     );
@@ -461,18 +465,17 @@ class _QuarryBlastingPurchaseHistoryScreenState
                           onPressed: p.id == null ? null : () => _openEdit(p),
                           icon: const Icon(Icons.edit_outlined, size: 19),
                         ),
-                        if (context.watch<AuthProvider>().isAdmin)
-                          IconButton(
-                            tooltip: AppLocalization.t('Delete'),
-                            onPressed: p.id == null
-                                ? null
-                                : () => _confirmDelete(p),
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 19,
-                              color: Color(0xFFBA1A1A),
-                            ),
+                        IconButton(
+                          tooltip: AppLocalization.t('Delete'),
+                          onPressed: p.id == null
+                              ? null
+                              : () => _confirmDelete(p),
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            size: 19,
+                            color: Color(0xFFBA1A1A),
                           ),
+                        ),
                       ],
                     ),
                   ),

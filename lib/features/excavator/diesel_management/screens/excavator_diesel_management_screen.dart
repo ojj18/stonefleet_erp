@@ -6,11 +6,9 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:provider/provider.dart';
 
 import '../../../../core/database/database_helper.dart';
 import '../../../../core/localization/app_localization.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/repositories/driver_repository.dart';
@@ -519,8 +517,6 @@ class _ExcavatorDieselManagementScreenState
     }
   }
 
-  bool get _isAdmin => context.read<AuthProvider>().isAdmin;
-
   void _viewEntry(Map<String, Object?> row) {
     showDialog<void>(
       context: context,
@@ -573,7 +569,6 @@ class _ExcavatorDieselManagementScreenState
   );
 
   Future<void> _delete(Map<String, Object?> row) async {
-    if (!_isAdmin) return;
     final yes = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
@@ -1195,21 +1190,20 @@ class _ExcavatorDieselManagementScreenState
                                                         color: _green,
                                                       ),
                                                     ),
-                                                    if (_isAdmin)
-                                                      IconButton(
-                                                        tooltip:
-                                                            AppLocalization.t(
-                                                              'Delete',
-                                                            ),
-                                                        onPressed: () =>
-                                                            _delete(r),
-                                                        icon: const Icon(
-                                                          Icons.delete_outline,
-                                                          color: Color(
-                                                            0xFFB42318,
+                                                    IconButton(
+                                                      tooltip:
+                                                          AppLocalization.t(
+                                                            'Delete',
                                                           ),
+                                                      onPressed: () =>
+                                                          _delete(r),
+                                                      icon: const Icon(
+                                                        Icons.delete_outline,
+                                                        color: Color(
+                                                          0xFFB42318,
                                                         ),
                                                       ),
+                                                    ),
                                                   ],
                                                 ),
                                               ),

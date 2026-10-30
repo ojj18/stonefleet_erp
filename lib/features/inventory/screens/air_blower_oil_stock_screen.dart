@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../../auth/providers/auth_provider.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:stonefleet_erp/core/widgets/app_sidebar.dart';
 import '../../../core/database/database_helper.dart';
@@ -125,8 +123,6 @@ class _AirBlowerOilStockScreenState extends State<AirBlowerOilStockScreen> {
       ? (double.tryParse(_useCans.text) ?? 0) *
             (double.tryParse(_useLitresPerCan.text) ?? 0)
       : (double.tryParse(_useLitres.text) ?? 0);
-
-  bool get _isAdmin => context.read<AuthProvider>().isAdmin;
 
   Future<void> _viewMovement(Map<String, dynamic> m) async {
     final type = m['movement_type'] == 'purchase'
@@ -329,7 +325,6 @@ class _AirBlowerOilStockScreenState extends State<AirBlowerOilStockScreen> {
   }
 
   Future<void> _deleteMovement(Map<String, dynamic> m) async {
-    if (!_isAdmin) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1037,20 +1032,18 @@ class _AirBlowerOilStockScreenState extends State<AirBlowerOilStockScreen> {
                                                       size: 19,
                                                     ),
                                                   ),
-                                                  if (_isAdmin)
-                                                    IconButton(
-                                                      tooltip:
-                                                          AppLocalization.t(
-                                                            'Delete',
-                                                          ),
-                                                      onPressed: () =>
-                                                          _deleteMovement(m),
-                                                      icon: const Icon(
-                                                        Icons.delete_outline,
-                                                        color: Colors.red,
-                                                        size: 19,
-                                                      ),
+                                                  IconButton(
+                                                    tooltip: AppLocalization.t(
+                                                      'Delete',
                                                     ),
+                                                    onPressed: () =>
+                                                        _deleteMovement(m),
+                                                    icon: const Icon(
+                                                      Icons.delete_outline,
+                                                      color: Colors.red,
+                                                      size: 19,
+                                                    ),
+                                                  ),
                                                 ],
                                               ),
                                             ),

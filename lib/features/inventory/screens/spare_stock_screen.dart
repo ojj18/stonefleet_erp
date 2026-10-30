@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
-import 'package:stonefleet_erp/features/auth/providers/auth_provider.dart';
 
 import '../providers/inventory_provider.dart';
 import '../widgets/inventory_shell.dart';
@@ -28,36 +27,64 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
     super.dispose();
   }
 
-
   Future<void> _viewStock(dynamic row) async {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalization.t('Stock Item Details')),
-        content: SizedBox(width: 440, child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _detail(AppLocalization.t('Spare Item'), row.itemName),
-            _detail(AppLocalization.t('Unit'), row.unit ?? '-'),
-            _detail(AppLocalization.t('Purchased'), formatQty(row.purchased)),
-            _detail(AppLocalization.t('Used'), formatQty(row.used)),
-            _detail(AppLocalization.t('Remaining'), formatQty(row.remaining)),
-            _detail(AppLocalization.t('Last Purchase'), formatDate(row.lastPurchaseDate)),
-            _detail(AppLocalization.t('Status'), row.remaining <= 0 ? AppLocalization.t('Out of Stock') : (row.purchased > 0 && row.remaining / row.purchased <= .2 ? AppLocalization.t('Low Stock') : AppLocalization.t('In Stock'))),
-          ],
-        )),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalization.t('Close')))],
+        content: SizedBox(
+          width: 440,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _detail(AppLocalization.t('Spare Item'), row.itemName),
+              _detail(AppLocalization.t('Unit'), row.unit ?? '-'),
+              _detail(AppLocalization.t('Purchased'), formatQty(row.purchased)),
+              _detail(AppLocalization.t('Used'), formatQty(row.used)),
+              _detail(AppLocalization.t('Remaining'), formatQty(row.remaining)),
+              _detail(
+                AppLocalization.t('Last Purchase'),
+                formatDate(row.lastPurchaseDate),
+              ),
+              _detail(
+                AppLocalization.t('Status'),
+                row.remaining <= 0
+                    ? AppLocalization.t('Out of Stock')
+                    : (row.purchased > 0 && row.remaining / row.purchased <= .2
+                          ? AppLocalization.t('Low Stock')
+                          : AppLocalization.t('In Stock')),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalization.t('Close')),
+          ),
+        ],
       ),
     );
   }
 
   Widget _detail(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 7),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(width: 140, child: Text(label, style: const TextStyle(color: Color(0xFF657166)))),
-      Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.w600))),
-    ]),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 140,
+          child: Text(label, style: const TextStyle(color: Color(0xFF657166))),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    ),
   );
 
   Future<void> _editStock(InventoryProvider provider, dynamic row) async {
@@ -68,25 +95,64 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalization.t('Edit Spare Item')),
-        content: SizedBox(width: 460, child: Form(key: formKey, child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextFormField(controller: name, decoration: InputDecoration(labelText: AppLocalization.t('Spare Item')), validator: (v) => (v ?? '').trim().isEmpty ? AppLocalization.t('Required') : null),
-            const SizedBox(height: 12),
-            TextFormField(controller: unit, decoration: InputDecoration(labelText: AppLocalization.t('Unit (Optional)'))),
-          ],
-        ))),
+        content: SizedBox(
+          width: 460,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: name,
+                  decoration: InputDecoration(
+                    labelText: AppLocalization.t('Spare Item'),
+                  ),
+                  validator: (v) => (v ?? '').trim().isEmpty
+                      ? AppLocalization.t('Required')
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: unit,
+                  decoration: InputDecoration(
+                    labelText: AppLocalization.t('Unit (Optional)'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalization.t('Cancel'))),
-          FilledButton.icon(onPressed: () { if (formKey.currentState?.validate() == true) Navigator.pop(ctx, true); }, icon: const Icon(Icons.save_outlined), label: Text(AppLocalization.t('Update'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              if (formKey.currentState?.validate() == true) {
+                Navigator.pop(ctx, true);
+              }
+            },
+            icon: const Icon(Icons.save_outlined),
+            label: Text(AppLocalization.t('Update')),
+          ),
         ],
       ),
     );
     if (saved == true) {
-      await provider.updateStockItem(itemId: row.itemId, itemName: name.text, unit: unit.text);
-      if (provider.error != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.error!)));
+      await provider.updateStockItem(
+        itemId: row.itemId,
+        itemName: name.text,
+        unit: unit.text,
+      );
+      if (provider.error != null && mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(provider.error!)));
+      }
     }
-    name.dispose(); unit.dispose();
+    name.dispose();
+    unit.dispose();
   }
 
   Future<void> _deleteStock(InventoryProvider provider, dynamic row) async {
@@ -94,16 +160,30 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(AppLocalization.t('Delete spare item?')),
-        content: Text(AppLocalization.t('Only items without purchase or usage history can be deleted. Existing stock history will be preserved.')),
+        content: Text(
+          AppLocalization.t(
+            'Only items without purchase or usage history can be deleted. Existing stock history will be preserved.',
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppLocalization.t('Cancel'))),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(AppLocalization.t('Delete'))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalization.t('Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalization.t('Delete')),
+          ),
         ],
       ),
     );
     if (confirmed != true) return;
     await provider.deleteStockItem(row.itemId);
-    if (provider.error != null && mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(provider.error!)));
+    if (provider.error != null && mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(provider.error!)));
+    }
   }
 
   @override
@@ -122,8 +202,9 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                   children: [
                     InventoryPageHeader(
                       title: AppLocalization.t('Spare Stock'),
-                      subtitle:
-                          AppLocalization.t('Track purchased, used and remaining quantities for each spare.'),
+                      subtitle: AppLocalization.t(
+                        'Track purchased, used and remaining quantities for each spare.',
+                      ),
                     ),
                     const SizedBox(height: 24),
                     Row(
@@ -180,7 +261,9 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                                       provider.loadStock(search: v),
                                   decoration: InputDecoration(
                                     prefixIcon: Icon(Icons.search),
-                                    hintText: AppLocalization.t('Search spare item...'),
+                                    hintText: AppLocalization.t(
+                                      'Search spare item...',
+                                    ),
                                     border: OutlineInputBorder(),
                                   ),
                                 ),
@@ -199,11 +282,11 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: DataTable(
-                            columnSpacing: 28,
-                            horizontalMargin: 16,
-                            headingRowHeight: 48,
-                            dataRowMinHeight: 56,
-                            dataRowMaxHeight: 76,
+                              columnSpacing: 28,
+                              horizontalMargin: 16,
+                              headingRowHeight: 48,
+                              dataRowMinHeight: 56,
+                              dataRowMaxHeight: 76,
                               columns: [
                                 DataColumn(
                                   label: Text(AppLocalization.t('SPARE ITEM')),
@@ -228,7 +311,9 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                                 DataColumn(
                                   label: Text(AppLocalization.t('STATUS')),
                                 ),
-                                DataColumn(label: Text(AppLocalization.t('ACTIONS'))),
+                                DataColumn(
+                                  label: Text(AppLocalization.t('ACTIONS')),
+                                ),
                               ],
                               rows: provider.stock.map((row) {
                                 final status = row.remaining <= 0
@@ -266,12 +351,39 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                                         ),
                                       ),
                                     ),
-                                    DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
-                                      IconButton(tooltip: AppLocalization.t('View'), onPressed: () => _viewStock(row), icon: const Icon(Icons.visibility_outlined)),
-                                      IconButton(tooltip: AppLocalization.t('Edit'), onPressed: () => _editStock(provider, row), icon: const Icon(Icons.edit_outlined)),
-                                      if (context.watch<AuthProvider>().isAdmin)
-                                        IconButton(tooltip: AppLocalization.t('Delete'), onPressed: () => _deleteStock(provider, row), icon: const Icon(Icons.delete_outline, color: Color(0xFFBA1A1A))),
-                                    ])),
+                                    DataCell(
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            tooltip: AppLocalization.t('View'),
+                                            onPressed: () => _viewStock(row),
+                                            icon: const Icon(
+                                              Icons.visibility_outlined,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            tooltip: AppLocalization.t('Edit'),
+                                            onPressed: () =>
+                                                _editStock(provider, row),
+                                            icon: const Icon(
+                                              Icons.edit_outlined,
+                                            ),
+                                          ),
+                                          IconButton(
+                                            tooltip: AppLocalization.t(
+                                              'Delete',
+                                            ),
+                                            onPressed: () =>
+                                                _deleteStock(provider, row),
+                                            icon: const Icon(
+                                              Icons.delete_outline,
+                                              color: Color(0xFFBA1A1A),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 );
                               }).toList(),

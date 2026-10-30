@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stonefleet_erp/features/auth/providers/auth_provider.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import '../../../data/models/diesel_models.dart';
 import '../providers/diesel_provider.dart';
@@ -155,12 +154,17 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
                                               onPressed: () =>
                                                   _receiptForm(existing: r),
                                             ),
-                                            if (context.watch<AuthProvider>().isAdmin)
-                                              IconButton(
-                                                tooltip: AppLocalization.t('Delete'),
-                                                icon: const Icon(Icons.delete_outline, size: 18),
-                                                onPressed: () => _deleteReceipt(r),
+                                            IconButton(
+                                              tooltip: AppLocalization.t(
+                                                'Delete',
                                               ),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                size: 18,
+                                              ),
+                                              onPressed: () =>
+                                                  _deleteReceipt(r),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -292,7 +296,6 @@ class _DieselStockScreenState extends State<DieselStockScreen> {
   }
 
   Future<void> _deleteReceipt(DieselReceiptRow r) async {
-    if (!context.read<AuthProvider>().isAdmin) return;
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(

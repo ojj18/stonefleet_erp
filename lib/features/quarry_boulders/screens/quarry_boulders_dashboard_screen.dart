@@ -3,7 +3,6 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../../../core/localization/app_localization.dart';
 import '../../../core/widgets/app_sidebar.dart';
-import '../../auth/providers/auth_provider.dart';
 import '../../service_notification/providers/service_notification_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
 import '../providers/quarry_boulder_provider.dart';
@@ -108,9 +107,20 @@ class _QuarryBouldersDashboardScreenState
               _detail(AppLocalization.t('Boulder Producer'), trip.producerName),
               _detail(AppLocalization.t('Unit'), _num(trip.unit)),
               _detail(AppLocalization.t('Trip'), '${trip.trips}'),
-              _detail(AppLocalization.t('Total Unit'), _num(trip.totalLoad), bold: true),
-              _detail(AppLocalization.t('Per Unit Price'), '₹${_num(trip.unitPrice)}'),
-              _detail(AppLocalization.t('Total Value'), '₹${NumberFormat('#,##,##0.00').format(trip.totalValue)}', bold: true),
+              _detail(
+                AppLocalization.t('Total Unit'),
+                _num(trip.totalLoad),
+                bold: true,
+              ),
+              _detail(
+                AppLocalization.t('Per Unit Price'),
+                '₹${_num(trip.unitPrice)}',
+              ),
+              _detail(
+                AppLocalization.t('Total Value'),
+                '₹${NumberFormat('#,##,##0.00').format(trip.totalValue)}',
+                bold: true,
+              ),
             ],
           ),
         ),
@@ -451,10 +461,8 @@ class _QuarryBouldersDashboardScreenState
                 child: Text(AppLocalization.t('All Producers')),
               ),
               ..._producers.map(
-                (name) => DropdownMenuItem<String>(
-                  value: name,
-                  child: Text(name),
-                ),
+                (name) =>
+                    DropdownMenuItem<String>(value: name, child: Text(name)),
               ),
             ],
             onChanged: (v) {
@@ -524,7 +532,9 @@ class _QuarryBouldersDashboardScreenState
         if (items.isEmpty)
           Padding(
             padding: const EdgeInsets.all(50),
-            child: Text(AppLocalization.t('No quarry boulder trip records found.')),
+            child: Text(
+              AppLocalization.t('No quarry boulder trip records found.'),
+            ),
           )
         else
           SingleChildScrollView(
@@ -557,14 +567,29 @@ class _QuarryBouldersDashboardScreenState
   DataRow _tripTableRow(QuarryBoulderTrip t) => DataRow(
     cells: <DataCell>[
       DataCell(Text(_date(t.tripDate))),
-      DataCell(Text(t.registrationNumber, style: const TextStyle(fontWeight: FontWeight.w600))),
+      DataCell(
+        Text(
+          t.registrationNumber,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       DataCell(Text(t.driverName)),
       DataCell(Text(t.producerName)),
       DataCell(Text(_num(t.unit))),
       DataCell(Text('${t.trips}')),
-      DataCell(Text(_num(t.totalLoad), style: const TextStyle(fontWeight: FontWeight.w700))),
+      DataCell(
+        Text(
+          _num(t.totalLoad),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
       DataCell(Text('₹${_num(t.unitPrice)}')),
-      DataCell(Text('₹${NumberFormat('#,##,##0.00').format(t.totalValue)}', style: const TextStyle(fontWeight: FontWeight.w700))),
+      DataCell(
+        Text(
+          '₹${NumberFormat('#,##,##0.00').format(t.totalValue)}',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
+      ),
       DataCell(
         Row(
           mainAxisSize: MainAxisSize.min,
@@ -579,12 +604,15 @@ class _QuarryBouldersDashboardScreenState
               onPressed: () => _openEdit(t),
               icon: const Icon(Icons.edit_outlined, size: 18),
             ),
-            if (context.read<AuthProvider>().isAdmin)
-              IconButton(
-                tooltip: AppLocalization.t('Delete'),
-                onPressed: () => _delete(t),
-                icon: const Icon(Icons.delete_outline, size: 18, color: Color(0xFFBA1A1A)),
+            IconButton(
+              tooltip: AppLocalization.t('Delete'),
+              onPressed: () => _delete(t),
+              icon: const Icon(
+                Icons.delete_outline,
+                size: 18,
+                color: Color(0xFFBA1A1A),
               ),
+            ),
           ],
         ),
       ),

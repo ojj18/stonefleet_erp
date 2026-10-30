@@ -8,7 +8,6 @@ import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/transport_vehicle_model.dart';
 import '../../../../data/models/transport_service_model.dart';
 import '../../../../data/repositories/transport_service_repository.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../master/providers/transport_master_provider.dart';
 import '../providers/transport_service_provider.dart';
@@ -686,18 +685,17 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
                         : () => _openEditScreen(service),
                     icon: const Icon(Icons.edit_outlined, size: 19),
                   ),
-                  if (context.watch<AuthProvider>().isAdmin)
-                    IconButton(
-                      tooltip: AppLocalization.t('Delete'),
-                      onPressed: service.id == null
-                          ? null
-                          : () => _confirmDelete(service),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: 19,
-                        color: Color(0xFFBA1A1A),
-                      ),
+                  IconButton(
+                    tooltip: AppLocalization.t('Delete'),
+                    onPressed: service.id == null
+                        ? null
+                        : () => _confirmDelete(service),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 19,
+                      color: Color(0xFFBA1A1A),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -758,7 +756,9 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
   }
 
   Future<void> _viewService(TransportServiceModel service) async {
-    final vehicle = await context.read<TransportProvider>().getById(service.transportVehicleId);
+    final vehicle = await context.read<TransportProvider>().getById(
+      service.transportVehicleId,
+    );
     final summary = await _getItemSummary(service.id);
     if (!mounted) return;
     await showDialog<void>(
@@ -766,14 +766,37 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
       builder: (_) => _ServiceDetailsDialog(
         title: AppLocalization.t('Transport Service Details'),
         children: [
-          _sd(AppLocalization.t('Service Date'), _formatDate(service.serviceDate)),
+          _sd(
+            AppLocalization.t('Service Date'),
+            _formatDate(service.serviceDate),
+          ),
           _sd(AppLocalization.t('Vehicle'), vehicle?.registrationNumber),
-          _sd(AppLocalization.t('Current KM'), _formatNumber(service.currentKm)),
-          _sd(AppLocalization.t('AdBlue Oil Quantity (L)'), _formatNumber(service.airBlowerOilQuantity)),
-          _sd(AppLocalization.t('Oil Cost per Litre'), _formatCurrency(service.airBlowerOilRate)),
-          _sd(AppLocalization.t('AdBlue Oil Total Cost'), _formatCurrency(service.airBlowerOilQuantity * service.airBlowerOilRate)),
+          _sd(
+            AppLocalization.t('Current KM'),
+            _formatNumber(service.currentKm),
+          ),
+          _sd(
+            AppLocalization.t('AdBlue Oil Quantity (L)'),
+            _formatNumber(service.airBlowerOilQuantity),
+          ),
+          _sd(
+            AppLocalization.t('Oil Cost per Litre'),
+            _formatCurrency(service.airBlowerOilRate),
+          ),
+          _sd(
+            AppLocalization.t('AdBlue Oil Total Cost'),
+            _formatCurrency(
+              service.airBlowerOilQuantity * service.airBlowerOilRate,
+            ),
+          ),
           _sd(AppLocalization.t('Service Items'), summary.count.toString()),
-          _sd(AppLocalization.t('Total Service Cost'), _formatCurrency(summary.total + service.airBlowerOilQuantity * service.airBlowerOilRate)),
+          _sd(
+            AppLocalization.t('Total Service Cost'),
+            _formatCurrency(
+              summary.total +
+                  service.airBlowerOilQuantity * service.airBlowerOilRate,
+            ),
+          ),
           _sd(AppLocalization.t('Service Remarks'), service.remarks),
         ],
       ),
@@ -782,12 +805,26 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
 
   Widget _sd(String label, String? value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(width: 165, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF68717D)))),
-      const SizedBox(width: 10), Expanded(child: Text(value == null || value.trim().isEmpty ? '-' : value)),
-    ]),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 165,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF68717D),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(value == null || value.trim().isEmpty ? '-' : value),
+        ),
+      ],
+    ),
   );
-
 
   Future<void> _openEditScreen(TransportServiceModel service) async {
     if (service.id == null) {
@@ -899,7 +936,8 @@ class _TransportServiceScreenState extends State<TransportServiceScreen> {
     }
 
     final service = await repository.getById(serviceId);
-    total += (service?.airBlowerOilQuantity ?? 0) * (service?.airBlowerOilRate ?? 0);
+    total +=
+        (service?.airBlowerOilQuantity ?? 0) * (service?.airBlowerOilRate ?? 0);
     return _ItemSummary(count: items.length, total: total);
   }
 
@@ -1098,11 +1136,23 @@ const TextStyle _headerStyle = TextStyle(
 );
 
 class _ServiceDetailsDialog extends StatelessWidget {
-  final String title; final List<Widget> children;
+  final String title;
+  final List<Widget> children;
   const _ServiceDetailsDialog({required this.title, required this.children});
-  @override Widget build(BuildContext context) => AlertDialog(
+  @override
+  Widget build(BuildContext context) => AlertDialog(
     title: Text(title),
-    content: SizedBox(width: 560, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: children))),
-    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalization.t('Close')))],
+    content: SizedBox(
+      width: 560,
+      child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(AppLocalization.t('Close')),
+      ),
+    ],
   );
 }

@@ -8,7 +8,6 @@ import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/excavator_model.dart';
 import '../../../../data/models/excavator_service_model.dart';
 import '../../../../data/repositories/excavator_service_repository.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_service_provider.dart';
@@ -631,18 +630,17 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
                         : () => _openEditScreen(service),
                     icon: const Icon(Icons.edit_outlined, size: 19),
                   ),
-                  if (context.watch<AuthProvider>().isAdmin)
-                    IconButton(
-                      tooltip: AppLocalization.t('Delete'),
-                      onPressed: service.id == null
-                          ? null
-                          : () => _confirmDelete(service),
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        size: 19,
-                        color: Color(0xFFBA1A1A),
-                      ),
+                  IconButton(
+                    tooltip: AppLocalization.t('Delete'),
+                    onPressed: service.id == null
+                        ? null
+                        : () => _confirmDelete(service),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 19,
+                      color: Color(0xFFBA1A1A),
                     ),
+                  ),
                 ],
               ),
             ),
@@ -703,7 +701,9 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
   }
 
   Future<void> _viewService(ExcavatorServiceModel service) async {
-    final excavator = await context.read<ExcavatorProvider>().getById(service.excavatorId);
+    final excavator = await context.read<ExcavatorProvider>().getById(
+      service.excavatorId,
+    );
     final summary = await _getItemSummary(service.id);
     if (!mounted) return;
     await showDialog<void>(
@@ -711,11 +711,20 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
       builder: (_) => _ServiceDetailsDialog(
         title: AppLocalization.t('Excavator Service Details'),
         children: [
-          _sd(AppLocalization.t('Service Date'), _formatDate(service.serviceDate)),
+          _sd(
+            AppLocalization.t('Service Date'),
+            _formatDate(service.serviceDate),
+          ),
           _sd(AppLocalization.t('Excavator'), excavator?.registrationNumber),
-          _sd(AppLocalization.t('Current Hour Meter'), _formatNumber(service.currentHourMeter)),
+          _sd(
+            AppLocalization.t('Current Hour Meter'),
+            _formatNumber(service.currentHourMeter),
+          ),
           _sd(AppLocalization.t('Service Items'), summary.count.toString()),
-          _sd(AppLocalization.t('Total Service Cost'), _formatCurrency(summary.total)),
+          _sd(
+            AppLocalization.t('Total Service Cost'),
+            _formatCurrency(summary.total),
+          ),
           _sd(AppLocalization.t('Service Remarks'), service.remarks),
         ],
       ),
@@ -724,12 +733,26 @@ class _ExcavatorServiceScreenState extends State<ExcavatorServiceScreen> {
 
   Widget _sd(String label, String? value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      SizedBox(width: 175, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF68717D)))),
-      const SizedBox(width: 10), Expanded(child: Text(value == null || value.trim().isEmpty ? '-' : value)),
-    ]),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 175,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF68717D),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(value == null || value.trim().isEmpty ? '-' : value),
+        ),
+      ],
+    ),
   );
-
 
   Future<void> _openEditScreen(ExcavatorServiceModel service) async {
     if (service.id == null) return;
@@ -1019,11 +1042,23 @@ const TextStyle _headerStyle = TextStyle(
 );
 
 class _ServiceDetailsDialog extends StatelessWidget {
-  final String title; final List<Widget> children;
+  final String title;
+  final List<Widget> children;
   const _ServiceDetailsDialog({required this.title, required this.children});
-  @override Widget build(BuildContext context) => AlertDialog(
+  @override
+  Widget build(BuildContext context) => AlertDialog(
     title: Text(title),
-    content: SizedBox(width: 560, child: SingleChildScrollView(child: Column(mainAxisSize: MainAxisSize.min, children: children))),
-    actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(AppLocalization.t('Close')))],
+    content: SizedBox(
+      width: 560,
+      child: SingleChildScrollView(
+        child: Column(mainAxisSize: MainAxisSize.min, children: children),
+      ),
+    ),
+    actions: [
+      TextButton(
+        onPressed: () => Navigator.pop(context),
+        child: Text(AppLocalization.t('Close')),
+      ),
+    ],
   );
 }

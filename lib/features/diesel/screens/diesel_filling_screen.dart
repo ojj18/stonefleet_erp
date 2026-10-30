@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:stonefleet_erp/features/auth/providers/auth_provider.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import '../../../data/models/diesel_models.dart';
 import '../providers/diesel_provider.dart';
@@ -145,12 +144,16 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
                                               onPressed: () =>
                                                   _openForm(existing: r),
                                             ),
-                                            if (context.watch<AuthProvider>().isAdmin)
-                                              IconButton(
-                                                tooltip: AppLocalization.t('Delete'),
-                                                icon: const Icon(Icons.delete_outline, size: 18),
-                                                onPressed: () => _delete(r),
+                                            IconButton(
+                                              tooltip: AppLocalization.t(
+                                                'Delete',
                                               ),
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                size: 18,
+                                              ),
+                                              onPressed: () => _delete(r),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -197,7 +200,6 @@ class _DieselFillingScreenState extends State<DieselFillingScreen> {
   }
 
   Future<void> _delete(DieselFillingRow r) async {
-    if (!context.read<AuthProvider>().isAdmin) return;
     final p = context.read<DieselProvider>();
     if (!await _confirm(
       AppLocalization.t('Delete Diesel Filling?'),

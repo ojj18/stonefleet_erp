@@ -6,7 +6,6 @@ import '../../../../app/app_config.dart';
 import '../../../../core/widgets/app_sidebar.dart';
 import '../../../../core/widgets/pagination_footer.dart';
 import '../../../../data/models/transport_maintenance_model.dart';
-import '../../../auth/providers/auth_provider.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../../../transport/master/providers/transport_master_provider.dart';
 import '../providers/transport_maintenance_provider.dart';
@@ -664,13 +663,12 @@ class _TransportMaintenanceScreenState
                     icon: const Icon(Icons.edit_outlined, size: 19),
                     color: const Color(0xFF00652C),
                   ),
-                  if (context.watch<AuthProvider>().isAdmin)
-                    IconButton(
-                      tooltip: AppLocalization.t('Delete'),
-                      onPressed: () => _confirmDelete(record),
-                      icon: const Icon(Icons.delete_outline, size: 19),
-                      color: const Color(0xFFBA1A1A),
-                    ),
+                  IconButton(
+                    tooltip: AppLocalization.t('Delete'),
+                    onPressed: () => _confirmDelete(record),
+                    icon: const Icon(Icons.delete_outline, size: 19),
+                    color: const Color(0xFFBA1A1A),
+                  ),
                 ],
               ),
             ),
