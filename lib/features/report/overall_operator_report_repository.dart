@@ -12,15 +12,7 @@ class OverallOperatorReportRepository {
         SELECT operator_name AS name FROM quarry_blasting_purchases
         UNION SELECT producer_name AS name FROM quarry_boulder_trips
         UNION SELECT driller_name AS name FROM quarry_driller_records
-        UNION SELECT
-          CASE
-            WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name)
-            WHEN vehicle_registration LIKE 'External Lorry - %'
-              THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1))
-            ELSE ''
-          END AS name
-        FROM diesel_fillings
-        WHERE vehicle_type = 'External Lorry'
+        UNION SELECT operator_name AS name FROM diesel_fillings WHERE vehicle_type = 'External Lorry'
       ) WHERE TRIM(COALESCE(name,'')) <> '' AND LOWER(TRIM(name)) <> 'company'
       ORDER BY name COLLATE NOCASE
     ''');
@@ -66,26 +58,7 @@ class OverallOperatorReportRepository {
     await addRows(
       '''
       SELECT purchase_date AS entry_date, TRIM(operator_name) AS operator,
-             'Padi' AS description, salary AS amount
-      FROM quarry_blasting_purchases
-      WHERE date(purchase_date) BETWEEN date(?) AND date(?) $opClause
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company'
-        AND COALESCE(salary,0) <> 0
-    ''',
-      'Quarry Blasting',
-      'amount',
-    );
-
-    // Material purchases are part of the overall operating cost, but are
-    // kept separate from Padi and operator advances so they are not counted
-    // as operator earnings or deducted twice from the final settlement.
-    await addRows(
-      '''
-      SELECT purchase_date AS entry_date, TRIM(operator_name) AS operator,
-             'Bullet: ' || COALESCE(bullet_total,0) ||
-             ' | 3m Wire: ' || COALESCE(wire_3m_total,0) ||
-             ' | 4m Wire: ' || COALESCE(wire_4m_total,0) ||
-             ' | ED: ' || COALESCE(ed_total,0) AS description,
+             'Blasting materials (Bullet, 3m Wire, 4m Wire, ED)' AS description,
              (COALESCE(bullet_total,0) + COALESCE(wire_3m_total,0) +
               COALESCE(wire_4m_total,0) + COALESCE(ed_total,0)) AS amount
       FROM quarry_blasting_purchases
@@ -95,6 +68,19 @@ class OverallOperatorReportRepository {
              COALESCE(wire_4m_total,0) + COALESCE(ed_total,0)) <> 0
     ''',
       'Blasting Materials',
+      'amount',
+    );
+
+    await addRows(
+      '''
+      SELECT purchase_date AS entry_date, TRIM(operator_name) AS operator,
+             'Padi' AS description, salary AS amount
+      FROM quarry_blasting_purchases
+      WHERE date(purchase_date) BETWEEN date(?) AND date(?) $opClause
+        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company'
+        AND COALESCE(salary,0) <> 0
+    ''',
+      'Quarry Blasting',
       'amount',
     );
 
@@ -121,15 +107,11 @@ class OverallOperatorReportRepository {
       '''
       SELECT trip_date AS entry_date, TRIM(producer_name) AS operator,
              'Boulder trips: ' || COALESCE(trips,0) || ' | Total units: ' || COALESCE(total_load,0) AS description,
-             CASE
-               WHEN COALESCE(total_value,0) <> 0 THEN total_value
-               ELSE COALESCE(total_load,0) * COALESCE(unit_price,0)
-             END AS amount
+             total_value AS amount
       FROM quarry_boulder_trips
       WHERE date(trip_date) BETWEEN date(?) AND date(?) $boulderOpClause
         AND LOWER(TRIM(COALESCE(producer_name,''))) <> 'company'
-        AND (COALESCE(total_value,0) <> 0 OR
-             (COALESCE(total_load,0) * COALESCE(unit_price,0)) <> 0)
+        AND COALESCE(total_value,0) <> 0
     ''',
       'Quarry Boulders',
       'amount',
@@ -150,20 +132,17 @@ class OverallOperatorReportRepository {
       'amount',
     );
 
-    const dieselOperatorExpr = "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN vehicle_registration LIKE 'External Lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(vehicle_registration) END";
-    final dieselOpClause = filterOp
-        ? 'AND LOWER($dieselOperatorExpr) = ?'
-        : '';
+    final dieselOpClause = filterOp ? 'AND LOWER(TRIM(operator_name)) = ?' : '';
     await addRows(
       '''
-      SELECT filling_date AS entry_date, $dieselOperatorExpr AS operator,
+      SELECT filling_date AS entry_date, TRIM(operator_name) AS operator,
              vehicle_registration || ' | ' || COALESCE(quantity_litres,0) || ' L' AS description,
              total_cost AS amount
       FROM diesel_fillings
       WHERE date(filling_date) BETWEEN date(?) AND date(?)
         AND vehicle_type = 'External Lorry'
-        AND LOWER(TRIM($dieselOperatorExpr)) <> ''
-        AND LOWER(TRIM($dieselOperatorExpr)) <> 'company' $dieselOpClause
+        AND LOWER(TRIM(COALESCE(operator_name,''))) <> ''
+        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company' $dieselOpClause
         AND COALESCE(total_cost,0) <> 0
     ''',
       'Diesel Filling',

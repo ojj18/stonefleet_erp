@@ -103,15 +103,14 @@ class _OverallOperatorReportScreenState
   double get _padi => _sum('Quarry Blasting');
   double get _boulders => _sum('Quarry Boulders');
   double get _driller => _sum('Quarry Driller');
-  double get _materialCost => _sum('Blasting Materials');
   double get _advance => -_sum('Advance');
+  double get _materials => _sum('Blasting Materials');
   double get _diesel => _sum('Diesel Filling');
 
-  double get _gross => _padi + _boulders + _driller;
-  // Operating cost includes operator earnings, blasting materials and
-  // external-lorry diesel. Advance is already part of Padi settlement.
-  double get _totalOperatingCost => _gross + _materialCost + _diesel;
-  double get _net => _gross - _advance - _diesel;
+  // As requested: Padi + advance + blasting materials + external-lorry diesel.
+  double get _totalEarnings => _padi + _advance + _materials + _diesel;
+  double get _totalBoulderDriller => _boulders + _driller;
+  double get _net => _totalBoulderDriller - _totalEarnings;
 
   Future<void> _exportExcel() async {
     final excel = Excel.createExcel();
@@ -135,48 +134,18 @@ class _OverallOperatorReportScreenState
         DoubleCellValue((r['amount'] as num).toDouble()),
       ]);
     }
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Blasting Materials Cost'),
-      DoubleCellValue(_materialCost),
-    ]);
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Gross Earnings'),
-      DoubleCellValue(_gross),
-    ]);
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Total Operating Cost'),
-      DoubleCellValue(_totalOperatingCost),
-    ]);
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Advance Deduction'),
-      DoubleCellValue(_advance),
-    ]);
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Diesel Deduction'),
-      DoubleCellValue(_diesel),
-    ]);
-    sheet.appendRow([
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue(''),
-      TextCellValue('Net Payable'),
-      DoubleCellValue(_net),
-    ]);
+    void appendSummary(String label, double amount) {
+      sheet.appendRow([
+        TextCellValue(''),
+        TextCellValue(''),
+        TextCellValue(''),
+        TextCellValue(label),
+        DoubleCellValue(amount),
+      ]);
+    }
+    appendSummary('Total Earnings (Padi + Advance + Materials + Diesel)', _totalEarnings);
+    appendSummary('Total Boulder & Driller', _totalBoulderDriller);
+    appendSummary('Total Net Payable', _net);
     final dir = await getApplicationDocumentsDirectory();
     final file = File(
       '${dir.path}/overall_operator_settlement_${DateTime.now().millisecondsSinceEpoch}.xlsx',
@@ -218,13 +187,10 @@ class _OverallOperatorReportScreenState
                 .toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('Blasting Materials Cost: ${_money.format(_materialCost)}'),
-          pw.Text('Gross Earnings: ${_money.format(_gross)}'),
-          pw.Text('Total Operating Cost: ${_money.format(_totalOperatingCost)}'),
-          pw.Text('Advance Deduction: ${_money.format(_advance)}'),
-          pw.Text('Diesel Deduction: ${_money.format(_diesel)}'),
+          pw.Text('Total Earnings (Padi + Advance + Blasting Materials + External Lorry Diesel): ${_money.format(_totalEarnings)}'),
+          pw.Text('Total Boulder & Driller: ${_money.format(_totalBoulderDriller)}'),
           pw.Text(
-            'Net Payable: ${_money.format(_net)}',
+            'Total Net Payable: ${_money.format(_net)}',
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
           ),
         ],
@@ -415,7 +381,7 @@ class _OverallOperatorReportScreenState
                                   ),
                                   _metric(
                                     tr('Blasting Materials Cost'),
-                                    _materialCost,
+                                    _materials,
                                     Icons.inventory_2_outlined,
                                   ),
                                   _metric(
@@ -424,18 +390,22 @@ class _OverallOperatorReportScreenState
                                     Icons.money_off,
                                   ),
                                   _metric(
-                                    tr('Diesel Deduction'),
+                                    tr('External Lorry Diesel'),
                                     _diesel,
                                     Icons.local_gas_station_outlined,
                                   ),
                                   _metric(
-                                    tr('Total Operating Cost'),
-                                    _totalOperatingCost,
+                                    tr('Total Earnings'),
+                                    _totalEarnings,
                                     Icons.calculate_outlined,
-                                    strong: true,
                                   ),
                                   _metric(
-                                    tr('Net Payable'),
+                                    tr('Total Boulder & Driller'),
+                                    _totalBoulderDriller,
+                                    Icons.summarize_outlined,
+                                  ),
+                                  _metric(
+                                    tr('Total Net Payable'),
                                     _net,
                                     Icons.account_balance_wallet_outlined,
                                     strong: true,
@@ -469,32 +439,22 @@ class _OverallOperatorReportScreenState
                                     ),
                                     _summaryLine(
                                       tr('Blasting Materials Cost'),
-                                      _materialCost,
+                                      _materials,
                                     ),
                                     const Divider(),
                                     _summaryLine(
-                                      tr('Gross Earnings'),
-                                      _gross,
+                                      tr('Total Earnings (Padi + Advance + Materials + Diesel)'),
+                                      _totalEarnings,
                                       bold: true,
                                     ),
                                     _summaryLine(
-                                      tr('Advance Amount'),
-                                      _advance,
-                                      negative: true,
-                                    ),
-                                    _summaryLine(
-                                      tr('External Lorry Diesel Cost'),
-                                      _diesel,
-                                      negative: true,
-                                    ),
-                                    _summaryLine(
-                                      tr('Total Operating Cost'),
-                                      _totalOperatingCost,
+                                      tr('Total Boulder & Driller'),
+                                      _totalBoulderDriller,
                                       bold: true,
                                     ),
                                     const Divider(),
                                     _summaryLine(
-                                      tr('Final Payable'),
+                                      tr('Total Net Payable'),
                                       _net,
                                       bold: true,
                                       green: true,
