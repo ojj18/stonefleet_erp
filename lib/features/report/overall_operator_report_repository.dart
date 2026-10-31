@@ -13,11 +13,11 @@ class OverallOperatorReportRepository {
         UNION SELECT producer_name AS name FROM quarry_boulder_trips
         UNION SELECT driller_name AS name FROM quarry_driller_records
         UNION SELECT operator_name AS name FROM diesel_fillings WHERE vehicle_type = 'External Lorry'
-      ) WHERE TRIM(COALESCE(name,'')) <> '' AND LOWER(TRIM(name)) <> 'company'
+      ) WHERE TRIM(COALESCE(name,'')) <> ''
       ORDER BY name COLLATE NOCASE
     ''');
     final names = rows.map((r) => r['name'].toString()).toSet().toList();
-    for (final name in ['Madhavan', 'Murugan']) {
+    for (final name in ['Company', 'Madhavan', 'Murugan']) {
       if (!names.any((n) => n.toLowerCase() == name.toLowerCase())) {
         names.add(name);
       }
@@ -63,7 +63,6 @@ class OverallOperatorReportRepository {
               COALESCE(wire_4m_total,0) + COALESCE(ed_total,0)) AS amount
       FROM quarry_blasting_purchases
       WHERE date(purchase_date) BETWEEN date(?) AND date(?) $opClause
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company'
         AND (COALESCE(bullet_total,0) + COALESCE(wire_3m_total,0) +
              COALESCE(wire_4m_total,0) + COALESCE(ed_total,0)) <> 0
     ''',
@@ -77,7 +76,6 @@ class OverallOperatorReportRepository {
              'Padi' AS description, salary AS amount
       FROM quarry_blasting_purchases
       WHERE date(purchase_date) BETWEEN date(?) AND date(?) $opClause
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company'
         AND COALESCE(salary,0) <> 0
     ''',
       'Quarry Blasting',
@@ -93,7 +91,6 @@ class OverallOperatorReportRepository {
              'Advance paid' AS description, -advance_amount AS amount
       FROM quarry_blasting_purchases
       WHERE date(purchase_date) BETWEEN date(?) AND date(?) $advanceOpClause
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company'
         AND COALESCE(advance_amount,0) <> 0
     ''',
       'Advance',
@@ -110,7 +107,6 @@ class OverallOperatorReportRepository {
              total_value AS amount
       FROM quarry_boulder_trips
       WHERE date(trip_date) BETWEEN date(?) AND date(?) $boulderOpClause
-        AND LOWER(TRIM(COALESCE(producer_name,''))) <> 'company'
         AND COALESCE(total_value,0) <> 0
     ''',
       'Quarry Boulders',
@@ -125,24 +121,30 @@ class OverallOperatorReportRepository {
              total_amount AS amount
       FROM quarry_driller_records
       WHERE date(record_date) BETWEEN date(?) AND date(?) $drillerOpClause
-        AND LOWER(TRIM(COALESCE(driller_name,''))) <> 'company'
         AND COALESCE(total_amount,0) <> 0
     ''',
       'Quarry Driller',
       'amount',
     );
 
-    final dieselOpClause = filterOp ? 'AND LOWER(TRIM(operator_name)) = ?' : '';
+    // Older External Lorry entries may store the operator in
+    // vehicle_registration (e.g. "External Lorry - Murugan") while
+    // operator_name is empty. Resolve both formats for filtering/reporting.
+    const dieselOperatorExpr = "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
+    final dieselOpClause = filterOp
+        ? 'AND LOWER(TRIM(($dieselOperatorExpr))) = ?'
+        : '';
     await addRows(
       '''
-      SELECT filling_date AS entry_date, TRIM(operator_name) AS operator,
+      SELECT filling_date AS entry_date,
+             TRIM(($dieselOperatorExpr)) AS operator,
              vehicle_registration || ' | ' || COALESCE(quantity_litres,0) || ' L' AS description,
              total_cost AS amount
       FROM diesel_fillings
       WHERE date(filling_date) BETWEEN date(?) AND date(?)
-        AND vehicle_type = 'External Lorry'
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> ''
-        AND LOWER(TRIM(COALESCE(operator_name,''))) <> 'company' $dieselOpClause
+        AND LOWER(TRIM(vehicle_type)) = 'external lorry'
+        AND TRIM(COALESCE(vehicle_registration,'')) <> ''
+        $dieselOpClause
         AND COALESCE(total_cost,0) <> 0
     ''',
       'Diesel Filling',

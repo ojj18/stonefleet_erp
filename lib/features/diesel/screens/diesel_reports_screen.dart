@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:stonefleet_erp/core/localization/app_localization.dart';
 import 'package:provider/provider.dart';
 
+import '../../../data/models/diesel_models.dart';
 import '../../../data/services/diesel_excel_service.dart';
 import '../../../data/services/diesel_pdf_service.dart';
 import '../providers/diesel_provider.dart';
@@ -22,6 +23,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
   );
   String type = 'All';
   int? vehicleId;
+  String externalDriver = 'All';
   int page = 0;
   int rowsPerPage = 10;
 
@@ -29,9 +31,56 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await context.read<DieselProvider>().loadVehicles();
+      if (!mounted) return;
+
+      final provider = context.read<DieselProvider>();
+      await provider.loadVehicles();
+      if (!mounted) return;
+
+      await provider.loadExternalDrivers();
+      if (!mounted) return;
+
       await _load();
     });
+  }
+
+  List<DieselReportRow> _filteredRows(List<DieselReportRow> rows) {
+    if (type != 'External Lorry' || externalDriver == 'All') return rows;
+    final expected = externalDriver.toLowerCase().trim();
+    return rows.where((row) {
+      final registration = row.vehicleRegistration.toString().toLowerCase();
+      // External-lorry names are stored in the registration field as
+      // "External Lorry - <name>" by the filling form.
+      return registration.contains(expected);
+    }).toList();
+  }
+
+  Future<void> _pickDate(bool from) async {
+    final initial = from ? range.start : range.end;
+    final picked = await showDatePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      initialDate: initial,
+    );
+    if (picked == null) return;
+
+    DateTime startDate = from ? picked : range.start;
+    DateTime endDate = from ? range.end : picked;
+    if (startDate.isAfter(endDate)) {
+      if (from) {
+        endDate = picked;
+      } else {
+        startDate = picked;
+      }
+    }
+
+    setState(() {
+      period = 'Custom';
+      range = DateTimeRange(start: startDate, end: endDate);
+      page = 0;
+    });
+    await _load();
   }
 
   Future<void> _load() {
@@ -66,7 +115,8 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
 
   Future<void> _export() async {
     final p = context.read<DieselProvider>();
-    if (p.reportRows.isEmpty) {
+    final rows = _filteredRows(p.reportRows);
+    if (rows.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalization.t('No records available for export.')),
@@ -76,34 +126,101 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
     }
     try {
       final path = await DieselExcelService().exportReport(
-        rows: p.reportRows,
+        rows: rows,
         fromDate: range.start,
         toDate: range.end,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalization.t('Excel report saved: ') + path)),
+        SnackBar(
+          content: Text(AppLocalization.t('Excel report saved: ') + path),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalization.t('Export failed: ') + e.toString())),
+        SnackBar(
+          content: Text(AppLocalization.t('Export failed: ') + e.toString()),
+        ),
       );
     }
   }
 
   Future<void> _pdf({required bool print}) async {
     final p = context.read<DieselProvider>();
-    if (p.reportRows.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppLocalization.t('No records available for export.'))));
+    final rows = _filteredRows(p.reportRows);
+    if (rows.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalization.t('No records available for export.')),
+        ),
+      );
       return;
     }
     final service = DieselPdfService();
     if (print) {
-      await service.printReport(rows: p.reportRows, fromDate: range.start, toDate: range.end);
+      await service.printReport(
+        rows: rows,
+        fromDate: range.start,
+        toDate: range.end,
+      );
     } else {
-      await service.shareReport(rows: p.reportRows, fromDate: range.start, toDate: range.end);
+      await service.shareReport(
+        rows: rows,
+        fromDate: range.start,
+        toDate: range.end,
+      );
     }
+  }
+
+  Widget _dateFilterButton(String label, DateTime date, VoidCallback onTap) {
+    return SizedBox(
+      width: 160,
+      height: 56,
+      child: OutlinedButton(
+        onPressed: onTap,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: const Color(0xFF00652C),
+          side: const BorderSide(color: Color(0xFFBECABC)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.calendar_month_outlined,
+              size: 19,
+              color: Color(0xFF00652C),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF59665D),
+                    ),
+                  ),
+                  Text(
+                    dieselDisplayDate(dieselDate(date)),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -112,12 +229,14 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
       selectedIndex: 23,
       child: Consumer<DieselProvider>(
         builder: (context, p, _) {
-          final litres = p.reportRows.fold<double>(0, (s, r) => s + r.litres);
-          final cost = p.reportRows.fold<double>(0, (s, r) => s + r.cost);
+          final filteredRows = _filteredRows(p.reportRows);
+          final litres = filteredRows.fold<double>(0, (s, r) => s + r.litres);
+          final cost = filteredRows.fold<double>(0, (s, r) => s + r.cost);
           final averageRate = litres == 0 ? 0 : cost / litres;
           final start = page * rowsPerPage;
-          final end = (start + rowsPerPage).clamp(0, p.reportRows.length);
-          final visibleRows = p.reportRows.sublist(start, end);
+          final end = (start + rowsPerPage).clamp(0, filteredRows.length);
+          final safeStart = start.clamp(0, filteredRows.length);
+          final visibleRows = filteredRows.sublist(safeStart, end);
 
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
@@ -126,13 +245,34 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
               children: [
                 DieselPageHeader(
                   title: AppLocalization.t('Diesel Reports'),
-                  subtitle:
-                      AppLocalization.t('Generate daily, weekly, monthly and custom diesel reports.'),
-                  action: Wrap(spacing: 8, children: [
-                    OutlinedButton.icon(onPressed: p.isLoading ? null : () => _pdf(print: false), icon: const Icon(Icons.picture_as_pdf_outlined), label: Text(AppLocalization.t('Export PDF'))),
-                    OutlinedButton.icon(onPressed: p.isLoading ? null : () => _pdf(print: true), icon: const Icon(Icons.print_outlined), label: Text(AppLocalization.t('Print'))),
-                    FilledButton.icon(onPressed: p.isLoading ? null : _export, icon: const Icon(Icons.file_download_outlined), label: Text(AppLocalization.t('Export Excel')), style: FilledButton.styleFrom(backgroundColor: const Color(0xFF00652C))),
-                  ]),
+                  subtitle: AppLocalization.t(
+                    'Generate daily, weekly, monthly and custom diesel reports.',
+                  ),
+                  action: Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: p.isLoading
+                            ? null
+                            : () => _pdf(print: false),
+                        icon: const Icon(Icons.picture_as_pdf_outlined),
+                        label: Text(AppLocalization.t('Export PDF')),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: p.isLoading ? null : () => _pdf(print: true),
+                        icon: const Icon(Icons.print_outlined),
+                        label: Text(AppLocalization.t('Print')),
+                      ),
+                      FilledButton.icon(
+                        onPressed: p.isLoading ? null : _export,
+                        icon: const Icon(Icons.file_download_outlined),
+                        label: Text(AppLocalization.t('Export Excel')),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFF00652C),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
                 DieselCard(
@@ -142,27 +282,28 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                     children: [
                       DropdownButton<String>(
                         value: period,
-                        items: const ['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom']
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
-                            )
-                            .toList(),
+                        items:
+                            const [
+                                  'Daily',
+                                  'Weekly',
+                                  'Monthly',
+                                  'Yearly',
+                                  'Custom',
+                                ]
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(AppLocalization.t(e)),
+                                  ),
+                                )
+                                .toList(),
                         onChanged: (v) async {
                           if (v == null) return;
                           if (v == 'Custom') {
-                            final d = await showDateRangePicker(
-                              context: context,
-                              firstDate: DateTime(2020),
-                              lastDate: DateTime(2100),
-                              initialDateRange: range,
-                            );
-                            if (d != null) {
-                              setState(() {
-                                period = 'Custom';
-                                range = d;
-                              });
-                              await _load();
-                            }
+                            setState(() {
+                              period = 'Custom';
+                              page = 0;
+                            });
                           } else {
                             await _setPeriod(v);
                           }
@@ -170,21 +311,62 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                       ),
                       DropdownButton<String>(
                         value: type,
-                        items: const ['All', 'Excavator', 'Transport']
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(AppLocalization.t(e))),
-                            )
-                            .toList(),
+                        items:
+                            const [
+                                  'All',
+                                  'Excavator',
+                                  'Transport',
+                                  'External Lorry',
+                                ]
+                                .map(
+                                  (e) => DropdownMenuItem(
+                                    value: e,
+                                    child: Text(AppLocalization.t(e)),
+                                  ),
+                                )
+                                .toList(),
                         onChanged: (v) async {
                           if (v == null) return;
                           setState(() {
                             type = v;
                             vehicleId = null;
+                            externalDriver = 'All';
                           });
+                          if (v == 'External Lorry') {
+                            await context
+                                .read<DieselProvider>()
+                                .loadExternalDrivers();
+                          }
                           await _load();
                         },
                       ),
-                      if (type != 'All')
+                      if (type == 'External Lorry')
+                        DropdownButton<String>(
+                          value: externalDriver,
+                          items:
+                              <String>{'All', ...p.externalDrivers, 'Company'}
+                                  .map(
+                                    (name) => DropdownMenuItem(
+                                      value: name,
+                                      child: Text(
+                                        name == 'All'
+                                            ? AppLocalization.t(
+                                                'All External Drivers',
+                                              )
+                                            : name,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                          onChanged: (value) {
+                            if (value == null) return;
+                            setState(() {
+                              externalDriver = value;
+                              page = 0;
+                            });
+                          },
+                        ),
+                      if (type == 'Excavator' || type == 'Transport')
                         DropdownButton<int?>(
                           value: vehicleId,
                           hint: Text(AppLocalization.t('All Vehicles')),
@@ -207,26 +389,15 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                             await _load();
                           },
                         ),
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final d = await showDateRangePicker(
-                            context: context,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2100),
-                            initialDateRange: range,
-                          );
-                          if (d != null) {
-                            setState(() {
-                              period = 'Custom';
-                              range = d;
-                            });
-                            await _load();
-                          }
-                        },
-                        icon: const Icon(Icons.date_range_outlined),
-                        label: Text(
-                          '${dieselDisplayDate(dieselDate(range.start))} - ${dieselDisplayDate(dieselDate(range.end))}',
-                        ),
+                      _dateFilterButton(
+                        AppLocalization.t('From Date'),
+                        range.start,
+                        () => _pickDate(true),
+                      ),
+                      _dateFilterButton(
+                        AppLocalization.t('To Date'),
+                        range.end,
+                        () => _pickDate(false),
                       ),
                     ],
                   ),
@@ -289,7 +460,7 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                         icon: Icons.assessment_outlined,
                       ),
                       const SizedBox(height: 16),
-                      if (p.reportRows.isEmpty)
+                      if (filteredRows.isEmpty)
                         Center(
                           child: Padding(
                             padding: EdgeInsets.all(24),
@@ -330,7 +501,9 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                                     cells: [
                                       DataCell(Text(dieselDisplayDate(r.date))),
                                       DataCell(Text(r.vehicleRegistration)),
-                                      DataCell(Text(AppLocalization.t(r.vehicleType))),
+                                      DataCell(
+                                        Text(AppLocalization.t(r.vehicleType)),
+                                      ),
                                       DataCell(
                                         Text('${dieselQty(r.litres)} L'),
                                       ),
@@ -342,8 +515,17 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
                                 .toList(),
                           ),
                         ),
-                      if (p.reportRows.isNotEmpty)
-                        _Pager(total: p.reportRows.length, page: page, rowsPerPage: rowsPerPage, onPage: (v) => setState(() => page = v), onRows: (v) => setState(() { rowsPerPage = v; page = 0; })),
+                      if (filteredRows.isNotEmpty)
+                        _Pager(
+                          total: filteredRows.length,
+                          page: page,
+                          rowsPerPage: rowsPerPage,
+                          onPage: (v) => setState(() => page = v),
+                          onRows: (v) => setState(() {
+                            rowsPerPage = v;
+                            page = 0;
+                          }),
+                        ),
                     ],
                   ),
                 ),
@@ -357,7 +539,52 @@ class _DieselReportsScreenState extends State<DieselReportsScreen> {
 }
 
 class _Pager extends StatelessWidget {
-  final int total, page, rowsPerPage; final ValueChanged<int> onPage; final ValueChanged<int> onRows;
-  const _Pager({required this.total,required this.page,required this.rowsPerPage,required this.onPage,required this.onRows});
-  @override Widget build(BuildContext context){final pages=(total/rowsPerPage).ceil();final from=page*rowsPerPage+1;final to=((page+1)*rowsPerPage>total)?total:(page+1)*rowsPerPage;return Padding(padding:const EdgeInsets.only(top:14),child:Row(children:[Text('${AppLocalization.t('Rows per page')}: '),DropdownButton<int>(value:rowsPerPage,items:const[10,25,50,100].map((e)=>DropdownMenuItem(value:e,child:Text('$e'))).toList(),onChanged:(v){if(v!=null)onRows(v);}),const Spacer(),Text('${AppLocalization.t('Showing')} $from-$to ${AppLocalization.t('of')} $total'),IconButton(onPressed:page>0?()=>onPage(page-1):null,icon:const Icon(Icons.chevron_left)),Text('${page+1} / ${pages==0?1:pages}'),IconButton(onPressed:page<pages-1?()=>onPage(page+1):null,icon:const Icon(Icons.chevron_right))]));}
+  final int total, page, rowsPerPage;
+  final ValueChanged<int> onPage;
+  final ValueChanged<int> onRows;
+  const _Pager({
+    required this.total,
+    required this.page,
+    required this.rowsPerPage,
+    required this.onPage,
+    required this.onRows,
+  });
+  @override
+  Widget build(BuildContext context) {
+    final pages = (total / rowsPerPage).ceil();
+    final from = page * rowsPerPage + 1;
+    final to = ((page + 1) * rowsPerPage > total)
+        ? total
+        : (page + 1) * rowsPerPage;
+    return Padding(
+      padding: const EdgeInsets.only(top: 14),
+      child: Row(
+        children: [
+          Text('${AppLocalization.t('Rows per page')}: '),
+          DropdownButton<int>(
+            value: rowsPerPage,
+            items: const [10, 25, 50, 100]
+                .map((e) => DropdownMenuItem(value: e, child: Text('$e')))
+                .toList(),
+            onChanged: (v) {
+              if (v != null) onRows(v);
+            },
+          ),
+          const Spacer(),
+          Text(
+            '${AppLocalization.t('Showing')} $from-$to ${AppLocalization.t('of')} $total',
+          ),
+          IconButton(
+            onPressed: page > 0 ? () => onPage(page - 1) : null,
+            icon: const Icon(Icons.chevron_left),
+          ),
+          Text('${page + 1} / ${pages == 0 ? 1 : pages}'),
+          IconButton(
+            onPressed: page < pages - 1 ? () => onPage(page + 1) : null,
+            icon: const Icon(Icons.chevron_right),
+          ),
+        ],
+      ),
+    );
+  }
 }

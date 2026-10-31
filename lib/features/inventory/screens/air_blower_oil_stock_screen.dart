@@ -425,7 +425,14 @@ class _AirBlowerOilStockScreenState extends State<AirBlowerOilStockScreen> {
             'Insufficient AdBlue Oil stock. Available: ${available.toStringAsFixed(2)} L.',
           );
         }
-        final vehicle = _vehicles.firstWhere((v) => v['id'] == _vehicleId);
+        final vehicle = _vehicles.firstWhere(
+          (v) =>
+              v['id'] == _vehicleId &&
+              v['vehicle_type'] == _vehicleType,
+          orElse: () => throw StateError(
+            'Selected vehicle does not match the selected vehicle type. Please select the vehicle again.',
+          ),
+        );
         final type = vehicle['vehicle_type'] as String;
         final rate = (row['average_cost_per_litre'] as num).toDouble();
         final date = _dateString(_usageDate);
