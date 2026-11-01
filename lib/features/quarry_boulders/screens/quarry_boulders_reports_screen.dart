@@ -147,6 +147,16 @@ class _QuarryBouldersReportsScreenState
                                   ),
                                   const SizedBox(width: 10),
                                   OutlinedButton.icon(
+                                    onPressed: _exportPdf,
+                                    icon: const Icon(
+                                      Icons.picture_as_pdf_outlined,
+                                    ),
+                                    label: Text(
+                                      AppLocalization.t('Export PDF'),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  OutlinedButton.icon(
                                     onPressed: _printPdf,
                                     icon: const Icon(Icons.print_outlined),
                                     label: Text(AppLocalization.t('Print')),
@@ -158,17 +168,7 @@ class _QuarryBouldersReportsScreenState
                               const SizedBox(height: 24),
                               _summary(p),
                               const SizedBox(height: 24),
-                              _summaryTable(
-                                AppLocalization.t('Driver-wise Summary'),
-                                p.driverSummary,
-                                'driver_name',
-                              ),
-                              const SizedBox(height: 20),
-                              _summaryTable(
-                                AppLocalization.t('Lorry-wise Summary'),
-                                p.lorrySummary,
-                                'registration_number',
-                              ),
+                              _detailTable(p),
                             ],
                           ),
                         ),
@@ -245,10 +245,8 @@ class _QuarryBouldersReportsScreenState
                 child: Text(AppLocalization.t('All Producers')),
               ),
               ..._producers.map(
-                (name) => DropdownMenuItem<String>(
-                  value: name,
-                  child: Text(name),
-                ),
+                (name) =>
+                    DropdownMenuItem<String>(value: name, child: Text(name)),
               ),
             ],
             onChanged: (value) => setState(() => _producer = value ?? ''),
@@ -352,11 +350,8 @@ class _QuarryBouldersReportsScreenState
       ),
     ),
   );
-  Widget _summaryTable(
-    String title,
-    List<Map<String, dynamic>> rows,
-    String key,
-  ) => Container(
+  Widget _detailTable(QuarryBoulderProvider p) => Container(
+    width: double.infinity,
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(12),
@@ -368,14 +363,16 @@ class _QuarryBouldersReportsScreenState
         Padding(
           padding: const EdgeInsets.all(18),
           child: Text(
-            title,
-            style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+            AppLocalization.t('Quarry Boulders Report'),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
           ),
         ),
-        if (rows.isEmpty)
+        if (p.trips.isEmpty)
           Padding(
             padding: const EdgeInsets.all(30),
-            child: Text(AppLocalization.t('No report data available.')),
+            child: Center(
+              child: Text(AppLocalization.t('No report data available.')),
+            ),
           )
         else
           SingleChildScrollView(
@@ -383,27 +380,49 @@ class _QuarryBouldersReportsScreenState
             child: DataTable(
               headingRowColor: WidgetStateProperty.all(const Color(0xFFF3F4F6)),
               columns: [
+                DataColumn(label: Text(AppLocalization.t('Date'))),
                 DataColumn(
-                  label: Text(
-                    key == 'driver_name'
-                        ? AppLocalization.t('Driver Name')
-                        : AppLocalization.t('Lorry Registration No'),
-                  ),
+                  label: Text(AppLocalization.t('Lorry Registration No')),
                 ),
-                DataColumn(label: Text(AppLocalization.t('Records'))),
+                DataColumn(label: Text(AppLocalization.t('Driver Name'))),
+                DataColumn(label: Text(AppLocalization.t('Boulder Producer'))),
+                DataColumn(label: Text(AppLocalization.t('Unit'))),
                 DataColumn(label: Text(AppLocalization.t('Trip'))),
-                DataColumn(label: Text(AppLocalization.t('Total Load'))),
+                DataColumn(label: Text(AppLocalization.t('Total Unit'))),
+                DataColumn(label: Text(AppLocalization.t('Per Unit Price'))),
+                DataColumn(label: Text(AppLocalization.t('Total Value'))),
               ],
-              rows: rows
+              rows: p.trips
                   .map(
-                    (r) => DataRow(
+                    (t) => DataRow(
                       cells: [
-                        DataCell(Text('${r[key]}')),
-                        DataCell(Text('${r['records']}')),
-                        DataCell(Text('${r['trips']}')),
                         DataCell(
                           Text(
-                            _n((r['total_load'] as num).toDouble()),
+                            DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(DateTime.parse(t.tripDate)),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            t.registrationNumber,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        DataCell(Text(t.driverName)),
+                        DataCell(Text(t.producerName)),
+                        DataCell(Text(_n(t.unit))),
+                        DataCell(Text('${t.trips}')),
+                        DataCell(
+                          Text(
+                            _n(t.totalLoad),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        DataCell(Text('₹${_n(t.unitPrice)}')),
+                        DataCell(
+                          Text(
+                            '₹${NumberFormat('#,##,##0.00').format(t.totalValue)}',
                             style: const TextStyle(fontWeight: FontWeight.w700),
                           ),
                         ),
@@ -411,6 +430,20 @@ class _QuarryBouldersReportsScreenState
                     ),
                   )
                   .toList(),
+            ),
+          ),
+        if (p.trips.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                '${AppLocalization.t('Total Records')}: ${p.trips.length}',
+                style: const TextStyle(
+                  color: Color(0xFF68717D),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ),
       ],
@@ -481,7 +514,17 @@ class _QuarryBouldersReportsScreenState
           pw.Text('Period: ${_periodLabel()}'),
           pw.SizedBox(height: 16),
           pw.TableHelper.fromTextArray(
-            headers: ['Date', 'Lorry', 'Driver', 'Boulder Producer', 'Unit', 'Trips', 'Total Unit', 'Per Unit Price', 'Total Value'],
+            headers: [
+              'Date',
+              'Lorry Registration No',
+              'Driver Name',
+              'Boulder Producer',
+              'Unit',
+              'Trip',
+              'Total Unit',
+              'Per Unit Price',
+              'Total Value',
+            ],
             data: p.trips
                 .map(
                   (t) => [
@@ -502,6 +545,25 @@ class _QuarryBouldersReportsScreenState
       ),
     );
     return doc.save();
+  }
+
+  Future<void> _exportPdf() async {
+    final bytes = await _simplePdf(context.read<QuarryBoulderProvider>());
+    final location = await getSaveLocation(
+      suggestedName: 'quarry_boulders_report.pdf',
+      acceptedTypeGroups: [
+        const XTypeGroup(label: 'PDF', extensions: ['pdf']),
+      ],
+    );
+    if (location == null) return;
+    await File(location.path).writeAsBytes(bytes, flush: true);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalization.t('PDF report saved successfully.')),
+        ),
+      );
+    }
   }
 
   Future<void> _printPdf() async {

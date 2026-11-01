@@ -131,11 +131,6 @@ class AppSidebar extends StatelessWidget {
                     index: 8,
                   ),
                   _menuItem(
-                    icon: Icons.account_balance_wallet_outlined,
-                    title: AppLocalization.t('Overall Report'),
-                    index: 29,
-                  ),
-                  _menuItem(
                     icon: Icons.verified_outlined,
                     title: AppLocalization.t('Compliance'),
                     index: 9,
@@ -245,6 +240,12 @@ class AppSidebar extends StatelessWidget {
                     icon: Icons.construction_outlined,
                     title: AppLocalization.t('Quarry Driller'),
                     index: 27,
+                  ),
+
+                  _menuItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    title: AppLocalization.t('Overall Report'),
+                    index: 29,
                   ),
 
                   Padding(

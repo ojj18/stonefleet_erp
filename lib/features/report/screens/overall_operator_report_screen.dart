@@ -115,10 +115,11 @@ class _OverallOperatorReportScreenState
   double _b(String key) => _breakdown[key] ?? 0;
   String _qty(double value) => NumberFormat('#,##0.##').format(value);
 
+
   // As requested: Padi + advance + blasting materials + external-lorry diesel.
-  double get _totalEarnings => _padi + _advance + _materials + _diesel;
+  double get _totalExpense => _padi + _advance + _materials + _diesel;
   double get _totalBoulderDriller => _boulders + _driller;
-  double get _net => _totalBoulderDriller - _totalEarnings;
+  double get _net => _totalBoulderDriller - _totalExpense;
 
   Future<void> _exportExcel() async {
     final excel = Excel.createExcel();
@@ -151,7 +152,6 @@ class _OverallOperatorReportScreenState
         DoubleCellValue(amount),
       ]);
     }
-
     appendSummary('Bullet Quantity', _b('bulletQuantity'));
     appendSummary('Bullet Price Total', _b('bulletCost'));
     appendSummary('3m Wire Quantity', _b('wire3mQuantity'));
@@ -160,14 +160,13 @@ class _OverallOperatorReportScreenState
     appendSummary('4m Wire Price Total', _b('wire4mCost'));
     appendSummary('ED Quantity', _b('edQuantity'));
     appendSummary('ED Price Total', _b('edCost'));
+    appendSummary('Quarry Driller Total Feet', _b('drillerFeet'));
+    appendSummary('Quarry Driller Total Amount', _b('drillerAmount'));
     appendSummary('Boulder Total Units', _b('boulderUnits'));
     appendSummary('Boulder Total Amount', _b('boulderCost'));
-    appendSummary('External Lorry Diesel Litres', _b('dieselLitres'));
-    appendSummary('External Lorry Diesel Amount', _b('dieselCost'));
-    appendSummary(
-      'Total Earnings (Padi + Advance + Materials + Diesel)',
-      _totalEarnings,
-    );
+    appendSummary('Diesel Consumption Litres', _b('dieselLitres'));
+    appendSummary('Diesel Consumption Amount', _b('dieselCost'));
+    appendSummary('Total Expense (Padi + Advance + Materials + Diesel)', _totalExpense);
     appendSummary('Total Boulder & Driller', _totalBoulderDriller);
     appendSummary('Total Net Payable', _net);
     final dir = await getApplicationDocumentsDirectory();
@@ -211,31 +210,16 @@ class _OverallOperatorReportScreenState
                 .toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text(
-            'Bullet: ${_qty(_b('bulletQuantity'))} Qty | ${_money.format(_b('bulletCost'))}',
-          ),
-          pw.Text(
-            '3m Wire: ${_qty(_b('wire3mQuantity'))} Qty | ${_money.format(_b('wire3mCost'))}',
-          ),
-          pw.Text(
-            '4m Wire: ${_qty(_b('wire4mQuantity'))} Qty | ${_money.format(_b('wire4mCost'))}',
-          ),
-          pw.Text(
-            'ED: ${_qty(_b('edQuantity'))} Qty | ${_money.format(_b('edCost'))}',
-          ),
-          pw.Text(
-            'Boulders: ${_qty(_b('boulderUnits'))} Units | ${_money.format(_b('boulderCost'))}',
-          ),
-          pw.Text(
-            'External Lorry Diesel: ${_qty(_b('dieselLitres'))} L | ${_money.format(_b('dieselCost'))}',
-          ),
+          pw.Text('Bullet: ${_qty(_b('bulletQuantity'))} Qty | ${_money.format(_b('bulletCost'))}'),
+          pw.Text('3m Wire: ${_qty(_b('wire3mQuantity'))} Qty | ${_money.format(_b('wire3mCost'))}'),
+          pw.Text('4m Wire: ${_qty(_b('wire4mQuantity'))} Qty | ${_money.format(_b('wire4mCost'))}'),
+          pw.Text('ED: ${_qty(_b('edQuantity'))} Qty | ${_money.format(_b('edCost'))}'),
+          pw.Text('Quarry Driller: ${_qty(_b('drillerFeet'))} Feet | ${_money.format(_b('drillerAmount'))}'),
+          pw.Text('Boulders: ${_qty(_b('boulderUnits'))} Units | ${_money.format(_b('boulderCost'))}'),
+          pw.Text('Diesel Consumption: ${_qty(_b('dieselLitres'))} L | ${_money.format(_b('dieselCost'))}'),
           pw.SizedBox(height: 8),
-          pw.Text(
-            'Total Earnings (Padi + Advance + Blasting Materials + External Lorry Diesel): ${_money.format(_totalEarnings)}',
-          ),
-          pw.Text(
-            'Total Boulder & Driller: ${_money.format(_totalBoulderDriller)}',
-          ),
+          pw.Text('Total Expense (Padi + Advance + Blasting Materials + Diesel Consumption): ${_money.format(_totalExpense)}'),
+          pw.Text('Total Boulder & Driller: ${_money.format(_totalBoulderDriller)}'),
           pw.Text(
             'Total Net Payable: ${_money.format(_net)}',
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
@@ -440,7 +424,7 @@ class _OverallOperatorReportScreenState
                                     Icons.electrical_services_outlined,
                                   ),
                                   _quantityMetric(
-                                    tr('External Lorry Diesel'),
+                                    tr('Diesel Consumption'),
                                     _b('dieselLitres'),
                                     'L',
                                     _b('dieselCost'),
@@ -458,9 +442,11 @@ class _OverallOperatorReportScreenState
                                     _b('boulderCost'),
                                     Icons.local_shipping_outlined,
                                   ),
-                                  _metric(
-                                    tr('Driller Amount'),
-                                    _driller,
+                                  _quantityMetric(
+                                    tr('Quarry Driller'),
+                                    _b('drillerFeet'),
+                                    tr('Feet'),
+                                    _b('drillerAmount'),
                                     Icons.construction_outlined,
                                   ),
                                   _metric(
@@ -474,13 +460,8 @@ class _OverallOperatorReportScreenState
                                     Icons.money_off,
                                   ),
                                   _metric(
-                                    tr('External Lorry Diesel'),
-                                    _diesel,
-                                    Icons.local_gas_station_outlined,
-                                  ),
-                                  _metric(
-                                    tr('Total Earnings'),
-                                    _totalEarnings,
+                                    tr('Total Expense'),
+                                    _totalExpense,
                                     Icons.calculate_outlined,
                                   ),
                                   _metric(
@@ -527,10 +508,8 @@ class _OverallOperatorReportScreenState
                                     ),
                                     const Divider(),
                                     _summaryLine(
-                                      tr(
-                                        'Total Earnings (Padi + Advance + Materials + Diesel)',
-                                      ),
-                                      _totalEarnings,
+                                      tr('Total Expense (Padi + Advance + Materials + Diesel)'),
+                                      _totalExpense,
                                       bold: true,
                                     ),
                                     _summaryLine(
@@ -786,32 +765,13 @@ class _OverallOperatorReportScreenState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF68756D)),
-              ),
+              Text(title, style: const TextStyle(fontSize: 12, color: Color(0xFF68756D))),
               const SizedBox(height: 5),
-              Text(
-                '${_qty(quantity)} $unit',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF202820),
-                ),
-              ),
+              Text('${_qty(quantity)} $unit', maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF202820))),
               const SizedBox(height: 3),
-              Text(
-                _money.format(amount),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF202820),
-                ),
-              ),
+              Text(_money.format(amount), maxLines: 1, overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF202820))),
             ],
           ),
         ),

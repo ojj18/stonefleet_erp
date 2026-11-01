@@ -187,16 +187,6 @@ class OverallOperatorReportRepository {
       FROM quarry_blasting_purchases
       WHERE $purchaseWhere
     ''', purchaseArgs);
-    final boulder = await db.rawQuery(
-      '''
-      SELECT COALESCE(SUM(total_load),0) AS boulder_units,
-             COALESCE(SUM(total_value),0) AS boulder_cost
-      FROM quarry_boulder_trips
-      WHERE date(trip_date) BETWEEN date(?) AND date(?)
-        ${filterOp ? 'AND LOWER(TRIM(producer_name)) = ?' : ''}
-    ''',
-      [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
-    );
     const dieselOperatorExpr =
         "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
     final diesel = await db.rawQuery(
@@ -211,12 +201,35 @@ class OverallOperatorReportRepository {
     ''',
       [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
     );
+    final boulder = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(total_load),0) AS boulder_units,
+             COALESCE(SUM(total_value),0) AS boulder_cost
+      FROM quarry_boulder_trips
+      WHERE date(trip_date) BETWEEN date(?) AND date(?)
+        ${filterOp ? 'AND LOWER(TRIM(producer_name)) = ?' : ''}
+    ''',
+      [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
+    );
+    final driller = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(feet),0) AS driller_feet,
+             COALESCE(SUM(total_amount),0) AS driller_amount
+      FROM quarry_driller_records
+      WHERE date(record_date) BETWEEN date(?) AND date(?)
+        ${filterOp ? 'AND LOWER(TRIM(driller_name)) = ?' : ''}
+    ''',
+      [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
+    );
     double value(Map<String, Object?> row, String key) =>
         (row[key] as num?)?.toDouble() ?? 0;
     final p = purchases.first;
     final d = diesel.first;
     final boulderRow = boulder.first;
+    final drillerRow = driller.first;
     return {
+      'drillerFeet': value(drillerRow, 'driller_feet'),
+      'drillerAmount': value(drillerRow, 'driller_amount'),
       'boulderUnits': value(boulderRow, 'boulder_units'),
       'boulderCost': value(boulderRow, 'boulder_cost'),
       'bulletQuantity': value(p, 'bullet_qty'),
