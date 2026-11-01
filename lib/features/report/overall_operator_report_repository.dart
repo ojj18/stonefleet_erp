@@ -155,6 +155,69 @@ class OverallOperatorReportRepository {
     return result;
   }
 
+
+  Future<Map<String, double>> getOperationalBreakdown({
+    required DateTime fromDate,
+    required DateTime toDate,
+    String? operatorName,
+  }) async {
+    final db = await _helper.database;
+    final op = operatorName?.trim();
+    final filterOp = op != null && op.isNotEmpty;
+    final purchaseWhere = '''
+      date(purchase_date) BETWEEN date(?) AND date(?)
+      ${filterOp ? 'AND LOWER(TRIM(operator_name)) = ?' : ''}
+    ''';
+    final purchaseArgs = [
+      _date(fromDate),
+      _date(toDate),
+      if (filterOp) op.toLowerCase(),
+    ];
+    final purchases = await db.rawQuery('''
+      SELECT
+        COALESCE(SUM(bullet_quantity),0) AS bullet_qty,
+        COALESCE(SUM(bullet_total),0) AS bullet_cost,
+        COALESCE(SUM(wire_3m_quantity),0) AS wire3m_qty,
+        COALESCE(SUM(wire_3m_total),0) AS wire3m_cost,
+        COALESCE(SUM(wire_4m_quantity),0) AS wire4m_qty,
+        COALESCE(SUM(wire_4m_total),0) AS wire4m_cost,
+        COALESCE(SUM(ed_quantity),0) AS ed_qty,
+        COALESCE(SUM(ed_total),0) AS ed_cost
+      FROM quarry_blasting_purchases
+      WHERE $purchaseWhere
+    ''', purchaseArgs);
+    const dieselOperatorExpr = "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
+    final diesel = await db.rawQuery('''
+      SELECT COALESCE(SUM(quantity_litres),0) AS diesel_litres,
+             COALESCE(SUM(total_cost),0) AS diesel_cost
+      FROM diesel_fillings
+      WHERE date(filling_date) BETWEEN date(?) AND date(?)
+        AND LOWER(TRIM(vehicle_type)) = 'external lorry'
+        AND TRIM(COALESCE(vehicle_registration,'')) <> ''
+        ${filterOp ? 'AND LOWER(TRIM(($dieselOperatorExpr))) = ?' : ''}
+    ''', [
+      _date(fromDate),
+      _date(toDate),
+      if (filterOp) op.toLowerCase(),
+    ]);
+    double value(Map<String, Object?> row, String key) =>
+        (row[key] as num?)?.toDouble() ?? 0;
+    final p = purchases.first;
+    final d = diesel.first;
+    return {
+      'bulletQuantity': value(p, 'bullet_qty'),
+      'bulletCost': value(p, 'bullet_cost'),
+      'wire3mQuantity': value(p, 'wire3m_qty'),
+      'wire3mCost': value(p, 'wire3m_cost'),
+      'wire4mQuantity': value(p, 'wire4m_qty'),
+      'wire4mCost': value(p, 'wire4m_cost'),
+      'edQuantity': value(p, 'ed_qty'),
+      'edCost': value(p, 'ed_cost'),
+      'dieselLitres': value(d, 'diesel_litres'),
+      'dieselCost': value(d, 'diesel_cost'),
+    };
+  }
+
   String _date(DateTime d) =>
       '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }

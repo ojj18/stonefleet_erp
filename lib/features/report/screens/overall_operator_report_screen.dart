@@ -30,6 +30,7 @@ class _OverallOperatorReportScreenState
   DateTime _to = DateTime.now();
   List<String> _operators = [];
   List<Map<String, dynamic>> _rows = [];
+  Map<String, double> _breakdown = {};
   bool _loading = true;
 
   @override
@@ -43,6 +44,11 @@ class _OverallOperatorReportScreenState
     try {
       _operators = await _repo.getOperators();
       _rows = await _repo.getSettlement(
+        fromDate: _from,
+        toDate: _to,
+        operatorName: _operator,
+      );
+      _breakdown = await _repo.getOperationalBreakdown(
         fromDate: _from,
         toDate: _to,
         operatorName: _operator,
@@ -106,6 +112,8 @@ class _OverallOperatorReportScreenState
   double get _advance => -_sum('Advance');
   double get _materials => _sum('Blasting Materials');
   double get _diesel => _sum('Diesel Filling');
+  double _b(String key) => _breakdown[key] ?? 0;
+  String _qty(double value) => NumberFormat('#,##0.##').format(value);
 
   // As requested: Padi + advance + blasting materials + external-lorry diesel.
   double get _totalEarnings => _padi + _advance + _materials + _diesel;
@@ -143,7 +151,21 @@ class _OverallOperatorReportScreenState
         DoubleCellValue(amount),
       ]);
     }
-    appendSummary('Total Earnings (Padi + Advance + Materials + Diesel)', _totalEarnings);
+
+    appendSummary('Bullet Quantity', _b('bulletQuantity'));
+    appendSummary('Bullet Price Total', _b('bulletCost'));
+    appendSummary('3m Wire Quantity', _b('wire3mQuantity'));
+    appendSummary('3m Wire Price Total', _b('wire3mCost'));
+    appendSummary('4m Wire Quantity', _b('wire4mQuantity'));
+    appendSummary('4m Wire Price Total', _b('wire4mCost'));
+    appendSummary('ED Quantity', _b('edQuantity'));
+    appendSummary('ED Price Total', _b('edCost'));
+    appendSummary('External Lorry Diesel Litres', _b('dieselLitres'));
+    appendSummary('External Lorry Diesel Amount', _b('dieselCost'));
+    appendSummary(
+      'Total Earnings (Padi + Advance + Materials + Diesel)',
+      _totalEarnings,
+    );
     appendSummary('Total Boulder & Driller', _totalBoulderDriller);
     appendSummary('Total Net Payable', _net);
     final dir = await getApplicationDocumentsDirectory();
@@ -187,8 +209,28 @@ class _OverallOperatorReportScreenState
                 .toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('Total Earnings (Padi + Advance + Blasting Materials + External Lorry Diesel): ${_money.format(_totalEarnings)}'),
-          pw.Text('Total Boulder & Driller: ${_money.format(_totalBoulderDriller)}'),
+          pw.Text(
+            'Bullet: ${_qty(_b('bulletQuantity'))} Qty | ${_money.format(_b('bulletCost'))}',
+          ),
+          pw.Text(
+            '3m Wire: ${_qty(_b('wire3mQuantity'))} Qty | ${_money.format(_b('wire3mCost'))}',
+          ),
+          pw.Text(
+            '4m Wire: ${_qty(_b('wire4mQuantity'))} Qty | ${_money.format(_b('wire4mCost'))}',
+          ),
+          pw.Text(
+            'ED: ${_qty(_b('edQuantity'))} Qty | ${_money.format(_b('edCost'))}',
+          ),
+          pw.Text(
+            'External Lorry Diesel: ${_qty(_b('dieselLitres'))} L | ${_money.format(_b('dieselCost'))}',
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Total Earnings (Padi + Advance + Blasting Materials + External Lorry Diesel): ${_money.format(_totalEarnings)}',
+          ),
+          pw.Text(
+            'Total Boulder & Driller: ${_money.format(_totalBoulderDriller)}',
+          ),
           pw.Text(
             'Total Net Payable: ${_money.format(_net)}',
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 16),
@@ -364,6 +406,41 @@ class _OverallOperatorReportScreenState
                                 spacing: 12,
                                 runSpacing: 12,
                                 children: [
+                                  _quantityMetric(
+                                    tr('Bullet'),
+                                    _b('bulletQuantity'),
+                                    tr('Qty'),
+                                    _b('bulletCost'),
+                                    Icons.circle_outlined,
+                                  ),
+                                  _quantityMetric(
+                                    tr('3m Wire'),
+                                    _b('wire3mQuantity'),
+                                    tr('Qty'),
+                                    _b('wire3mCost'),
+                                    Icons.electrical_services_outlined,
+                                  ),
+                                  _quantityMetric(
+                                    tr('4m Wire'),
+                                    _b('wire4mQuantity'),
+                                    tr('Qty'),
+                                    _b('wire4mCost'),
+                                    Icons.electrical_services_outlined,
+                                  ),
+                                  _quantityMetric(
+                                    tr('ED'),
+                                    _b('edQuantity'),
+                                    tr('Qty'),
+                                    _b('edCost'),
+                                    Icons.electrical_services_outlined,
+                                  ),
+                                  _quantityMetric(
+                                    tr('External Lorry Diesel'),
+                                    _b('dieselLitres'),
+                                    'L',
+                                    _b('dieselCost'),
+                                    Icons.local_gas_station_outlined,
+                                  ),
                                   _metric(
                                     tr('Blasting Padi'),
                                     _padi,
@@ -389,11 +466,11 @@ class _OverallOperatorReportScreenState
                                     _advance,
                                     Icons.money_off,
                                   ),
-                                  _metric(
-                                    tr('External Lorry Diesel'),
-                                    _diesel,
-                                    Icons.local_gas_station_outlined,
-                                  ),
+                                  // _metric(
+                                  //   tr('External Lorry Diesel'),
+                                  //   _diesel,
+                                  //   Icons.local_gas_station_outlined,
+                                  // ),
                                   _metric(
                                     tr('Total Earnings'),
                                     _totalEarnings,
@@ -443,7 +520,9 @@ class _OverallOperatorReportScreenState
                                     ),
                                     const Divider(),
                                     _summaryLine(
-                                      tr('Total Earnings (Padi + Advance + Materials + Diesel)'),
+                                      tr(
+                                        'Total Earnings (Padi + Advance + Materials + Diesel)',
+                                      ),
                                       _totalEarnings,
                                       bold: true,
                                     ),
@@ -671,6 +750,68 @@ class _OverallOperatorReportScreenState
       ],
     ),
   );
+  Widget _quantityMetric(
+    String title,
+    double quantity,
+    String unit,
+    double amount,
+    IconData icon,
+  ) => Container(
+    width: 205,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: const Color(0xFFD7E2D9)),
+      borderRadius: BorderRadius.circular(13),
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: const Color(0xFFE5F3E9),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, color: const Color(0xFF00652C)),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(fontSize: 12, color: Color(0xFF68756D)),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                '${_qty(quantity)} $unit',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF202820),
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                _money.format(amount),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF202820),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+
   Widget _summaryLine(
     String label,
     double value, {
