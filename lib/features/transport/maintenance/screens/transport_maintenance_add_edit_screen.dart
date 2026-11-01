@@ -16,6 +16,19 @@ import '../../../service_notification/providers/service_notification_provider.da
 import '../../../transport/master/providers/transport_master_provider.dart';
 import '../providers/transport_maintenance_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class TransportMaintenanceAddEditScreen extends StatefulWidget {
   final TransportMaintenanceModel? maintenance;
 
@@ -590,10 +603,10 @@ class _TransportMaintenanceAddEditScreenState
                 _driverController.text = value ?? '';
               });
             },
-      validator: (_) =>
+      validator: _allowEmptyFieldValidator(((_) =>
           (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
           ? AppLocalization.t('Enter driver name')
-          : null,
+          : null)),
     );
   }
 
@@ -631,13 +644,13 @@ class _TransportMaintenanceAddEditScreenState
               });
             },
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.id == null) {
           return AppLocalization.t('Select vehicle');
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -1150,7 +1163,7 @@ class _TransportMaintenanceAddEditScreenState
       controller: controller,
       keyboardType: TextInputType.numberWithOptions(decimal: decimal),
       decoration: _inputDecoration(label: label, hint: hint, icon: icon),
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return '${AppLocalization.t('Enter')} $label';
         }
@@ -1164,7 +1177,7 @@ class _TransportMaintenanceAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 

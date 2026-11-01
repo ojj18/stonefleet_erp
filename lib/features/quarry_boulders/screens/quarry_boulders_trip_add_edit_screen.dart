@@ -11,6 +11,19 @@ import '../../transport/master/providers/transport_master_provider.dart';
 import '../models/quarry_boulder_trip_model.dart';
 import '../providers/quarry_boulder_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class QuarryBouldersTripAddEditScreen extends StatefulWidget {
   final QuarryBoulderTrip? trip;
   const QuarryBouldersTripAddEditScreen({super.key, this.trip});
@@ -376,9 +389,9 @@ class _QuarryBouldersTripAddEditScreenState
                 _vehicle = selected;
               });
             },
-      validator: (id) => id == null
+      validator: _allowEmptyFieldValidator(((id) => id == null
           ? AppLocalization.t('Select lorry registration number')
-          : null,
+          : null)),
     );
   }
 
@@ -450,9 +463,9 @@ class _QuarryBouldersTripAddEditScreenState
           _driver.text = value ?? '';
         });
       },
-      validator: (_) => (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
+      validator: _allowEmptyFieldValidator(((_) => (_selectedDriver == null || _selectedDriver!.trim().isEmpty)
           ? AppLocalization.t('Enter driver name')
-          : null,
+          : null)),
     );
   }
   Future<void> _addProducer() async {
@@ -498,9 +511,9 @@ class _QuarryBouldersTripAddEditScreenState
         if (value == '__add_producer__') { await _addProducer(); return; }
         setState(() => _selectedProducer = value);
       },
-      validator: (_) => (_selectedProducer == null || _selectedProducer!.trim().isEmpty)
+      validator: _allowEmptyFieldValidator(((_) => (_selectedProducer == null || _selectedProducer!.trim().isEmpty)
           ? AppLocalization.t('Select boulder producer')
-          : null,
+          : null)),
     );
   }
   Widget _unitField() => InputDecorator(
@@ -521,12 +534,12 @@ class _QuarryBouldersTripAddEditScreenState
     keyboardType: TextInputType.number,
     onChanged: (_) => setState(() {}),
     decoration: _dec(AppLocalization.t('Trip'), Icons.repeat),
-    validator: (v) {
+    validator: _allowEmptyFieldValidator(((v) {
       final n = int.tryParse((v ?? '').trim());
       return n == null || n <= 0
           ? AppLocalization.t('Enter valid trip count')
           : null;
-    },
+    })),
   );
   Widget _unitPriceField() => TextFormField(
     controller: _unitPrice,
@@ -534,12 +547,12 @@ class _QuarryBouldersTripAddEditScreenState
     keyboardType: const TextInputType.numberWithOptions(decimal: true),
     onChanged: (_) => setState(() {}),
     decoration: _dec(AppLocalization.t('Per Unit Price'), Icons.currency_rupee),
-    validator: (v) {
+    validator: _allowEmptyFieldValidator(((v) {
       final price = double.tryParse((v ?? '').trim());
       return price == null || price < 0
           ? AppLocalization.t('Enter a valid per unit price')
           : null;
-    },
+    })),
   );
   Widget _totalValueField() => InputDecorator(
     decoration: _dec(AppLocalization.t('Total Value'), Icons.payments_outlined),

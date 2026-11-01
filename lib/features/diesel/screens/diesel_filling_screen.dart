@@ -5,6 +5,19 @@ import '../../../data/models/diesel_models.dart';
 import '../providers/diesel_provider.dart';
 import '../widgets/diesel_shell.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class DieselFillingScreen extends StatefulWidget {
   const DieselFillingScreen({super.key});
   @override
@@ -557,11 +570,11 @@ class _FillingDialogState extends State<_FillingDialog> {
                                 setState(() => externalDriver = v);
                               }
                             },
-                            validator: (v) =>
+                            validator: _allowEmptyFieldValidator(((v) =>
                                 type == 'External Lorry' &&
                                     (v == null || v == '__add_driver__')
                                 ? AppLocalization.t('Select driver')
-                                : null,
+                                : null)),
                           ),
                         ),
                       ],
@@ -586,9 +599,9 @@ class _FillingDialogState extends State<_FillingDialog> {
                           )
                           .toList(),
                       onChanged: (v) => setState(() => vehicleId = v),
-                      validator: (v) => v == null
+                      validator: _allowEmptyFieldValidator(((v) => v == null
                           ? AppLocalization.t('Select vehicle')
-                          : null,
+                          : null)),
                     ),
                   ),
                 _field(qty, 'Diesel Quantity (Litres)', true),
@@ -639,7 +652,7 @@ class _FillingDialogState extends State<_FillingDialog> {
       keyboardType: num
           ? const TextInputType.numberWithOptions(decimal: true)
           : TextInputType.text,
-      validator: (v) {
+      validator: _allowEmptyFieldValidator(((v) {
         if (label.startsWith('Diesel Quantity') || label == 'Diesel Rate') {
           final n = double.tryParse(v?.trim() ?? '');
           if (n == null || n <= 0) {
@@ -647,7 +660,7 @@ class _FillingDialogState extends State<_FillingDialog> {
           }
         }
         return null;
-      },
+      })),
       decoration: InputDecoration(labelText: AppLocalization.t(label)),
     ),
   );

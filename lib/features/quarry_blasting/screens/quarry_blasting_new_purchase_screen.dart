@@ -7,6 +7,19 @@ import '../../../data/repositories/blasting_operator_repository.dart';
 import '../providers/quarry_blasting_provider.dart';
 import '../widgets/quarry_blasting_shell.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class QuarryBlastingNewPurchaseScreen extends StatefulWidget {
   final QuarryBlastingPurchase? purchase;
 
@@ -182,8 +195,13 @@ class _QuarryBlastingNewPurchaseScreenState
       _number(_edPrice),
     ];
 
-    if (quantities.every((q) => q <= 0)) {
-      _showError('Enter quantity for at least one item.');
+    final hasItemQuantity = quantities.any((q) => q > 0);
+    final hasAdvance = _number(_advanceAmountController) > 0;
+
+    // Allow an advance-only purchase record. Material quantities are optional
+    // when the operator records an advance without purchasing materials.
+    if (!hasItemQuantity && !hasAdvance) {
+      _showError('Enter a material quantity or an advance amount.');
       return;
     }
 
@@ -466,13 +484,13 @@ class _QuarryBlastingNewPurchaseScreenState
                 prefixText: '₹ ',
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
+              validator: _allowEmptyFieldValidator(((value) {
                 if (value == null || value.trim().isEmpty) return null;
                 final amount = double.tryParse(value.trim());
                 return amount == null || amount < 0
                     ? AppLocalization.t('Invalid')
                     : null;
-              },
+              })),
             ),
           ),
           const SizedBox(width: 18),
@@ -529,13 +547,13 @@ class _QuarryBlastingNewPurchaseScreenState
                 prefixText: '₹ ',
                 border: const OutlineInputBorder(),
               ),
-              validator: (value) {
+              validator: _allowEmptyFieldValidator(((value) {
                 if (value == null || value.trim().isEmpty) return null;
                 final amount = double.tryParse(value.trim());
                 return amount == null || amount < 0
                     ? AppLocalization.t('Invalid')
                     : null;
-              },
+              })),
             ),
           ),
           const SizedBox(width: 18),
@@ -634,7 +652,7 @@ class _QuarryBlastingNewPurchaseScreenState
         prefixText: rupee ? '₹ ' : null,
         border: const OutlineInputBorder(),
       ),
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value != null &&
             value.trim().isNotEmpty &&
             double.tryParse(value.trim()) == null) {
@@ -646,7 +664,7 @@ class _QuarryBlastingNewPurchaseScreenState
           return AppLocalization.t('Invalid');
         }
         return null;
-      },
+      })),
     );
   }
 }

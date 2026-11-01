@@ -9,6 +9,19 @@ import '../../transport/master/providers/transport_master_provider.dart';
 import '../models/retreading_model.dart';
 import '../providers/retreading_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class RetreadingAddEditScreen extends StatefulWidget {
   final RetreadingRecord? record;
   const RetreadingAddEditScreen({super.key, this.record});
@@ -580,11 +593,11 @@ class _RetreadingAddEditScreenState extends State<RetreadingAddEditScreen> {
     keyboardType: keyboard,
     maxLines: maxLines,
     decoration: _dec(label, icon),
-    validator: requiredField
+    validator: _allowEmptyFieldValidator((requiredField
         ? (v) => (v == null || v.trim().isEmpty)
               ? '${AppLocalization.t('Enter')} $label'
               : null
-        : null,
+        : null)),
   );
   InputDecoration _dec(String label, IconData icon) => InputDecoration(
     labelText: label,

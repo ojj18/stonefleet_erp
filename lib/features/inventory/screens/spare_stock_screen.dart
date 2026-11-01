@@ -5,6 +5,19 @@ import 'package:provider/provider.dart';
 import '../providers/inventory_provider.dart';
 import '../widgets/inventory_shell.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class SpareStockScreen extends StatefulWidget {
   const SpareStockScreen({super.key});
   @override
@@ -107,9 +120,9 @@ class _SpareStockScreenState extends State<SpareStockScreen> {
                   decoration: InputDecoration(
                     labelText: AppLocalization.t('Spare Item'),
                   ),
-                  validator: (v) => (v ?? '').trim().isEmpty
+                  validator: _allowEmptyFieldValidator(((v) => (v ?? '').trim().isEmpty
                       ? AppLocalization.t('Required')
-                      : null,
+                      : null)),
                 ),
                 const SizedBox(height: 12),
                 TextFormField(

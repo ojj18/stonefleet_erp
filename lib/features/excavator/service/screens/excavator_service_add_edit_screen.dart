@@ -15,6 +15,19 @@ import '../../../service_notification/providers/service_notification_provider.da
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_service_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class ExcavatorServiceAddEditScreen extends StatefulWidget {
   final int? serviceId;
 
@@ -749,13 +762,13 @@ class _ExcavatorServiceAddEditScreenState
                               _selectedExcavatorId = value;
                             });
                           },
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       if (value == null) {
                         return AppLocalization.t('Select excavator');
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -768,13 +781,13 @@ class _ExcavatorServiceAddEditScreenState
                       icon: Icons.calendar_today_outlined,
                     ),
                     onTap: _saving ? null : _selectDate,
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       if (value == null || value.trim().isEmpty) {
                         return AppLocalization.t('Select service date');
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -789,7 +802,7 @@ class _ExcavatorServiceAddEditScreenState
                       hint: 'e.g. 1258.5',
                       icon: Icons.speed_outlined,
                     ),
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       final number = double.tryParse(value?.trim() ?? '');
 
                       if (number == null) {
@@ -801,7 +814,7 @@ class _ExcavatorServiceAddEditScreenState
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
               ];
@@ -1033,9 +1046,9 @@ class _ExcavatorServiceAddEditScreenState
             label: AppLocalization.t('Spare Part'),
             icon: Icons.settings_outlined,
           ),
-          validator: (value) => value == null || value.trim().isEmpty
+          validator: _allowEmptyFieldValidator(((value) => value == null || value.trim().isEmpty
               ? AppLocalization.t('Enter spare name')
-              : null,
+              : null)),
           onFieldSubmitted: (_) => onFieldSubmitted(),
         );
       },
@@ -1050,7 +1063,7 @@ class _ExcavatorServiceAddEditScreenState
       onChanged: (_) {
         setState(() {});
       },
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number <= 0) {
@@ -1058,7 +1071,7 @@ class _ExcavatorServiceAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -1073,7 +1086,7 @@ class _ExcavatorServiceAddEditScreenState
       onChanged: (_) {
         setState(() {});
       },
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number < 0) {
@@ -1081,7 +1094,7 @@ class _ExcavatorServiceAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 

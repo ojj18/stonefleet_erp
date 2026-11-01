@@ -15,6 +15,19 @@ import '../../../service_notification/providers/service_notification_provider.da
 import '../../master/providers/excavator_provider.dart';
 import '../providers/excavator_maintenance_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class ExcavatorMaintenanceAddEditScreen extends StatefulWidget {
   final ExcavatorMaintenanceModel? maintenance;
 
@@ -190,10 +203,10 @@ class _ExcavatorMaintenanceAddEditScreenState
           _operatorController.text = value ?? '';
         });
       },
-      validator: (_) =>
+      validator: _allowEmptyFieldValidator(((_) =>
           (_selectedOperator == null || _selectedOperator!.trim().isEmpty)
           ? AppLocalization.t('Enter driver name')
-          : null,
+          : null)),
     );
   }
 
@@ -1338,13 +1351,13 @@ class _ExcavatorMaintenanceAddEditScreenState
                     Icons.pin_outlined,
                   ),
 
-                  validator: (_) {
+                  validator: _allowEmptyFieldValidator(((_) {
                     if (_selectedExcavator == null) {
                       return AppLocalization.t('Select excavator');
                     }
 
                     return null;
-                  },
+                  })),
 
                   items: excavators.where((e) => e.id != null && e.status).map((
                     excavator,
@@ -1863,7 +1876,7 @@ class _ExcavatorMaintenanceAddEditScreenState
       readOnly: readOnly,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: _inputDecoration(label, icon),
-      validator: required ? _numberValidator : null,
+      validator: _allowEmptyFieldValidator((required ? _numberValidator : null)),
     );
   }
 

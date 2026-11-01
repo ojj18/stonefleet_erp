@@ -14,6 +14,18 @@ import '../../../../data/models/excavator_model.dart';
 import '../../../../data/repositories/driver_repository.dart';
 import '../../../../data/repositories/excavator_repository.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
 class ExcavatorDieselManagementScreen extends StatefulWidget {
   const ExcavatorDieselManagementScreen({super.key});
 
@@ -231,12 +243,12 @@ class _ExcavatorDieselManagementScreenState
             TextEditingController controller,
             String label,
             IconData icon, {
-            required String? Function(String?) validator,
+            required FormFieldValidator<String>? validator,
           }) => TextFormField(
             controller: controller,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: decoration(label, icon),
-            validator: validator,
+            validator: _allowEmptyFieldValidator(validator),
             onChanged: (_) => setDialogState(() {}),
           );
           return AlertDialog(
@@ -317,9 +329,11 @@ class _ExcavatorDieselManagementScreenState
                                     ),
                                   )
                                   .toList(),
-                              validator: (v) => v == null || v.isEmpty
-                                  ? AppLocalization.t('Required')
-                                  : null,
+                              validator: _allowEmptyFieldValidator(
+                                ((v) => v == null || v.isEmpty
+                                    ? AppLocalization.t('Required')
+                                    : null),
+                              ),
                               onChanged: (v) =>
                                   setDialogState(() => selectedVehicle = v),
                             ),
@@ -344,9 +358,11 @@ class _ExcavatorDieselManagementScreenState
                                     ),
                                   )
                                   .toList(),
-                              validator: (v) => v == null || v.isEmpty
-                                  ? AppLocalization.t('Required')
-                                  : null,
+                              validator: _allowEmptyFieldValidator(
+                                ((v) => v == null || v.isEmpty
+                                    ? AppLocalization.t('Required')
+                                    : null),
+                              ),
                               onChanged: (v) =>
                                   setDialogState(() => selectedDriver = v),
                             ),
@@ -361,10 +377,14 @@ class _ExcavatorDieselManagementScreenState
                               start,
                               'Starting Meter',
                               Icons.play_arrow,
-                              validator: (v) =>
-                                  v == null || v.trim().isEmpty || number(v) < 0
-                                  ? AppLocalization.t('Enter a valid reading')
-                                  : null,
+                              validator: _allowEmptyFieldValidator(
+                                ((v) =>
+                                    v == null ||
+                                        v.trim().isEmpty ||
+                                        number(v) < 0
+                                    ? AppLocalization.t('Enter a valid reading')
+                                    : null),
+                              ),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -373,14 +393,16 @@ class _ExcavatorDieselManagementScreenState
                               end,
                               'Closing Meter',
                               Icons.stop,
-                              validator: (v) =>
-                                  v == null ||
-                                      v.trim().isEmpty ||
-                                      number(v) < number(start.text)
-                                  ? AppLocalization.t(
-                                      'Closing meter must be >= starting meter',
-                                    )
-                                  : null,
+                              validator: _allowEmptyFieldValidator(
+                                ((v) =>
+                                    v == null ||
+                                        v.trim().isEmpty ||
+                                        number(v) < number(start.text)
+                                    ? AppLocalization.t(
+                                        'Closing meter must be >= starting meter',
+                                      )
+                                    : null),
+                              ),
                             ),
                           ),
                         ],
@@ -390,10 +412,11 @@ class _ExcavatorDieselManagementScreenState
                         diesel,
                         'Diesel Used (L)',
                         Icons.local_gas_station,
-                        validator: (v) =>
-                            v == null || v.trim().isEmpty || number(v) < 0
-                            ? AppLocalization.t('Enter a valid quantity')
-                            : null,
+                        validator: _allowEmptyFieldValidator(
+                          ((v) => v == null || v.trim().isEmpty || number(v) < 0
+                              ? AppLocalization.t('Enter a valid quantity')
+                              : null),
+                        ),
                       ),
                       const SizedBox(height: 12),
                       Container(

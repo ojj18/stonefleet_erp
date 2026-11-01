@@ -17,6 +17,18 @@ import '../../../service_notification/providers/service_notification_provider.da
 import '../../master/providers/transport_master_provider.dart';
 import '../providers/transport_service_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
 class TransportServiceAddEditScreen extends StatefulWidget {
   final int? serviceId;
 
@@ -440,13 +452,13 @@ class _TransportServiceAddEditScreenState
                               _selectedVehicleId = value;
                             });
                           },
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       if (value == null) {
                         return AppLocalization.t('Select transport vehicle');
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
 
@@ -461,13 +473,13 @@ class _TransportServiceAddEditScreenState
                       icon: Icons.calendar_today_outlined,
                     ),
                     onTap: _saving ? null : _selectDate,
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       if (value == null || value.trim().isEmpty) {
                         return AppLocalization.t('Select service date');
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
 
@@ -484,7 +496,7 @@ class _TransportServiceAddEditScreenState
                       hint: 'e.g. 125850',
                       icon: Icons.speed_outlined,
                     ),
-                    validator: (value) {
+                    validator: _allowEmptyFieldValidator(((value) {
                       final number = double.tryParse(value?.trim() ?? '');
 
                       if (number == null) {
@@ -496,7 +508,7 @@ class _TransportServiceAddEditScreenState
                       }
 
                       return null;
-                    },
+                    })),
                   ),
                 ),
               ];
@@ -747,9 +759,11 @@ class _TransportServiceAddEditScreenState
             label: AppLocalization.t('Spare Part'),
             icon: Icons.settings_outlined,
           ),
-          validator: (value) => value == null || value.trim().isEmpty
-              ? AppLocalization.t('Enter spare name')
-              : null,
+          validator: _allowEmptyFieldValidator(
+            ((value) => value == null || value.trim().isEmpty
+                ? AppLocalization.t('Enter spare name')
+                : null),
+          ),
           onChanged: (value) {
             item.spareNameController.value = controller.value;
             final match = _spares.where(
@@ -773,7 +787,7 @@ class _TransportServiceAddEditScreenState
       onChanged: (_) {
         setState(() {});
       },
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number <= 0) {
@@ -781,7 +795,7 @@ class _TransportServiceAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -800,7 +814,7 @@ class _TransportServiceAddEditScreenState
       onChanged: (_) {
         setState(() {});
       },
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         final number = double.tryParse(value?.trim() ?? '');
 
         if (number == null || number < 0) {
@@ -808,7 +822,7 @@ class _TransportServiceAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -1013,7 +1027,7 @@ class _TransportServiceAddEditScreenState
   //                   labelText: AppLocalization.t('Spare Name'),
   //                   border: const OutlineInputBorder(),
   //                 ),
-  //                 validator: (value) => value == null || value.trim().isEmpty
+  //                 validator: _allowEmptyFieldValidator(((value) => value == null || value.trim().isEmpty
   //                     ? AppLocalization.t('Enter spare name')
   //                     : null,
   //               ),

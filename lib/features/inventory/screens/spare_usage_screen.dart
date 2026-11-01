@@ -5,6 +5,19 @@ import 'package:provider/provider.dart';
 import '../providers/inventory_provider.dart';
 import '../widgets/inventory_shell.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class SpareUsageScreen extends StatefulWidget {
   const SpareUsageScreen({super.key});
   @override
@@ -62,9 +75,9 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                         )
                         .toList(),
                     onChanged: (v) => setState(() => item = v),
-                    validator: (v) => v == null
+                    validator: _allowEmptyFieldValidator(((v) => v == null
                         ? AppLocalization.t('Select a spare item')
-                        : null,
+                        : null)),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -73,9 +86,9 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                     decoration: InputDecoration(
                       labelText: AppLocalization.t('Quantity Used'),
                     ),
-                    validator: (v) => double.tryParse(v ?? '') == null
+                    validator: _allowEmptyFieldValidator(((v) => double.tryParse(v ?? '') == null
                         ? AppLocalization.t('Enter quantity')
-                        : null,
+                        : null)),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -241,9 +254,9 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                           )
                           .toList(),
                       onChanged: (v) => setDialogState(() => item = v),
-                      validator: (v) => v == null
+                      validator: _allowEmptyFieldValidator(((v) => v == null
                           ? AppLocalization.t('Select a spare item')
-                          : null,
+                          : null)),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
@@ -254,9 +267,9 @@ class _SpareUsageScreenState extends State<SpareUsageScreen> {
                       decoration: InputDecoration(
                         labelText: AppLocalization.t('Quantity Used'),
                       ),
-                      validator: (v) => (double.tryParse(v ?? '') ?? 0) <= 0
+                      validator: _allowEmptyFieldValidator(((v) => (double.tryParse(v ?? '') ?? 0) <= 0
                           ? AppLocalization.t('Enter quantity')
-                          : null,
+                          : null)),
                     ),
                     const SizedBox(height: 12),
                     TextFormField(

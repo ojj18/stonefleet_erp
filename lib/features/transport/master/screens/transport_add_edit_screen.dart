@@ -11,6 +11,19 @@ import '../../../service_notification/providers/service_notification_provider.da
 import '../../../auth/providers/auth_provider.dart';
 import '../providers/transport_master_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class TransportAddEditScreen extends StatefulWidget {
   final int? vehicleId;
 
@@ -516,7 +529,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
                   ),
           ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter registration number');
         }
@@ -526,7 +539,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -739,13 +752,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         icon: Icons.factory_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter manufacturer');
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -767,13 +780,13 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         icon: Icons.local_shipping_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter vehicle model');
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -795,7 +808,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         icon: Icons.calendar_today_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter manufacturing year');
         }
@@ -811,7 +824,7 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -846,14 +859,14 @@ class _TransportAddEditScreenState extends State<TransportAddEditScreen> {
         hint: AppLocalization.t('Enter unit per trip'),
         icon: Icons.scale_outlined,
       ),
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (!isAdmin) return null;
         final unit = double.tryParse((value ?? '').trim());
         if (unit == null || unit <= 0) {
           return AppLocalization.t('Enter a valid unit');
         }
         return null;
-      },
+      })),
     );
   }
 

@@ -11,6 +11,19 @@ import '../../../../data/services/way2api_service.dart';
 import '../../../service_notification/providers/service_notification_provider.dart';
 import '../providers/excavator_provider.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class ExcavatorMasterAddEditScreen extends StatefulWidget {
   final int? excavatorId;
 
@@ -513,7 +526,7 @@ class _ExcavatorMasterAddEditScreenState
         _checkRegistration();
       },
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter registration number');
         }
@@ -523,7 +536,7 @@ class _ExcavatorMasterAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -788,13 +801,13 @@ class _ExcavatorMasterAddEditScreenState
         icon: Icons.factory_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter manufacturer');
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -816,13 +829,13 @@ class _ExcavatorMasterAddEditScreenState
         icon: Icons.construction_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return AppLocalization.t('Enter excavator model');
         }
 
         return null;
-      },
+      })),
     );
   }
 
@@ -849,7 +862,7 @@ class _ExcavatorMasterAddEditScreenState
         icon: Icons.calendar_today_outlined,
       ),
 
-      validator: (value) {
+      validator: _allowEmptyFieldValidator(((value) {
         if (value == null || value.trim().isEmpty) {
           return null;
         }
@@ -867,7 +880,7 @@ class _ExcavatorMasterAddEditScreenState
         }
 
         return null;
-      },
+      })),
     );
   }
 

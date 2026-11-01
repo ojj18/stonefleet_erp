@@ -5,6 +5,19 @@ import '../../../data/models/diesel_models.dart';
 import '../providers/diesel_provider.dart';
 import '../widgets/diesel_shell.dart';
 
+FormFieldValidator<T>? _allowEmptyFieldValidator<T>(
+  FormFieldValidator<T>? validator,
+) {
+  if (validator == null) return null;
+  return (value) {
+    if (value == null || (value is String && value.trim().isEmpty)) {
+      return null;
+    }
+    return validator(value);
+  };
+}
+
+
 class DieselStockScreen extends StatefulWidget {
   const DieselStockScreen({super.key});
   @override
@@ -458,7 +471,7 @@ class _ReceiptDialogState extends State<_ReceiptDialog> {
             ? const TextInputType.numberWithOptions(decimal: true)
             : TextInputType.text,
         decoration: InputDecoration(labelText: AppLocalization.t(label)),
-        validator: (value) {
+        validator: _allowEmptyFieldValidator(((value) {
           final text = value?.trim() ?? '';
           if (isOptional || text.isNotEmpty) {
             if (isNumeric && text.isNotEmpty && double.tryParse(text) == null) {
@@ -467,7 +480,7 @@ class _ReceiptDialogState extends State<_ReceiptDialog> {
             return null;
           }
           return AppLocalization.t('This field is required');
-        },
+        })),
       ),
     );
   }
