@@ -130,7 +130,8 @@ class OverallOperatorReportRepository {
     // Older External Lorry entries may store the operator in
     // vehicle_registration (e.g. "External Lorry - Murugan") while
     // operator_name is empty. Resolve both formats for filtering/reporting.
-    const dieselOperatorExpr = "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
+    const dieselOperatorExpr =
+        "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
     final dieselOpClause = filterOp
         ? 'AND LOWER(TRIM(($dieselOperatorExpr))) = ?'
         : '';
@@ -155,7 +156,6 @@ class OverallOperatorReportRepository {
     return result;
   }
 
-
   Future<Map<String, double>> getOperationalBreakdown({
     required DateTime fromDate,
     required DateTime toDate,
@@ -164,7 +164,8 @@ class OverallOperatorReportRepository {
     final db = await _helper.database;
     final op = operatorName?.trim();
     final filterOp = op != null && op.isNotEmpty;
-    final purchaseWhere = '''
+    final purchaseWhere =
+        '''
       date(purchase_date) BETWEEN date(?) AND date(?)
       ${filterOp ? 'AND LOWER(TRIM(operator_name)) = ?' : ''}
     ''';
@@ -186,8 +187,20 @@ class OverallOperatorReportRepository {
       FROM quarry_blasting_purchases
       WHERE $purchaseWhere
     ''', purchaseArgs);
-    const dieselOperatorExpr = "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
-    final diesel = await db.rawQuery('''
+    final boulder = await db.rawQuery(
+      '''
+      SELECT COALESCE(SUM(total_load),0) AS boulder_units,
+             COALESCE(SUM(total_value),0) AS boulder_cost
+      FROM quarry_boulder_trips
+      WHERE date(trip_date) BETWEEN date(?) AND date(?)
+        ${filterOp ? 'AND LOWER(TRIM(producer_name)) = ?' : ''}
+    ''',
+      [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
+    );
+    const dieselOperatorExpr =
+        "CASE WHEN TRIM(COALESCE(operator_name,'')) <> '' THEN TRIM(operator_name) WHEN LOWER(TRIM(COALESCE(vehicle_registration,''))) LIKE 'external lorry - %' THEN TRIM(SUBSTR(vehicle_registration, LENGTH('External Lorry - ') + 1)) ELSE TRIM(COALESCE(vehicle_registration,'')) END";
+    final diesel = await db.rawQuery(
+      '''
       SELECT COALESCE(SUM(quantity_litres),0) AS diesel_litres,
              COALESCE(SUM(total_cost),0) AS diesel_cost
       FROM diesel_fillings
@@ -195,16 +208,17 @@ class OverallOperatorReportRepository {
         AND LOWER(TRIM(vehicle_type)) = 'external lorry'
         AND TRIM(COALESCE(vehicle_registration,'')) <> ''
         ${filterOp ? 'AND LOWER(TRIM(($dieselOperatorExpr))) = ?' : ''}
-    ''', [
-      _date(fromDate),
-      _date(toDate),
-      if (filterOp) op.toLowerCase(),
-    ]);
+    ''',
+      [_date(fromDate), _date(toDate), if (filterOp) op.toLowerCase()],
+    );
     double value(Map<String, Object?> row, String key) =>
         (row[key] as num?)?.toDouble() ?? 0;
     final p = purchases.first;
     final d = diesel.first;
+    final boulderRow = boulder.first;
     return {
+      'boulderUnits': value(boulderRow, 'boulder_units'),
+      'boulderCost': value(boulderRow, 'boulder_cost'),
       'bulletQuantity': value(p, 'bullet_qty'),
       'bulletCost': value(p, 'bullet_cost'),
       'wire3mQuantity': value(p, 'wire3m_qty'),

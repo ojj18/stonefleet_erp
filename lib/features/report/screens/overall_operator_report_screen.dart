@@ -160,6 +160,8 @@ class _OverallOperatorReportScreenState
     appendSummary('4m Wire Price Total', _b('wire4mCost'));
     appendSummary('ED Quantity', _b('edQuantity'));
     appendSummary('ED Price Total', _b('edCost'));
+    appendSummary('Boulder Total Units', _b('boulderUnits'));
+    appendSummary('Boulder Total Amount', _b('boulderCost'));
     appendSummary('External Lorry Diesel Litres', _b('dieselLitres'));
     appendSummary('External Lorry Diesel Amount', _b('dieselCost'));
     appendSummary(
@@ -220,6 +222,9 @@ class _OverallOperatorReportScreenState
           ),
           pw.Text(
             'ED: ${_qty(_b('edQuantity'))} Qty | ${_money.format(_b('edCost'))}',
+          ),
+          pw.Text(
+            'Boulders: ${_qty(_b('boulderUnits'))} Units | ${_money.format(_b('boulderCost'))}',
           ),
           pw.Text(
             'External Lorry Diesel: ${_qty(_b('dieselLitres'))} L | ${_money.format(_b('dieselCost'))}',
@@ -446,9 +451,11 @@ class _OverallOperatorReportScreenState
                                     _padi,
                                     Icons.payments_outlined,
                                   ),
-                                  _metric(
-                                    tr('Boulders Amount'),
-                                    _boulders,
+                                  _quantityMetric(
+                                    tr('Boulders'),
+                                    _b('boulderUnits'),
+                                    tr('Units'),
+                                    _b('boulderCost'),
                                     Icons.local_shipping_outlined,
                                   ),
                                   _metric(
@@ -466,11 +473,11 @@ class _OverallOperatorReportScreenState
                                     _advance,
                                     Icons.money_off,
                                   ),
-                                  // _metric(
-                                  //   tr('External Lorry Diesel'),
-                                  //   _diesel,
-                                  //   Icons.local_gas_station_outlined,
-                                  // ),
+                                  _metric(
+                                    tr('External Lorry Diesel'),
+                                    _diesel,
+                                    Icons.local_gas_station_outlined,
+                                  ),
                                   _metric(
                                     tr('Total Earnings'),
                                     _totalEarnings,
